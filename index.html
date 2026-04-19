@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SPL Piese">
+<meta name="theme-color" content="#c0392b">
+<title>SPL Piese Auto – Chișoda</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0b0d15; --c1:#111420; --c2:#181c2c; --c3:#1d2238;
+  --brd:#24293f; --acc:#c0392b; --acc2:#e67e22; --grn:#27ae60;
+  --blu:#2980b9; --red:#e74c3c; --pur:#8e44ad;
+  --txt:#ecf0f1; --t2:#6c7a89; --t3:#95a5a6; --r:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);display:flex;flex-direction:column}
+
+/* HEADER */
+.hdr{background:var(--c1);border-bottom:1px solid var(--brd);height:54px;padding:0 14px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:50}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-svg{flex-shrink:0;width:38px;height:38px}
+.logo-nm{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;letter-spacing:.4px;line-height:1.1}
+.logo-sb{font-size:9px;color:var(--t2);letter-spacing:.9px;text-transform:uppercase}
+.hdr-r{display:flex;align-items:center;gap:7px}
+.pill{display:flex;align-items:center;gap:5px;background:var(--c2);border:1px solid var(--brd);
+  border-radius:20px;padding:5px 10px;font-size:10px;font-weight:600;cursor:pointer;color:var(--t2);transition:all .2s}
+.pill:hover{border-color:var(--grn);color:var(--txt)}
+.sdt{width:6px;height:6px;border-radius:50%;background:var(--t2);flex-shrink:0;transition:all .3s}
+.sdt.on{background:var(--grn);box-shadow:0 0 6px var(--grn);animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}
+.xbtn{background:linear-gradient(135deg,#0d3b1a,#0f4d22);border:1px solid rgba(39,174,96,.3);
+  border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--grn);cursor:pointer;
+  white-space:nowrap;transition:all .2s}
+.xbtn:hover{transform:translateY(-1px);border-color:var(--grn)}
+
+/* NAV */
+.nav{display:flex;background:var(--c1);border-bottom:1px solid var(--brd);flex-shrink:0;
+  overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nb{padding:10px 14px;font-size:10px;font-weight:700;color:var(--t2);cursor:pointer;
+  border:none;background:none;border-bottom:2px solid transparent;white-space:nowrap;
+  text-transform:uppercase;letter-spacing:.5px;transition:all .2s;font-family:'Barlow',sans-serif}
+.nb.on{color:var(--acc);border-bottom-color:var(--acc)}
+.nb:hover:not(.on){color:var(--t3)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.main::-webkit-scrollbar{width:3px}
+.main::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px}
+.pg{display:none;padding:14px;max-width:960px;margin:0 auto;padding-bottom:68px;
+  animation:fu .2s ease}
+.pg.on{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--c1);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:13px}
+.ch{padding:11px 14px;border-bottom:1px solid var(--brd);background:var(--c2);
+  display:flex;align-items:center;justify-content:space-between}
+.ch h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3)}
+.cb{padding:14px}
+
+/* KPI */
+.kg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+@media(min-width:540px){.kg{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--c1);border:1px solid var(--brd);border-radius:var(--r);padding:12px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kpi.g::after{background:var(--grn)}.kpi.o::after{background:var(--acc2)}
+.kpi.b::after{background:var(--blu)}.kpi.r::after{background:var(--red)}
+.kl{font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.kv{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;line-height:1.1}
+.ks{font-size:9px;color:var(--t2);margin-top:2px}
+
+/* FORMS */
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.fr3{grid-template-columns:2fr 1fr 1fr}
+.fr1{grid-template-columns:1fr}
+@media(max-width:420px){.fr,.fr3{grid-template-columns:1fr}}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select{background:var(--c2);border:1px solid var(--brd);border-radius:7px;
+  color:var(--txt);font-family:'Barlow',sans-serif;font-size:13px;padding:9px 11px;
+  outline:none;transition:border-color .2s;width:100%}
+.fg input:focus,.fg select:focus{border-color:var(--acc)}
+.bc{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;padding-right:34px!important}
+.iw{position:relative}
+.si{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:16px;cursor:pointer;color:var(--t2);transition:color .2s}
+.si:hover{color:var(--acc)}
+
+/* PRODUCT FOUND BANNER */
+.pfb{background:rgba(39,174,96,.07);border:1px solid rgba(39,174,96,.25);border-radius:7px;
+  padding:10px 12px;display:none;align-items:center;gap:10px;margin-bottom:9px}
+.pfb.on{display:flex}
+.pfn{font-size:13px;font-weight:700}.pfm{font-size:10px;color:var(--t2);margin-top:1px}
+.pfs{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--grn)}
+.pfl{font-size:9px;color:var(--t2)}
+
+/* SCANNER TOGGLE */
+.mtg{display:flex;background:var(--c3);border-radius:7px;padding:3px;gap:2px}
+.mbt{padding:5px 10px;font-size:10px;font-weight:700;border-radius:5px;cursor:pointer;
+  border:none;background:none;color:var(--t2);transition:all .2s;text-transform:uppercase}
+.mbt.on{background:var(--acc);color:#fff}
+
+/* CAMERA VIEWPORT */
+.cvw{display:none;position:relative;background:#000;max-height:175px;overflow:hidden}
+.cvw.on{display:block}
+.cvw video{width:100%;display:block;max-height:175px;object-fit:cover}
+.cl{position:absolute;left:0;right:0;height:2px;background:var(--acc);box-shadow:0 0 10px var(--acc);
+  animation:cs 1.8s ease-in-out infinite;z-index:5}
+@keyframes cs{0%{top:15%}100%{top:80%}}
+.cfr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.crc{width:190px;height:64px;border:2px solid var(--acc);border-radius:5px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+
+/* BUTTONS */
+.btn{padding:10px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;
+  border:none;transition:all .2s;letter-spacing:.3px;text-transform:uppercase;font-family:'Barlow',sans-serif}
+.btn:active{transform:scale(.97)!important}
+.ba{background:var(--acc);color:#fff}.ba:hover{background:#e74c3c;transform:translateY(-1px)}
+.bg{background:var(--grn);color:#0a1f0f}.bg:hover{transform:translateY(-1px)}
+.bp{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff}.bp:hover{transform:translateY(-1px)}
+.bbl{background:linear-gradient(135deg,var(--blu),#1a6fa0);color:#fff}.bbl:hover{transform:translateY(-1px)}
+.bgh{background:var(--c2);color:var(--t2);border:1px solid var(--brd)}.bgh:hover{color:var(--txt)}
+.acts{display:flex;gap:8px;margin-top:12px}.acts .btn{flex:1}
+
+/* TABLE */
+.tw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{padding:9px 11px;text-align:left;font-size:9px;font-weight:700;color:var(--t2);
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--brd);
+  background:var(--c2);white-space:nowrap}
+.tbl td{padding:9px 11px;border-bottom:1px solid rgba(36,41,63,.6);vertical-align:middle}
+.tbl tbody tr:hover{background:rgba(24,28,44,.7)}
+.tbl tbody tr:last-child td{border-bottom:none}
+.mono{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--t3);font-weight:600}
+.bdg{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;text-transform:uppercase}
+.bok{background:rgba(39,174,96,.12);color:var(--grn)}
+.bwn{background:rgba(230,126,34,.12);color:var(--acc2)}
+.blo{background:rgba(231,76,60,.12);color:var(--red)}
+
+/* HISTORY ROWS */
+.hr{display:flex;align-items:center;gap:10px;padding:10px 13px;
+  border-bottom:1px solid rgba(36,41,63,.5);transition:background .15s;cursor:default}
+.hr:hover{background:rgba(24,28,44,.6)}.hr:last-child{border-bottom:none}
+.hi{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;flex-shrink:0}
+.hi.in{background:rgba(39,174,96,.1)}.hi.out{background:rgba(192,57,43,.1)}.hi.ret{background:rgba(142,68,173,.12)}
+.hd{flex:1;min-width:0}
+.hn{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm{font-size:10px;color:var(--t2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrt{text-align:right;flex-shrink:0}
+.hq{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800}
+.hq.in{color:var(--grn)}.hq.out{color:var(--acc2)}.hq.ret{color:var(--pur)}
+.ht{font-size:9px;color:var(--t2);margin-top:1px}
+
+/* SETTINGS */
+.ss{background:var(--c1);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.sh{padding:10px 13px;background:var(--c2);border-bottom:1px solid var(--brd);
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t3)}
+.sb{padding:13px}
+.sb .fg{margin-bottom:9px}.sb .fg:last-child{margin-bottom:0}
+.hint{font-size:10px;color:var(--t2);margin-top:3px;line-height:1.5}
+.ibox{background:var(--c2);border:1px solid var(--brd);border-radius:7px;
+  padding:10px 12px;font-size:11px;color:var(--t3);line-height:1.7;margin-bottom:9px}
+.ibox b{color:var(--txt)}
+.scode{width:100%;height:155px;background:#0d1117;color:#2ecc71;
+  font-family:'Courier New',monospace;font-size:9.5px;border:1px solid var(--brd);
+  border-radius:7px;padding:10px;resize:vertical;outline:none;line-height:1.6}
+.srch{background:var(--c2);border:1px solid var(--brd);border-radius:7px;color:var(--txt);
+  font-size:12px;padding:7px 10px;outline:none;width:148px;transition:border-color .2s}
+.srch:focus{border-color:var(--acc)}
+.empty{padding:26px;text-align:center;color:var(--t2);font-size:12px}
+.empty span{display:block;font-size:26px;margin-bottom:7px;opacity:.4}
+
+/* STEP GUIDE */
+.steps-wrap{background:var(--c2);border-radius:7px;border:1px solid var(--brd);
+  padding:10px 12px;margin-bottom:10px}
+.step{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid rgba(36,41,63,.6)}
+.step:last-child{border-bottom:none}
+.snum{width:20px;height:20px;border-radius:50%;background:var(--acc);color:#fff;
+  font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.stxt{font-size:11px;color:var(--t3);line-height:1.5}
+.stxt b{color:var(--txt)}
+
+/* MODALS */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);
+  z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal.off{display:none}
+.mbox{background:var(--c1);border:1px solid var(--brd);border-radius:14px;
+  padding:24px 20px;max-width:330px;width:100%;text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.7);animation:mup .28s cubic-bezier(.34,1.56,.64,1)}
+@keyframes mup{from{transform:translateY(22px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mico{font-size:34px;margin-bottom:11px}
+.mbox h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;margin-bottom:5px;letter-spacing:.3px}
+.mbox p{font-size:12px;color:var(--t3);line-height:1.5;margin-bottom:4px}
+.mnote{font-size:11px;color:var(--t2);background:var(--c2);border:1px solid var(--brd);
+  border-radius:7px;padding:8px 11px;margin:11px 0 17px;text-align:left;line-height:1.5}
+.mnote b{color:var(--grn)}
+.mbtns{display:flex;flex-direction:column;gap:7px}.mbtns .btn{padding:10px}
+.mst{display:flex;align-items:center;justify-content:center;gap:6px;font-size:10px;color:var(--t2);margin-top:10px}
+.msd{width:6px;height:6px;border-radius:50%;background:var(--t2)}
+.msd.ok{background:var(--grn);box-shadow:0 0 5px var(--grn)}.msd.no{background:var(--red)}
+
+/* PWD INPUT */
+.pwd-i{width:100%;background:var(--c2);border:1px solid var(--brd);border-radius:7px;
+  color:var(--txt);font-size:18px;padding:11px 14px;outline:none;text-align:center;
+  letter-spacing:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  transition:border-color .2s;margin-bottom:8px}
+.pwd-i:focus{border-color:var(--acc)}
+.pwd-i.err{border-color:var(--red);animation:shk .3s}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pwd-e{font-size:11px;color:var(--red);min-height:16px;margin-bottom:8px}
+
+/* INSTALL BANNER */
+#ibn{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(to top,var(--c1),var(--c2));
+  border-top:2px solid var(--acc);padding:12px 14px 20px;z-index:8000;display:none;animation:ibnu .35s ease}
+#ibn.on{display:block}
+@keyframes ibnu{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ibn-w{display:flex;align-items:center;gap:10px;max-width:500px;margin:0 auto}
+.ibn-ico{width:42px;height:42px;border-radius:9px;background:linear-gradient(135deg,var(--acc),#922b21);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 14px rgba(192,57,43,.4)}
+.ibn-t{flex:1}.ibn-t h3{font-size:12px;font-weight:700;margin-bottom:1px}
+.ibn-t p{font-size:10px;color:var(--t2);line-height:1.4}
+.ibn-b{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+.ibn-b .btn{padding:6px 11px;font-size:10px;white-space:nowrap}
+
+/* CINFO */
+.cinfo{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:13px}
+.ci{display:flex;gap:7px;align-items:flex-start}
+.ci-i{font-size:14px;flex-shrink:0}
+.ci-l{font-size:9px;color:var(--t2);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.ci-v{font-size:11px;color:var(--txt);margin-top:2px;word-break:break-all}
+.soc-bar{display:flex;gap:8px;padding:10px 13px;border-top:1px solid var(--brd)}
+.soc{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:7px;
+  font-size:11px;font-weight:700;text-decoration:none;transition:all .2s;flex:1;justify-content:center}
+.soc:hover{transform:translateY(-1px)}
+.soc-ig{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff}
+.soc-tt{background:#1a1a1a;border:1px solid #333;color:#fff}
+
+/* TOAST */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--c2);border:1px solid var(--brd);border-radius:9px;
+  padding:9px 15px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;
+  box-shadow:0 10px 35px rgba(0,0,0,.55);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  z-index:9999;white-space:nowrap;max-width:340px}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- INSTALL BANNER -->
+<div id="ibn">
+  <div class="ibn-w">
+    <div class="ibn-ico">🔧</div>
+    <div class="ibn-t"><h3>📲 Instalează SPL Piese pe telefon</h3>
+      <p>Acces rapid de pe ecranul principal, fără browser</p></div>
+    <div class="ibn-b">
+      <button class="btn ba" id="ibn-ok" onclick="doInstall()">📲 Instalează</button>
+      <button class="btn bgh" onclick="dismissBanner()">Mai târziu</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAMERA -->
+<div class="modal off" id="m-cam">
+  <div class="mbox">
+    <div class="mico">📷</div>
+    <h3>Acces Cameră</h3>
+    <p>SPL Piese Auto are nevoie de acces la cameră pentru a scana codurile de bare.</p>
+    <div class="mnote"><b>ℹ️ Se salvează automat</b> — permisiunea se acordă o singură dată și rămâne activă pentru sesiunile viitoare.</div>
+    <div class="mbtns">
+      <button class="btn ba" onclick="reqCam()">📷 Acordă Acces la Cameră</button>
+      <button class="btn bgh" onclick="skipCam()">Continuă fără cameră</button>
+    </div>
+    <div class="mst"><div class="msd" id="cam-dot"></div><span id="cam-lbl">Necunoscut</span></div>
+  </div>
+</div>
+
+<!-- MODAL PAROLA -->
+<div class="modal off" id="m-pwd">
+  <div class="mbox">
+    <div class="mico">🔐</div>
+    <h3>Setări Protejate</h3>
+    <p>Introduceți parola pentru a accesa configurările SPL Piese Auto.</p>
+    <input type="password" class="pwd-i" id="pwd-inp" maxlength="20"
+      placeholder="••••••••" onkeydown="if(event.key==='Enter') chkPwd()">
+    <div class="pwd-e" id="pwd-err"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn bgh" style="flex:1" onclick="closePwd()">Anulează</button>
+      <button class="btn ba" style="flex:1" onclick="chkPwd()">🔓 Intră</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">
+    <img src="data:image/png;base64,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" class="logo-svg" alt="SPL Piese Auto" style="border-radius:6px;background:#000"/>
+    <div>
+      <div class="logo-nm">SPL Piese Auto</div>
+      <div class="logo-sb" id="hdr-dt">pieseautotm.ro</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <div class="xbtn" onclick="exportExcel()">⬇ Excel</div>
+    <div class="pill" onclick="testSync()">
+      <div class="sdt" id="sdt"></div>
+      <span id="slbl">Sheets</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nb on" data-pg="dash">📊 Board</button>
+  <button class="nb" data-pg="intrare">📥 Intrare</button>
+  <button class="nb" data-pg="iesire">📤 Ieșire</button>
+  <button class="nb" data-pg="retur">↩️ Retur</button>
+  <button class="nb" data-pg="acte">📄 Acte</button>
+  <button class="nb" data-pg="stoc">📦 Stoc</button>
+  <button class="nb" data-pg="istoric">📋 Istoric</button>
+  <button class="nb" data-pg="settings">⚙️ Setări 🔒</button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- ====== DASHBOARD ====== -->
+<div class="pg on" id="pg-dash">
+  <div class="kg">
+    <div class="kpi g"><div class="kl">Valoare Stoc</div><div class="kv" id="k-stoc">—</div><div class="ks">RON total</div></div>
+    <div class="kpi o"><div class="kl">Vânzări Azi</div><div class="kv" id="k-vanz">—</div><div class="ks">RON ieșiri</div></div>
+    <div class="kpi b"><div class="kl">Profit Azi</div><div class="kv" id="k-prof">—</div><div class="ks">RON brut</div></div>
+    <div class="kpi r"><div class="kl">Stoc Scăzut</div><div class="kv" id="k-low">—</div><div class="ks">sub limită</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><h2>Ultimele mișcări</h2><span style="font-size:10px;color:var(--t2)" id="mv-cnt"></span></div>
+    <div id="dash-movs"></div>
+  </div>
+  <div class="card">
+    <div class="ch"><h2>🏪 SPL Piese Auto — Chișoda, Timiș</h2></div>
+    <div class="cinfo" id="firm-info"></div>
+    <div class="soc-bar">
+      <a class="soc soc-ig" href="https://www.instagram.com/spl_piese" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        @spl_piese
+      </a>
+      <a class="soc soc-tt" href="https://www.tiktok.com/@spl_piese" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.73a4.85 4.85 0 0 1-1.01-.04z"/></svg>
+        @spl_piese
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ====== INTRARE ====== -->
+<div class="pg" id="pg-intrare">
+  <div class="card">
+    <div class="ch"><h2>📥 Înregistrare Intrare Piesă</h2>
+      <div class="mtg">
+        <button class="mbt on" id="bi-m" onclick="setMode('in','m')">Manual</button>
+        <button class="mbt" id="bi-s" onclick="setMode('in','s')">📷 Scan</button>
+      </div>
+    </div>
+    <div class="cvw" id="cv-in"><video id="vid-in" playsinline></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cb">
+      <div class="fr">
+        <div class="fg"><label>Cod Bară / SKU</label>
+          <div class="iw"><input class="bc" type="text" id="in-bc" autocomplete="off"
+            placeholder="Scanați sau tastați..." oninput="lookup('in',this.value)">
+            <span class="si" onclick="setMode('in','s')">⊞</span></div></div>
+        <div class="fg"><label>Denumire Piesă</label>
+          <input type="text" id="in-nm" placeholder="Auto-completat la scanare"></div>
+      </div>
+      <div class="pfb" id="in-pf">
+        <span style="font-size:20px">✅</span>
+        <div style="flex:1"><div class="pfn" id="in-pfn">—</div><div class="pfm" id="in-pfm">—</div></div>
+        <div style="text-align:right"><div class="pfs" id="in-pfs">—</div><div class="pfl">stoc actual</div></div>
+      </div>
+      <div class="fr fr3">
+        <div class="fg"><label>Furnizor</label><input type="text" id="in-sup" placeholder="Furnizor"></div>
+        <div class="fg"><label>Nr. Factură</label><input type="text" id="in-doc" placeholder="FAC-001"></div>
+        <div class="fg"><label>Cantitate</label><input type="number" id="in-qty" min="1" placeholder="0"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Preț Achiziție (RON/buc)</label><input type="number" id="in-prt" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Categorie</label>
+          <select id="in-cat"><option value="">— Alege —</option>
+            <option>Filtre</option><option>Frane</option><option>Aprindere</option>
+            <option>Distributie</option><option>Suspensie</option><option>Electronica</option>
+            <option>Caroserie</option><option>Motor</option><option>Transmisie</option>
+            <option>Baterii</option><option>Altele</option></select></div>
+      </div>
+      <div class="fr fr1"><div class="fg"><label>Operator</label><input type="text" id="in-op" placeholder="Numele operatorului"></div></div>
+      <div class="acts">
+        <button class="btn bgh" onclick="clearF('in')">✕ Anulează</button>
+        <button class="btn bg" onclick="subMov('in')">✓ Înregistrează Intrare</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== IEȘIRE ====== -->
+<div class="pg" id="pg-iesire">
+  <div class="card">
+    <div class="ch"><h2>📤 Înregistrare Vânzare</h2>
+      <div class="mtg">
+        <button class="mbt on" id="bo-m" onclick="setMode('out','m')">Manual</button>
+        <button class="mbt" id="bo-s" onclick="setMode('out','s')">📷 Scan</button>
+      </div>
+    </div>
+    <div class="cvw" id="cv-out"><video id="vid-out" playsinline></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cb">
+      <div class="fr">
+        <div class="fg"><label>Cod Bară / SKU</label>
+          <div class="iw"><input class="bc" type="text" id="out-bc" autocomplete="off"
+            placeholder="Scanați sau tastați..." oninput="lookup('out',this.value)">
+            <span class="si" onclick="setMode('out','s')">⊞</span></div></div>
+        <div class="fg"><label>Denumire Piesă</label>
+          <input type="text" id="out-nm" placeholder="Auto-completat la scanare"></div>
+      </div>
+      <div class="pfb" id="out-pf">
+        <span style="font-size:20px">✅</span>
+        <div style="flex:1"><div class="pfn" id="out-pfn">—</div><div class="pfm" id="out-pfm">—</div></div>
+        <div style="text-align:right"><div class="pfs" id="out-pfs">—</div><div class="pfl">stoc actual</div></div>
+      </div>
+      <div class="fr fr3">
+        <div class="fg"><label>Client</label><input type="text" id="out-clt" placeholder="Numele clientului"></div>
+        <div class="fg"><label>Nr. Bon/Factură</label><input type="text" id="out-doc" placeholder="BON-001"></div>
+        <div class="fg"><label>Cantitate</label><input type="number" id="out-qty" min="1" placeholder="0"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Preț Vânzare (RON/buc)</label><input type="number" id="out-prt" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Operator</label><input type="text" id="out-op" placeholder="Numele operatorului"></div>
+      </div>
+      <div class="acts">
+        <button class="btn bgh" onclick="clearF('out')">✕ Anulează</button>
+        <button class="btn ba" onclick="subMov('out')">✓ Înregistrează Vânzare</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== RETUR ====== -->
+<div class="pg" id="pg-retur">
+  <div class="card">
+    <div class="ch"><h2>↩️ Înregistrare Retur</h2>
+      <div class="mtg">
+        <button class="mbt on" id="br-m" onclick="setMode('ret','m')">Manual</button>
+        <button class="mbt" id="br-s" onclick="setMode('ret','s')">📷 Scan</button>
+      </div>
+    </div>
+    <div class="cvw" id="cv-ret"><video id="vid-ret" playsinline></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cb">
+      <div class="fr">
+        <div class="fg"><label>Tip Retur</label>
+          <select id="ret-tip">
+            <option value="client">🔄 Retur de la Client</option>
+            <option value="furnizor">📦 Retur la Furnizor (comandă greșită)</option>
+          </select></div>
+        <div class="fg"><label>Motiv Retur</label>
+          <select id="ret-mot"><option value="">— Alege motivul —</option>
+            <option>Piesă comandată greșit</option>
+            <option>Piesă defectă / neconformă</option>
+            <option>Piesă incompatibilă</option>
+            <option>Client s-a răzgândit</option>
+            <option>Deteriorată la livrare</option>
+            <option>Garanție — defect în funcționare</option>
+            <option>Altele</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Cod Bară / SKU</label>
+          <div class="iw"><input class="bc" type="text" id="ret-bc" autocomplete="off"
+            placeholder="Scanați sau tastați..." oninput="lookup('ret',this.value)">
+            <span class="si" onclick="setMode('ret','s')">⊞</span></div></div>
+        <div class="fg"><label>Denumire Piesă</label>
+          <input type="text" id="ret-nm" placeholder="Auto-completat la scanare"></div>
+      </div>
+      <div class="pfb" id="ret-pf">
+        <span style="font-size:20px">↩️</span>
+        <div style="flex:1"><div class="pfn" id="ret-pfn">—</div><div class="pfm" id="ret-pfm">—</div></div>
+        <div style="text-align:right"><div class="pfs" id="ret-pfs">—</div><div class="pfl">stoc actual</div></div>
+      </div>
+      <div class="fr fr3">
+        <div class="fg"><label id="ret-pl">Client / Furnizor</label><input type="text" id="ret-par" placeholder="Numele"></div>
+        <div class="fg"><label>Doc. Original</label><input type="text" id="ret-dor" placeholder="BON/FAC original"></div>
+        <div class="fg"><label>Cantitate</label><input type="number" id="ret-qty" min="1" placeholder="0"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Valoare Rambursată (RON)</label><input type="number" id="ret-val" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Nr. Fișă Retur</label><input type="text" id="ret-fis" placeholder="RET-001"></div>
+      </div>
+      <div class="fr fr1"><div class="fg"><label>Observații / Stare piesă</label><input type="text" id="ret-obs" placeholder="ex: ambalaj intact, piesă neutilizată..."></div></div>
+      <div class="fr">
+        <div class="fg"><label>Operator</label><input type="text" id="ret-op" placeholder="Numele operatorului"></div>
+        <div class="fg"><label>Reintrare în stoc?</label>
+          <select id="ret-rst">
+            <option value="da">✅ Da — reintrare în stoc</option>
+            <option value="nu">❌ Nu — deteriorată / înapoi la furnizor</option>
+          </select></div>
+      </div>
+      <div class="acts">
+        <button class="btn bgh" onclick="clearRet()">✕ Anulează</button>
+        <button class="btn bp" onclick="subRet()">↩️ Înregistrează Retur</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><h2>📋 Registru Retururi</h2><span style="font-size:10px;color:var(--t2)" id="ret-cnt"></span></div>
+    <div id="ret-list"></div>
+  </div>
+</div>
+
+<!-- ====== ACTE ====== -->
+<div class="pg" id="pg-acte">
+
+  <!-- FIȘĂ RETUR -->
+  <div class="card">
+    <div class="ch"><h2>📄 Fișă de Retur</h2></div>
+    <div class="cb">
+      <div class="fr">
+        <div class="fg"><label>Selectează Retur Înregistrat (opțional)</label>
+          <select id="ac-sel" onchange="preloadRetur()"><option value="">— Alege sau completați manual —</option></select></div>
+        <div class="fg"><label>Nr. Fișă Retur</label><input type="text" id="ac-nr" placeholder="RET-001"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Client / Furnizor</label><input type="text" id="ac-cl" placeholder="Nume"></div>
+        <div class="fg"><label>Data</label><input type="text" id="ac-dt"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Piesă Returnată</label><input type="text" id="ac-ps" placeholder="Denumire piesă"></div>
+        <div class="fg"><label>Motiv Retur</label><input type="text" id="ac-mo" placeholder="Motivul returului"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Valoare Rambursată (RON)</label><input type="number" id="ac-vl" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Operator</label><input type="text" id="ac-op" placeholder="Operator"></div>
+      </div>
+      <button class="btn ba" style="width:100%;margin-top:6px" onclick="printFisa()">🖨️ Generează / Printează Fișă Retur</button>
+    </div>
+  </div>
+
+  <!-- GARANȚIE PIESE -->
+  <div class="card">
+    <div class="ch"><h2>🔧 Certificat Garanție Piesă Auto</h2></div>
+    <div class="cb">
+      <div class="fr">
+        <div class="fg"><label>Cod Bară / SKU</label>
+          <input class="bc" type="text" id="gp-bc" placeholder="Cod piesă" oninput="gpLookup(this.value)"></div>
+        <div class="fg"><label>Denumire Piesă</label><input type="text" id="gp-nm" placeholder="Auto-completat"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Client</label><input type="text" id="gp-cl" placeholder="Numele clientului"></div>
+        <div class="fg"><label>Telefon Client</label><input type="text" id="gp-tel" placeholder="07xx xxx xxx"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Data Vânzării</label><input type="text" id="gp-dt"></div>
+        <div class="fg"><label>Perioadă Garanție</label>
+          <select id="gp-per"><option>3 luni</option><option selected>6 luni</option><option>12 luni</option><option>24 luni</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Nr. Bon / Factură</label><input type="text" id="gp-bon" placeholder="BON-001"></div>
+        <div class="fg"><label>Cantitate</label><input type="number" id="gp-qty" value="1" min="1"></div>
+      </div>
+      <div class="fr fr1">
+        <div class="fg"><label>Condiții Garanție</label>
+          <input type="text" id="gp-cnd" placeholder="ex: instalare la service autorizat, fără intervenții neautorizate"></div>
+      </div>
+      <button class="btn bg" style="width:100%;margin-top:6px" onclick="printGarPiesa()">🖨️ Generează Garanție Piesă</button>
+    </div>
+  </div>
+
+  <!-- GARANȚIE ACUMULATOR -->
+  <div class="card">
+    <div class="ch"><h2>🔋 Certificat Garanție Acumulator Auto</h2></div>
+    <div class="cb">
+      <div class="fr">
+        <div class="fg"><label>Model / Cod Acumulator</label><input type="text" id="gb-cod" placeholder="ex: VARTA E11 74Ah 680A"></div>
+        <div class="fg"><label>Nr. Serie / Lot</label><input type="text" id="gb-ser" placeholder="Număr serie de pe etichetă"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Client</label><input type="text" id="gb-cl" placeholder="Numele clientului"></div>
+        <div class="fg"><label>Telefon Client</label><input type="text" id="gb-tel" placeholder="07xx xxx xxx"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Data Vânzării</label><input type="text" id="gb-dt"></div>
+        <div class="fg"><label>Perioadă Garanție</label>
+          <select id="gb-per"><option>6 luni</option><option selected>12 luni</option><option>24 luni</option><option>36 luni</option></select></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Preț Vânzare (RON)</label><input type="number" id="gb-prt" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Nr. Bon / Factură</label><input type="text" id="gb-bon" placeholder="BON-001"></div>
+      </div>
+      <button class="btn bbl" style="width:100%;margin-top:6px" onclick="printGarBat()">🖨️ Generează Garanție Acumulator</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ====== STOC ====== -->
+<div class="pg" id="pg-stoc">
+  <div class="card">
+    <div class="ch"><h2>📦 Stoc Curent</h2>
+      <input class="srch" type="text" placeholder="🔍 Caută..." oninput="filtStoc(this.value)"></div>
+    <div class="tw">
+      <table class="tbl">
+        <thead><tr>
+          <th>Denumire Piesă</th>
+          <th style="text-align:center">Stoc</th>
+        </tr></thead>
+        <tbody id="stoc-body"></tbody>
+      </table>
+    </div>
+    <div style="padding:9px 13px;border-top:1px solid var(--brd);display:flex;justify-content:flex-end;align-items:center;gap:12px">
+      <span style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">TOTAL VALOARE STOC</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--grn)" id="stoc-tot">0 RON</span>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ISTORIC ====== -->
+<div class="pg" id="pg-istoric">
+  <div class="card">
+    <div class="ch"><h2>📋 Toate Mișcările</h2>
+      <select class="srch" onchange="filtIst(this.value)" style="width:115px">
+        <option value="">Toate</option>
+        <option value="in">Intrări</option>
+        <option value="out">Ieșiri</option>
+        <option value="ret">Retururi</option>
+      </select>
+    </div>
+    <div id="ist-list"></div>
+  </div>
+</div>
+
+<!-- ====== SETĂRI ====== -->
+<div class="pg" id="pg-settings">
+
+  <div class="ss">
+    <div class="sh">🏪 Date Firmă — SPL Piese Auto</div>
+    <div class="sb">
+      <div class="fr">
+        <div class="fg"><label>Nume Magazin</label><input type="text" id="s-shop" onchange="saveCfg()"></div>
+        <div class="fg"><label>Operator Implicit</label><input type="text" id="s-op" placeholder="Numele dvs." onchange="saveCfg()"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Adresă</label><input type="text" id="s-adr" placeholder="Str., Nr., Chișoda" onchange="saveCfg()"></div>
+        <div class="fg"><label>Număr Înmatriculare / CUI</label><input type="text" id="s-cui" placeholder="RO..." onchange="saveCfg()"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Email</label><input type="email" id="s-eml" placeholder="vanzari@pieseautotm.ro" onchange="saveCfg()"></div>
+        <div class="fg"><label>Operator Implicit</label><input type="text" id="s-op2" placeholder="Numele operatorului" onchange="saveCfg()"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Website</label><input type="text" id="s-web" placeholder="www.pieseautotm.ro" onchange="saveCfg()"></div>
+        <div class="fg"><label>Telefon</label><input type="tel" id="s-tel" placeholder="0766551313" onchange="saveCfg()"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Program de Lucru</label><input type="text" id="s-prg" placeholder="L–V: 08-18, S: 08-14" onchange="saveCfg()"></div>
+        <div class="fg"><label>Stoc Minim Alertă (buc)</label><input type="number" id="s-min" value="5" onchange="saveCfg()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ss">
+    <div class="sh">🔗 Google Sheets — Sincronizare în Timp Real</div>
+    <div class="sb">
+      <div class="steps-wrap">
+        <div class="step"><div class="snum" style="background:var(--grn)">✓</div><div class="stxt"><b style="color:var(--grn)">Google Sheets conectat permanent.</b> Toate intrările, ieșirile și retururile se sincronizează automat în timp real.</div></div>
+        <div class="step"><div class="snum">i</div><div class="stxt">Foile create automat: <b>Intrari</b>, <b>Iesiri</b>, <b>Retururi</b>, <b>Stoc Curent</b>.</div></div>
+      </div>
+      <div class="fg" style="margin-bottom:9px">
+        <label>URL Google Apps Script</label>
+        <input type="url" id="s-gs" value="https://script.google.com/macros/s/AKfycbzAlrh39o7IVZlj9mhNylhORvvYr62zf1xpEOPjeAqnnMawZqacCRj0aoT9_Ka06-By/exec" readonly style="color:var(--grn);font-size:10px;cursor:default;opacity:.8" title="URL conectat permanent">
+        <div class="hint">✅ Conectat permanent la Google Sheets SPL Piese Auto</div>
+      </div>
+      <button class="btn bgh" style="width:100%" onclick="testSync()">🔗 Verifică Conexiunea Google Sheets</button>
+    </div>
+  </div>
+
+  <div class="ss">
+    <div class="sh">📋 Cod Google Apps Script</div>
+    <div class="sb">
+      <textarea class="scode" readonly id="gs-cod">function doPost(e){
+  try{
+    var ss=SpreadsheetApp.getActiveSpreadsheet();
+    var d=JSON.parse(e.postData.contents);
+    var sh=ss.getSheetByName(d.sheet);
+    if(!sh){sh=ss.insertSheet(d.sheet);sh.appendRow(d.headers);
+      sh.getRange(1,1,1,d.headers.length).setFontWeight('bold')
+        .setBackground('#c0392b').setFontColor('#ffffff');}
+    sh.appendRow(d.row);
+    updStoc(ss,d);
+    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }catch(err){
+    return ContentService.createTextOutput(JSON.stringify({ok:false,e:err.message}))
+      .setMimeType(ContentService.MimeType.JSON);}
+}
+function updStoc(ss,d){
+  var s=ss.getSheetByName('Stoc Curent')||ss.insertSheet('Stoc Curent');
+  if(s.getLastRow()===0){s.appendRow(['Cod','Denumire','Cat','Stoc','P.Ach','P.Vanz']);
+    s.getRange(1,1,1,6).setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');}
+  var bc=String(d.barcode),lr=s.getLastRow(),ri=-1;
+  if(lr>1){var cc=s.getRange(2,1,lr-1,1).getValues();
+    for(var i=0;i<cc.length;i++){if(String(cc[i][0])===bc){ri=i+2;break;}}}
+  var qty=parseInt(d.qty)||0;
+  if(ri>0){var cur=parseInt(s.getRange(ri,4).getValue())||0;
+    s.getRange(ri,4).setValue(d.type==='in'?cur+qty:Math.max(0,cur-qty));
+    if(d.type==='in'&&d.pret)s.getRange(ri,5).setValue(d.pret);
+    if(d.type==='out'&&d.pretV)s.getRange(ri,6).setValue(d.pretV);
+  }else if(d.type==='in'){s.appendRow([bc,d.name||'',d.cat||'',qty,d.pret||0,0]);}
+}
+function doGet(){
+  return ContentService.createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</textarea>
+      <button class="btn bgh" style="width:100%;margin-top:8px" onclick="copyCod()">📋 Copiază Codul</button>
+    </div>
+  </div>
+
+  <div class="ss">
+    <div class="sh">📲 Instalare ca Aplicație pe Telefon</div>
+    <div class="sb">
+      <div class="ibox">
+        <b>Android (Chrome / Edge):</b><br>
+        1. Meniu ⋮ (colțul dreapta sus)<br>
+        2. „Adaugă pe ecranul principal" sau „Instalează aplicația"<br>
+        3. Confirmați — iconița SPL apare pe Home Screen ✅<br><br>
+        <b>iPhone / iPad (Safari):</b><br>
+        1. Deschideți în <b>Safari</b> (nu Chrome!)<br>
+        2. Apăsați □↑ (Partajare) din bara de jos<br>
+        3. „Adaugă pe ecranul principal" → Adaugă ✅<br>
+        <span style="color:var(--acc2)">⚠️ Pe iPhone folosiți obligatoriu Safari!</span>
+      </div>
+      <button class="btn ba" style="width:100%;display:none" id="pwa-btn" onclick="doInstall()">📲 Instalează Aplicația (Android)</button>
+    </div>
+  </div>
+
+  <div class="ss">
+    <div class="sh">📷 Permisiune Cameră</div>
+    <div class="sb">
+      <div class="ibox" id="cam-status">Se verifică starea permisiunii...</div>
+      <button class="btn bgh" style="width:100%;margin-top:8px" onclick="resetCam()">🔄 Resolicită Permisiune Cameră</button>
+    </div>
+  </div>
+
+  <div class="ss">
+    <div class="sh">🔒 Securitate Setări</div>
+    <div class="sb">
+      <div class="ibox">Setările sunt protejate cu parolă. Sesiunea se blochează automat după <b>30 minute</b> de inactivitate.</div>
+      <button class="btn bgh" style="width:100%;margin-top:8px" onclick="lockNow()">🔒 Blochează Setările Acum</button>
+    </div>
+  </div>
+
+  <div class="ss">
+    <div class="sh">⚠️ Resetare Date</div>
+    <div class="sb">
+      <button class="btn" style="width:100%;background:rgba(231,76,60,.1);color:var(--red);border:1px solid rgba(231,76,60,.3)" onclick="resetData()">🗑️ Șterge Toate Datele (ireversibil)</button>
+    </div>
+  </div>
+
+</div><!-- /settings -->
+</div><!-- /main -->
+
+<!-- TOAST -->
+<div id="toast"><span id="t-i">✅</span>&nbsp;<span id="t-m"></span></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════
+// UTILS
+// ═══════════════════════════════════
+function $(id){ return document.getElementById(id); }
+function gv(id){ var e=$(id); return e?e.value:''; }
+function sv(id,v){ var e=$(id); if(e) e.value=v; }
+
+var _tt=null;
+function toast(msg,ico,err){
+  ico=ico||'✅'; err=err||false;
+  $('t-m').textContent=msg; $('t-i').textContent=ico;
+  var t=$('toast');
+  t.style.borderColor=err?'var(--red)':'var(--grn)';
+  t.classList.add('on');
+  clearTimeout(_tt);
+  _tt=setTimeout(function(){ t.classList.remove('on'); },3000);
+}
+function tod(){ return new Date().toLocaleDateString('ro-RO'); }
+function ftm(ts){ return new Date(ts).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'}); }
+function fron(n){ return Number(n||0).toLocaleString('ro-RO',{minimumFractionDigits:2,maximumFractionDigits:2})+' RON'; }
+function expDate(per){
+  var l=parseInt(per); var d=new Date(); d.setMonth(d.getMonth()+l);
+  return d.toLocaleDateString('ro-RO');
+}
+
+// ═══════════════════════════════════
+// DATABASE
+// ═══════════════════════════════════
+var DB_K='spl3_db', CFG_K='spl3_cfg';
+var db={products:[],movements:[]};
+var GS_URL_PERM='https://script.google.com/macros/s/AKfycbzAlrh39o7IVZlj9mhNylhORvvYr62zf1xpEOPjeAqnnMawZqacCRj0aoT9_Ka06-By/exec';
+var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'',address:'Chișoda, Timiș',
+  phone:'0766551313',email:'vanzari@pieseautotm.ro',cui:'',website:'www.pieseautotm.ro',program:'L–V: 08:00–18:00 | S: 08:00–14:00',minStock:5};
+
+function loadAll(){
+  try{ var dbRaw=localStorage.getItem(DB_K); if(dbRaw) db=JSON.parse(dbRaw); }catch(e){}
+  try{ var cfgRaw=localStorage.getItem(CFG_K); if(cfgRaw) cfg=Object.assign(cfg,JSON.parse(cfgRaw)); }catch(e){}
+  // Always restore permanent GS URL even if overwritten by saved cfg
+  cfg.gsUrl=GS_URL_PERM;
+  applySettings();
+}
+function saveDB(){ try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){} }
+function saveCfg(){
+  cfg.gsUrl=GS_URL_PERM; // URL permanent – nu poate fi modificat
+  cfg.shopName=gv('s-shop'); cfg.defaultOp=gv('s-op')||gv('s-op2');
+  cfg.address=gv('s-adr'); cfg.phone=gv('s-tel'); cfg.email=gv('s-eml');
+  cfg.cui=gv('s-cui'); cfg.website=gv('s-web'); cfg.program=gv('s-prg');
+  cfg.minStock=parseInt(gv('s-min'))||5;
+  try{ localStorage.setItem(CFG_K,JSON.stringify(cfg)); }catch(e){}
+  updateSyncUI();
+}
+function applySettings(){
+  sv('s-shop',cfg.shopName||'SPL Piese Auto');
+  sv('s-op',cfg.defaultOp||'');
+  sv('s-adr',cfg.address||'Chișoda, Timiș');
+  sv('s-tel',cfg.phone||'0766551313');
+  sv('s-eml',cfg.email||'vanzari@pieseautotm.ro');
+  sv('s-cui',cfg.cui||'');
+  sv('s-web',cfg.website||'www.pieseautotm.ro');
+  sv('s-prg',cfg.program||'');
+  sv('s-min',cfg.minStock||5);
+  sv('s-gs',GS_URL_PERM); // afișat doar; blocat la modificare
+  updateSyncUI();
+}
+// seed() removed – aplicația pornește goală, fără date demo
+
+// ═══════════════════════════════════
+// NAV
+// ═══════════════════════════════════
+var settingsOk=false, settingsTimer=null;
+
+function goTo(pg){
+  if(pg==='settings'){ if(!settingsOk){ openPwd(); return; } }
+  _goTo(pg);
+}
+function _goTo(pg){
+  document.querySelectorAll('.nb').forEach(function(b){ b.classList.toggle('on',b.dataset.pg===pg); });
+  document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
+  var t=$('pg-'+pg); if(t){ t.classList.add('on'); }
+  document.querySelector('.main').scrollTop=0;
+  if(pg==='dash')    renderDash();
+  if(pg==='stoc')    renderStoc();
+  if(pg==='istoric') renderIst('');
+  if(pg==='retur')   renderRetList();
+  if(pg==='acte')    prepActe();
+}
+document.querySelectorAll('.nb').forEach(function(b){
+  b.addEventListener('click',function(){ goTo(b.dataset.pg); });
+});
+
+// ═══════════════════════════════════
+// PASSWORD
+// ═══════════════════════════════════
+var PWD='SpLPiEsE';
+function openPwd(){
+  $('m-pwd').classList.remove('off');
+  sv('pwd-inp',''); $('pwd-err').textContent='';
+  setTimeout(function(){ $('pwd-inp').focus(); },200);
+}
+function closePwd(){ $('m-pwd').classList.add('off'); }
+function chkPwd(){
+  if(gv('pwd-inp')===PWD){
+    settingsOk=true; closePwd(); _goTo('settings'); toast('Setări deblocate','🔓');
+    clearTimeout(settingsTimer);
+    settingsTimer=setTimeout(function(){ settingsOk=false; },30*60*1000);
+  } else {
+    $('pwd-err').textContent='Parolă incorectă!';
+    var i=$('pwd-inp'); i.classList.add('err'); i.value='';
+    setTimeout(function(){ i.classList.remove('err'); },400);
+    setTimeout(function(){ $('pwd-err').textContent=''; },2500);
+  }
+}
+function lockNow(){ settingsOk=false; _goTo('dash'); toast('Setări blocate 🔒','🔒'); }
+
+// ═══════════════════════════════════
+// SCANNER
+// ═══════════════════════════════════
+var scanOn={in:false,out:false,ret:false};
+
+function setMode(type,mode){
+  var cv=$('cv-'+type);
+  var bm=type==='in'?$('bi-m'):type==='out'?$('bo-m'):$('br-m');
+  var bs=type==='in'?$('bi-s'):type==='out'?$('bo-s'):$('br-s');
+  if(mode==='s'){
+    bs.classList.add('on'); bm.classList.remove('on');
+    cv.classList.add('on'); startCam(type);
+  } else {
+    bm.classList.add('on'); bs.classList.remove('on');
+    cv.classList.remove('on'); stopCam(type);
+  }
+}
+function startCam(type){
+  if(scanOn[type]) return;
+  if(typeof Quagga==='undefined'){ toast('Scanner indisponibil','⚠️',true); setMode(type,'m'); return; }
+  scanOn[type]=true;
+  Quagga.init({
+    inputStream:{name:'Live',type:'LiveStream',target:$('vid-'+type),
+      constraints:{facingMode:'environment',width:{ideal:640},height:{ideal:280}}},
+    decoder:{readers:['ean_reader','ean_8_reader','code_128_reader','code_39_reader','upc_reader']}
+  },function(err){
+    if(err){ scanOn[type]=false; toast('Camera indisponibilă','⚠️',true); setMode(type,'m'); return; }
+    Quagga.start();
+    // Register handler AFTER init, inside callback to avoid accumulation
+    Quagga.onDetected(function(r){
+      var code=r.codeResult.code;
+      stopCam(type); setMode(type,'m');
+      $(type+'-bc').value=code;
+      lookup(type,code);
+      toast('Cod scanat: '+code,'📷');
+    });
+  });
+}
+function stopCam(type){ scanOn[type]=false; try{ Quagga.stop(); }catch(e){} }
+
+// ═══════════════════════════════════
+// CAMERA PERMISSION
+// ═══════════════════════════════════
+var CAM_K='spl3_cam';
+function checkCam(){
+  var saved=localStorage.getItem(CAM_K);
+  if(saved==='granted'){ updateCamUI('granted'); return; }
+  if(saved==='denied'){  updateCamUI('denied');  return; }
+  if(navigator.permissions){
+    navigator.permissions.query({name:'camera'}).then(function(r){
+      if(r.state==='granted'){ localStorage.setItem(CAM_K,'granted'); updateCamUI('granted'); }
+      else if(r.state==='denied'){ localStorage.setItem(CAM_K,'denied'); updateCamUI('denied'); }
+      else { $('m-cam').classList.remove('off'); }
+    }).catch(function(){ $('m-cam').classList.remove('off'); });
+  } else { $('m-cam').classList.remove('off'); }
+}
+function reqCam(){
+  if(!navigator.mediaDevices){ toast('Camera indisponibilă pe acest dispozitiv','⚠️',true); return; }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+    stream.getTracks().forEach(function(t){ t.stop(); });
+    localStorage.setItem(CAM_K,'granted');
+    updateCamUI('granted');
+    $('m-cam').classList.add('off');
+    toast('Cameră activată! Puteți scana coduri de bare ✅','📷');
+  }).catch(function(){
+    localStorage.setItem(CAM_K,'denied');
+    updateCamUI('denied');
+    $('m-cam').classList.add('off');
+    toast('Acces refuzat. Activați camera din setările browser-ului.','❌',true);
+  });
+}
+function skipCam(){ $('m-cam').classList.add('off'); toast('Continuați fără cameră. Activați oricând din Setări.','ℹ️'); }
+function resetCam(){ localStorage.removeItem(CAM_K); checkCam(); toast('Permisiunea camerei a fost resetată.','📷'); }
+function updateCamUI(state){
+  var d=$('cam-dot'),l=$('cam-lbl'),b=$('cam-status');
+  if(d){ d.className='msd'+(state==='granted'?' ok':state==='denied'?' no':''); }
+  if(l){ l.textContent=state==='granted'?'Cameră activă ✓':state==='denied'?'Acces refuzat':'Necunoscut'; }
+  if(b){ b.innerHTML=state==='granted'
+    ?'<b style="color:var(--grn)">✓ Camera este activă</b> — scanarea codurilor de bare funcționează.'
+    :state==='denied'
+    ?'<b style="color:var(--red)">✗ Acces refuzat</b> — activați camera din setările browser-ului, apoi apăsați butonul de mai jos.'
+    :'Permisiunea camerei nu a fost setată. Apăsați butonul de mai jos.'; }
+}
+
+// ═══════════════════════════════════
+// PWA INSTALL
+// ═══════════════════════════════════
+var IBN_K='spl3_ibn', deferredPWA=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault(); deferredPWA=e;
+  var b=$('pwa-btn'); if(b) b.style.display='block';
+  if(!localStorage.getItem(IBN_K)){
+    // Show immediately on mobile, after 2.5s on desktop
+    var delay=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?500:2500;
+    setTimeout(function(){ $('ibn').classList.add('on'); },delay);
+  }
+});
+// On mobile Safari show a custom banner with instructions (no beforeinstallprompt)
+(function(){
+  var isSafariMobile=/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window.MSStream;
+  var isStandalone=window.navigator.standalone===true;
+  if(isSafariMobile&&!isStandalone&&!localStorage.getItem(IBN_K)){
+    setTimeout(function(){
+      $('ibn-ok').textContent='ℹ️ Cum instalezi';
+      $('ibn-ok').onclick=function(){
+        alert('📲 Instalare pe iPhone/iPad:\n\n1. Apăsați \u2191 (Partajare) din bara Safari\n2. Derulați și apăsați „Adaugă pe ecranul principal"\n3. Apăsați Adaugă ✅');
+      };
+      $('ibn').classList.add('on');
+    },1000);
+  }
+})();
+function doInstall(){
+  if(!deferredPWA) return;
+  deferredPWA.prompt();
+  deferredPWA.userChoice.then(function(r){
+    if(r.outcome==='accepted'){
+      toast('Aplicație instalată! Accesați de pe ecranul principal 🎉','📲');
+      $('ibn').classList.remove('on');
+      localStorage.setItem(IBN_K,'1');
+    }
+    deferredPWA=null;
+  });
+}
+function dismissBanner(){ $('ibn').classList.remove('on'); localStorage.setItem(IBN_K,'1'); }
+window.addEventListener('appinstalled',function(){ $('ibn').classList.remove('on'); toast('SPL Piese Auto instalat!','🎉'); });
+(function injectManifest(){
+  var m={name:'SPL Piese Auto',short_name:'SPL Piese',start_url:'./',display:'standalone',
+    background_color:'#0b0d15',theme_color:'#c0392b',orientation:'portrait-primary',
+    icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%23c0392b'/%3E%3Ctext x='96' y='78' font-family='Arial Black' font-weight='900' font-size='52' fill='white' text-anchor='middle'%3ESPL%3C/text%3E%3Cline x1='20' y1='90' x2='172' y2='90' stroke='rgba(255,255,255,.3)' stroke-width='3'/%3E%3Ctext x='96' y='126' font-family='Arial' font-weight='700' font-size='36' fill='rgba(255,255,255,.9)' text-anchor='middle'%3EPIESE%3C/text%3E%3Ctext x='96' y='158' font-family='Arial' font-weight='600' font-size='26' fill='rgba(255,255,255,.65)' text-anchor='middle'%3EAUTO%3C/text%3E%3C/svg%3E",sizes:'192x192',type:'image/svg+xml',purpose:'any maskable'}]};
+  var b=new Blob([JSON.stringify(m)],{type:'application/json'});
+  var u=URL.createObjectURL(b);
+  var l=document.createElement('link'); l.rel='manifest'; l.href=u;
+  document.head.appendChild(l);
+})();
+
+// ═══════════════════════════════════
+// PRODUCT LOOKUP
+// ═══════════════════════════════════
+function lookup(type,bc){
+  if(!bc||bc.length<3) return;
+  var p=db.products.find(function(x){ return x.bc===bc.trim(); });
+  var pf=$(type+'-pf');
+  if(p){
+    $(type+'-nm').value=p.name;
+    $(type+'-pfn').textContent=p.name;
+    $(type+'-pfm').textContent=(p.cat||'—')+' · '+p.um;
+    var se=$(type+'-pfs'); se.textContent=p.stock+' buc';
+    se.style.color=p.stock<=cfg.minStock?'var(--red)':'var(--grn)';
+    pf.classList.add('on');
+    if(type==='in'){ sv('in-prt',p.buy); sv('in-cat',p.cat); }
+    if(type==='out'){ sv('out-prt',p.sell); }
+    if(type==='ret'){ sv('ret-val',p.sell); }
+    if(cfg.defaultOp){ var oe=$(type+'-op'); if(oe) oe.value=cfg.defaultOp; }
+  } else { pf.classList.remove('on'); }
+}
+function gpLookup(bc){
+  var p=db.products.find(function(x){ return x.bc===bc.trim(); });
+  if(p) sv('gp-nm',p.name);
+}
+
+// ═══════════════════════════════════
+// SUBMIT INTRARE / IESIRE
+// ═══════════════════════════════════
+function subMov(type){
+  var bc=gv(type+'-bc').trim(), nm=gv(type+'-nm').trim();
+  var qty=parseInt(gv(type+'-qty')), prt=parseFloat(gv(type+'-prt'));
+  var op=gv(type+'-op').trim()||cfg.defaultOp||'Operator';
+  var par=type==='in'?gv('in-sup').trim():gv('out-clt').trim();
+  var doc=type==='in'?gv('in-doc').trim():gv('out-doc').trim();
+  var cat=type==='in'?gv('in-cat').trim():'';
+  if(!bc) return toast('Introduceți codul de bară!','⚠️',true);
+  if(!nm) return toast('Introduceți denumirea piesei!','⚠️',true);
+  if(!qty||qty<1) return toast('Cantitate invalidă!','⚠️',true);
+  if(!prt||prt<=0) return toast('Introduceți prețul!','⚠️',true);
+  var prod=db.products.find(function(x){ return x.bc===bc; });
+  if(type==='out'){
+    if(!prod) return toast('Cod bară negăsit în stoc!','❌',true);
+    if(prod.stock<qty) return toast('Stoc insuficient! Disponibil: '+prod.stock+' buc','❌',true);
+  }
+  if(!prod){ prod={bc:bc,name:nm,cat:cat,um:'BUC',stock:0,buy:prt,sell:0}; db.products.push(prod); }
+  if(type==='in'){ prod.stock+=qty; prod.buy=prt; if(cat) prod.cat=cat; if(!prod.name) prod.name=nm; }
+  else { prod.stock-=qty; prod.sell=prt; }
+  var mov={t:type,date:tod(),bc:bc,name:nm,partner:par,doc:doc,qty:qty,price:prt,op:op,cat:cat,ts:Date.now()};
+  db.movements.unshift(mov);
+  saveDB(); syncGS(mov,prod); clearF(type);
+  toast(type==='in'?'Intrare: +'+qty+' × '+nm:'Vânzare: −'+qty+' × '+nm, type==='in'?'📥':'📤');
+}
+function clearF(type){
+  ['bc','nm','prt','op'].forEach(function(f){ sv(type+'-'+f,''); });
+  sv(type+'-qty','');
+  if(type==='in'){ sv('in-sup',''); sv('in-doc',''); sv('in-cat',''); }
+  if(type==='out'){ sv('out-clt',''); sv('out-doc',''); }
+  var pf=$(type+'-pf'); if(pf) pf.classList.remove('on');
+}
+
+// ═══════════════════════════════════
+// RETUR
+// ═══════════════════════════════════
+function subRet(){
+  var bc=gv('ret-bc').trim(), nm=gv('ret-nm').trim();
+  var tip=gv('ret-tip'), mot=gv('ret-mot');
+  var par=gv('ret-par').trim(), dor=gv('ret-dor').trim();
+  var qty=parseInt(gv('ret-qty')), val=parseFloat(gv('ret-val'))||0;
+  var fis=gv('ret-fis').trim()||('RET-'+Date.now().toString().slice(-4));
+  var obs=gv('ret-obs').trim(), op=gv('ret-op').trim()||cfg.defaultOp||'Operator';
+  var rst=gv('ret-rst');
+  if(!bc) return toast('Introduceți codul de bară!','⚠️',true);
+  if(!nm) return toast('Introduceți denumirea!','⚠️',true);
+  if(!qty||qty<1) return toast('Cantitate invalidă!','⚠️',true);
+  if(!mot) return toast('Alegeți motivul returului!','⚠️',true);
+  var prod=db.products.find(function(x){ return x.bc===bc; });
+  if(rst==='da'&&tip==='client'){
+    if(!prod){ prod={bc:bc,name:nm,cat:'',um:'BUC',stock:0,buy:0,sell:val}; db.products.push(prod); }
+    prod.stock+=qty;
+  }
+  if(rst==='da'&&tip==='furnizor'&&prod) prod.stock=Math.max(0,prod.stock-qty);
+  var ret={t:'ret',date:tod(),bc:bc,name:nm,tip:tip,motiv:mot,partner:par,
+    docOrig:dor,qty:qty,val:val,fisa:fis,obs:obs,op:op,restoc:rst,ts:Date.now()};
+  db.movements.unshift(ret);
+  saveDB(); syncGSRet(ret); clearRet(); renderRetList();
+  toast('Retur înregistrat: '+qty+' × '+nm,'↩️');
+}
+function clearRet(){
+  ['bc','nm','par','dor','val','fis','obs','op'].forEach(function(f){ sv('ret-'+f,''); });
+  sv('ret-qty','');
+  var pf=$('ret-pf'); if(pf) pf.classList.remove('on');
+}
+function renderRetList(){
+  var rets=db.movements.filter(function(m){ return m.t==='ret'; });
+  $('ret-cnt').textContent=rets.length+' total';
+  if(!rets.length){ $('ret-list').innerHTML='<div class="empty"><span>↩️</span>Niciun retur înregistrat</div>'; return; }
+  $('ret-list').innerHTML=rets.map(function(r){
+    return '<div class="hr"><div class="hi ret">↩️</div>'+
+      '<div class="hd"><div class="hn">'+r.name+'</div>'+
+      '<div class="hm">'+(r.tip==='client'?'Client':'Furnizor')+': '+(r.partner||'—')+' · '+(r.motiv||'—')+
+      ' · Fișă: '+(r.fisa||'—')+' · <span style="color:'+(r.restoc==='da'?'var(--grn)':'var(--red)')+'">'+
+      (r.restoc==='da'?'Reintrare stoc':'Fără restoc')+'</span></div></div>'+
+      '<div class="hrt"><div class="hq ret">↩️ '+r.qty+' × '+(r.val||0).toFixed(2)+' RON</div>'+
+      '<div class="ht">'+r.date+' '+ftm(r.ts)+' · '+r.op+'</div></div></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════
+function renderDash(){
+  var t=tod(), tm=db.movements.filter(function(m){ return m.date===t; });
+  var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
+  var profit=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){
+    var p=db.products.find(function(x){ return x.bc===m.bc; }); return s+(m.price-(p?p.buy:0))*m.qty; },0);
+  var sv2=db.products.reduce(function(s,p){ return s+p.stock*p.sell; },0);
+  var low=db.products.filter(function(p){ return p.stock<=cfg.minStock; }).length;
+  $('k-stoc').textContent=fron(sv2); $('k-vanz').textContent=fron(sales);
+  $('k-prof').textContent=fron(profit); $('k-low').textContent=low;
+  $('mv-cnt').textContent=db.movements.length+' total';
+  var movs=db.movements.slice(0,10);
+  if(!movs.length){ $('dash-movs').innerHTML='<div class="empty"><span>📭</span>Nicio mișcare înregistrată</div>'; }
+  else $('dash-movs').innerHTML=movs.map(function(m){
+    var ico=m.t==='in'?'📥':m.t==='out'?'📤':'↩️';
+    var qc=m.t==='in'?'in':m.t==='out'?'out':'ret';
+    var qt=m.t==='in'?'+'+m.qty+' buc':m.t==='out'?'−'+m.qty+' buc':'↩️ '+m.qty+' buc';
+    var dc=m.t==='ret'?(m.fisa||'—'):(m.doc||'—');
+    return '<div class="hr"><div class="hi '+qc+'">'+ico+'</div>'+
+      '<div class="hd"><div class="hn">'+m.name+'</div>'+
+      '<div class="hm">'+(m.partner||'—')+' · '+dc+' · '+m.op+'</div></div>'+
+      '<div class="hrt"><div class="hq '+qc+'">'+qt+'</div>'+
+      '<div class="ht">'+m.date+' '+ftm(m.ts)+'</div></div></div>';
+  }).join('');
+  var items=[
+    {i:'📍',l:'Adresă',   v:cfg.address||'Chișoda, Timiș'},
+    {i:'📞',l:'Telefon',  v:cfg.phone||'0766551313'},
+    {i:'✉️',l:'Email',   v:cfg.email||'vanzari@pieseautotm.ro'},
+    {i:'🌐',l:'Website', v:cfg.website||'www.pieseautotm.ro'},
+    {i:'🔢',l:'CUI',     v:cfg.cui||'—'},
+    {i:'🕐',l:'Program', v:cfg.program||'—'},
+    {i:'📦',l:'Produse', v:db.products.length+' articole în stoc'},
+  ];
+  $('firm-info').innerHTML=items.map(function(x){
+    return '<div class="ci"><div class="ci-i">'+x.i+'</div><div><div class="ci-l">'+x.l+'</div><div class="ci-v">'+x.v+'</div></div></div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════
+// STOC
+// ═══════════════════════════════════
+function renderStoc(filter){
+  filter=filter||'';
+  var prods=filter?db.products.filter(function(p){
+    return p.name.toLowerCase().indexOf(filter.toLowerCase())>=0||p.bc.toLowerCase().indexOf(filter.toLowerCase())>=0;
+  }):db.products;
+  var total=prods.reduce(function(s,p){ return s+p.stock*p.sell; },0);
+  var min=cfg.minStock;
+  $('stoc-body').innerHTML=prods.map(function(p){
+    var bc=p.stock<=0?'blo':p.stock<=min?'bwn':'bok';
+    var bt=p.stock<=0?'Epuizat':p.stock<=min?'Scăzut':'OK';
+    var stClr=p.stock<=0?'var(--red)':p.stock<=min?'var(--acc2)':'var(--grn)';
+    return '<tr>'+
+      '<td style="font-weight:600">'+p.name+'<br><span class="mono" style="font-size:10px;color:var(--t2)">'+p.bc+'</span></td>'+
+      '<td style="text-align:center"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:800;color:'+stClr+'">'+p.stock+'</span><br><span class="bdg '+bc+'" style="font-size:8px">'+bt+'</span></td>'+
+      '</tr>';
+  }).join('');
+  $('stoc-tot').textContent=fron(total);
+}
+function filtStoc(q){ renderStoc(q); }
+
+// ═══════════════════════════════════
+// ISTORIC
+// ═══════════════════════════════════
+function renderIst(tf){
+  var movs=tf?db.movements.filter(function(m){ return m.t===tf; }):db.movements;
+  if(!movs.length){ $('ist-list').innerHTML='<div class="empty"><span>📋</span>Nicio înregistrare</div>'; return; }
+  $('ist-list').innerHTML=movs.map(function(m){
+    var ico=m.t==='in'?'📥':m.t==='out'?'📤':'↩️';
+    var qc=m.t==='in'?'in':m.t==='out'?'out':'ret';
+    var amt=m.t==='ret'?'↩️ '+m.qty+' buc':(m.t==='in'?'+':'-')+m.qty+' buc';
+    return '<div class="hr"><div class="hi '+qc+'">'+ico+'</div>'+
+      '<div class="hd"><div class="hn">'+m.name+'</div>'+
+      '<div class="hm">'+m.date+' · '+m.op+'</div></div>'+
+      '<div class="hrt"><div class="hq '+qc+'">'+amt+'</div></div></div>';
+  }).join('');
+}
+function filtIst(v){ renderIst(v); }
+
+// ═══════════════════════════════════
+// ACTE — DOCUMENTE PRINTABILE
+// ═══════════════════════════════════
+function prepActe(){
+  var rets=db.movements.filter(function(m){ return m.t==='ret'; });
+  var sel=$('ac-sel');
+  sel.innerHTML='<option value="">— Alege sau completați manual —</option>'+
+    rets.map(function(r,i){ return '<option value="'+i+'">'+r.date+' · '+r.name+' · Fișă: '+(r.fisa||'—')+'</option>'; }).join('');
+  if(!gv('ac-dt')) sv('ac-dt',tod());
+  if(!gv('gp-dt')) sv('gp-dt',tod());
+  if(!gv('gb-dt')) sv('gb-dt',tod());
+}
+function preloadRetur(){
+  var idx=parseInt(gv('ac-sel')); if(isNaN(idx)) return;
+  var r=db.movements.filter(function(m){ return m.t==='ret'; })[idx]; if(!r) return;
+  sv('ac-nr',r.fisa||''); sv('ac-cl',r.partner||''); sv('ac-dt',r.date||tod());
+  sv('ac-ps',r.name||''); sv('ac-mo',r.motiv||''); sv('ac-vl',r.val||'');
+  sv('ac-op',r.op||'');
+}
+
+function docHdr(col){
+  var shop=cfg.shopName||'SPL Piese Auto';
+  var web=cfg.website||'www.pieseautotm.ro';
+  var phone=cfg.phone||'0766551313';
+  var email=cfg.email||'vanzari@pieseautotm.ro';
+  var sub=[cfg.address||'Chișoda, Timiș', phone, email].filter(Boolean).join(' | ');
+  return '<div style="text-align:center;border-bottom:3px solid '+col+';padding-bottom:12px;margin-bottom:16px">'+
+    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:3px">'+
+    '<div style="width:36px;height:36px;background:'+col+';border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px">🔧</div>'+
+    '<div style="font-size:20px;font-weight:900;font-family:Arial Black,sans-serif;color:'+col+'">'+shop+'</div></div>'+
+    '<div style="font-size:11px;color:#777">'+sub+'</div>'+
+    '<div style="font-size:10px;color:#aaa;margin-top:2px">🌐 '+web+' &nbsp;·&nbsp; Instagram & TikTok: @spl_piese</div></div>';
+}
+
+function openPrint(h){
+  var w=window.open('','_blank');
+  if(!w){ toast('Activați pop-up-urile pentru a printa','⚠️',true); return; }
+  w.document.write(h); w.document.close();
+}
+
+function printFisa(){
+  var nr=gv('ac-nr')||'—', cl=gv('ac-cl')||'—', dt=gv('ac-dt')||tod();
+  var ps=gv('ac-ps')||'—', mo=gv('ac-mo')||'—';
+  var vl=parseFloat(gv('ac-vl'))||0, op=gv('ac-op')||cfg.defaultOp||'—';
+  var shop=cfg.shopName||'SPL Piese Auto';
+  openPrint('<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8"><title>Fișă Retur '+nr+'</title>'+
+    '<style>body{font-family:Arial,sans-serif;max-width:670px;margin:30px auto;padding:20px;color:#222}'+
+    'h2{text-align:center;background:#fff3ee;border:1px solid #c0392b;border-radius:6px;padding:8px;font-size:15px;margin:0 0 16px}'+
+    'table{width:100%;border-collapse:collapse;margin-bottom:16px}td{padding:9px 12px;border:1px solid #ddd;font-size:13px}'+
+    'td:first-child{background:#f9f9f9;font-weight:bold;width:40%}'+
+    '.semnat{display:flex;gap:20px;margin-top:26px}.semnat div{flex:1;border-top:1px solid #999;padding-top:8px;text-align:center;font-size:12px;color:#666}'+
+    '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:14px;border-top:1px solid #eee;padding-top:8px}'+
+    '@media print{button{display:none}}</style></head><body>'+
+    docHdr('#c0392b')+
+    '<h2>📄 FIȘĂ DE RETUR Nr. '+nr+'</h2>'+
+    '<table><tr><td>Client / Furnizor</td><td>'+cl+'</td></tr>'+
+    '<tr><td>Data Returului</td><td>'+dt+'</td></tr>'+
+    '<tr><td>Piesă Returnată</td><td>'+ps+'</td></tr>'+
+    '<tr><td>Motiv Retur</td><td>'+mo+'</td></tr>'+
+    '<tr><td>Valoare Rambursată</td><td><strong>'+(vl||0).toFixed(2)+' RON</strong></td></tr>'+
+    '<tr><td>Operator</td><td>'+op+'</td></tr></table>'+
+    '<p style="font-size:12px;color:#555">Prin semnarea prezentei, confirmăm primirea piesei returnate și rambursarea sumei indicate.</p>'+
+    '<div class="semnat"><div>Semnătură Operator<br><br>_______________</div><div>Semnătură Client / Furnizor<br><br>_______________</div></div>'+
+    '<div class="footer">'+shop+' · Fișă Retur '+nr+' · '+dt+' · @spl_piese</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">🖨️ Printează</button>'+
+    '</body></html>');
+}
+
+function printGarPiesa(){
+  var bc=gv('gp-bc'), nm=gv('gp-nm')||'—', cl=gv('gp-cl')||'—', tel=gv('gp-tel')||'—';
+  var dt=gv('gp-dt')||tod(), per=gv('gp-per')||'6 luni';
+  var bon=gv('gp-bon')||'—', qty=gv('gp-qty')||'1';
+  var cnd=gv('gp-cnd')||'Instalare la service autorizat, fără intervenții neautorizate';
+  var dtExp=expDate(per), shop=cfg.shopName||'SPL Piese Auto';
+  openPrint('<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8"><title>Garanție Piesă</title>'+
+    '<style>body{font-family:Arial,sans-serif;max-width:670px;margin:30px auto;padding:20px;color:#222}'+
+    'h2{text-align:center;background:#eafaf1;border:1px solid #27ae60;border-radius:6px;padding:8px;font-size:15px;margin:0 0 14px}'+
+    '.gb{background:#eafaf1;border:2px solid #27ae60;border-radius:8px;padding:13px;text-align:center;margin-bottom:14px}'+
+    '.gb .per{font-size:26px;font-weight:900;color:#1e8449}.gb .exp{font-size:12px;color:#666;margin-top:2px}'+
+    'table{width:100%;border-collapse:collapse;margin-bottom:13px}td{padding:9px 12px;border:1px solid #ddd;font-size:13px}'+
+    'td:first-child{background:#f9f9f9;font-weight:bold;width:40%}'+
+    '.cond{background:#eafaf1;border:1px solid #27ae60;border-radius:6px;padding:10px;font-size:11px;margin-bottom:13px}'+
+    '.cond h4{font-size:12px;margin:0 0 5px;color:#145a32}.cond p{margin:0;line-height:1.7}'+
+    '.semnat{display:flex;gap:20px;margin-top:22px}.semnat div{flex:1;border-top:1px solid #999;padding-top:8px;text-align:center;font-size:12px;color:#666}'+
+    '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:12px;border-top:1px solid #eee;padding-top:8px}'+
+    '@media print{button{display:none}}</style></head><body>'+
+    docHdr('#27ae60')+
+    '<h2>🔧 CERTIFICAT DE GARANȚIE PIESĂ AUTO</h2>'+
+    '<div class="gb"><div class="per">GARANȚIE '+per.toUpperCase()+'</div><div class="exp">Valabilă până la: <strong>'+dtExp+'</strong></div></div>'+
+    '<table><tr><td>Piesă / Produs</td><td>'+nm+'</td></tr>'+
+    (bc?'<tr><td>Cod Bară / SKU</td><td>'+bc+'</td></tr>':'')+
+    '<tr><td>Cantitate</td><td>'+qty+' buc</td></tr>'+
+    '<tr><td>Client</td><td>'+cl+'</td></tr>'+
+    '<tr><td>Telefon Client</td><td>'+tel+'</td></tr>'+
+    '<tr><td>Data Achiziției</td><td>'+dt+'</td></tr>'+
+    '<tr><td>Nr. Bon / Factură</td><td>'+bon+'</td></tr>'+
+    '<tr><td>Expirare Garanție</td><td><strong>'+dtExp+'</strong></td></tr></table>'+
+    '<div class="cond"><h4>📋 Condiții de Garanție:</h4><p>'+cnd+'</p></div>'+
+    '<div class="semnat"><div>Semnătură Vânzător<br><br>_______________</div><div>Semnătură Client<br><br>_______________</div></div>'+
+    '<div class="footer">'+shop+' · Garanție Piesă · Achiziție: '+dt+' · Exp: '+dtExp+' · @spl_piese</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">🖨️ Printează</button>'+
+    '</body></html>');
+}
+
+function printGarBat(){
+  var cod=gv('gb-cod')||'—', ser=gv('gb-ser')||'—';
+  var cl=gv('gb-cl')||'—', tel=gv('gb-tel')||'—';
+  var dt=gv('gb-dt')||tod(), per=gv('gb-per')||'12 luni';
+  var prt=parseFloat(gv('gb-prt'))||0, bon=gv('gb-bon')||'—';
+  var dtExp=expDate(per), shop=cfg.shopName||'SPL Piese Auto';
+  openPrint('<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8"><title>Garanție Acumulator</title>'+
+    '<style>body{font-family:Arial,sans-serif;max-width:670px;margin:30px auto;padding:20px;color:#222}'+
+    'h2{text-align:center;background:#eaf2ff;border:1px solid #2980b9;border-radius:6px;padding:8px;font-size:15px;margin:0 0 14px}'+
+    '.gb{background:#eaf2ff;border:2px solid #2980b9;border-radius:8px;padding:13px;text-align:center;margin-bottom:14px}'+
+    '.gb .per{font-size:26px;font-weight:900;color:#1a5276}.gb .exp{font-size:12px;color:#666;margin-top:2px}'+
+    'table{width:100%;border-collapse:collapse;margin-bottom:13px}td{padding:9px 12px;border:1px solid #ddd;font-size:13px}'+
+    'td:first-child{background:#f9f9f9;font-weight:bold;width:40%}'+
+    '.cond{background:#fffde7;border:1px solid #f39c12;border-radius:6px;padding:10px;font-size:11px;margin-bottom:13px}'+
+    '.cond h4{font-size:12px;margin:0 0 5px;color:#7d6608}.cond ul{margin:0;padding-left:16px;line-height:1.8}'+
+    '.semnat{display:flex;gap:20px;margin-top:22px}.semnat div{flex:1;border-top:1px solid #999;padding-top:8px;text-align:center;font-size:12px;color:#666}'+
+    '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:12px;border-top:1px solid #eee;padding-top:8px}'+
+    '@media print{button{display:none}}</style></head><body>'+
+    docHdr('#2980b9')+
+    '<h2>🔋 CERTIFICAT DE GARANȚIE ACUMULATOR AUTO</h2>'+
+    '<div class="gb"><div class="per">GARANȚIE '+per.toUpperCase()+'</div><div class="exp">Valabilă până la: <strong>'+dtExp+'</strong></div></div>'+
+    '<table><tr><td>Model / Cod Acumulator</td><td>'+cod+'</td></tr>'+
+    '<tr><td>Nr. Serie / Lot</td><td>'+ser+'</td></tr>'+
+    '<tr><td>Client</td><td>'+cl+'</td></tr>'+
+    '<tr><td>Telefon Client</td><td>'+tel+'</td></tr>'+
+    '<tr><td>Data Achiziției</td><td>'+dt+'</td></tr>'+
+    '<tr><td>Nr. Bon / Factură</td><td>'+bon+'</td></tr>'+
+    '<tr><td>Preț Plătit</td><td><strong>'+(prt||0).toFixed(2)+' RON</strong></td></tr>'+
+    '<tr><td>Expirare Garanție</td><td><strong>'+dtExp+'</strong></td></tr></table>'+
+    '<div class="cond"><h4>⚠️ Condiții de Garanție:</h4><ul>'+
+    '<li>Acoperă defectele de fabricație și capacitate insuficientă</li>'+
+    '<li>Utilizare corespunzătoare vehiculului (tensiune 12V/24V conform specificațiilor)</li>'+
+    '<li>Nu se acordă garanție pentru deteriorări mecanice, sulfatare sau supraîncărcare</li>'+
+    '<li>Nu se acordă garanție dacă acumulatorul a fost dezmembrat sau modificat</li>'+
+    '<li>Verificarea se efectuează în prezența clientului la magazinul SPL Piese Auto</li>'+
+    '<li>Prezentarea bonului fiscal / facturii este obligatorie la orice solicitare de garanție</li>'+
+    '</ul></div>'+
+    '<div class="semnat"><div>Semnătură Vânzător<br><br>_______________</div><div>Semnătură Client<br><br>_______________</div></div>'+
+    '<div class="footer">'+shop+' · Garanție Acumulator · Achiziție: '+dt+' · Exp: '+dtExp+' · @spl_piese</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">🖨️ Printează</button>'+
+    '</body></html>');
+}
+
+// ═══════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ═══════════════════════════════════
+function updateSyncUI(state){
+  if(state===false){
+    // Eroare conexiune temporară
+    $('sdt').className='sdt';
+    $('slbl').textContent='Eroare';
+    return;
+  }
+  $('sdt').className='sdt on';
+  $('slbl').textContent=state===true?'Sincronizat':'Conectat';
+}
+function syncGS(mov,prod){
+  var isIn=mov.t==='in';
+  var headers=isIn?['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator']:
+    ['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator'];
+  var row=isIn?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op]:
+    [mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,prod.buy,(mov.price-prod.buy)*mov.qty,mov.op];
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sheet:isIn?'Intrari':'Iesiri',type:mov.t,headers:headers,row:row,
+      barcode:mov.bc,name:mov.name,cat:mov.cat||'',qty:mov.qty,pret:mov.price,pretV:isIn?0:mov.price})
+  }).then(function(){ updateSyncUI(true); setTimeout(updateSyncUI,3000); }).catch(function(){});
+}
+function syncGSRet(r){
+  var headers=['Data','Tip','Cod Bara','Denumire','Partner','Doc Orig','Cant','Valoare','Motiv','Fisa','Obs','Restoc','Operator'];
+  var row=[r.date,r.tip==='client'?'Retur Client':'Retur Furnizor',r.bc,r.name,r.partner||'',
+    r.docOrig||'',r.qty,r.val,r.motiv||'',r.fisa||'',r.obs||'',r.restoc,r.op];
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sheet:'Retururi',type:'ret',headers:headers,row:row,barcode:r.bc,name:r.name,qty:r.qty})
+  }).then(function(){ updateSyncUI(true); setTimeout(updateSyncUI,3000); }).catch(function(){});
+}
+function testSync(){
+  fetch(GS_URL_PERM,{mode:'no-cors'}).then(function(){
+    updateSyncUI(true); toast('Conexiune Google Sheets OK ✅','🔗');
+    setTimeout(updateSyncUI,4000);
+  }).catch(function(){ updateSyncUI(false); toast('Eroare conexiune. Verificați URL-ul.','❌',true); });
+}
+
+// ═══════════════════════════════════
+// EXCEL EXPORT
+// ═══════════════════════════════════
+function exportExcel(){
+  if(typeof XLSX==='undefined'){ toast('Librăria XLSX nu este disponibilă','❌',true); return; }
+  var wb=XLSX.utils.book_new(), shop=cfg.shopName||'SPL Piese Auto', now=tod();
+
+  // Stoc
+  var sd=[[shop+' — STOC CURENT — '+now],[],['Cod Bară','Denumire','Categorie','UM','Stoc','P.Ach.','P.Vânz.','Valoare','Status']];
+  var ts=0; db.products.forEach(function(p){
+    var v=p.stock*p.sell; ts+=v;
+    sd.push([p.bc,p.name,p.cat||'',p.um||'BUC',p.stock,p.buy,p.sell,v,p.stock<=0?'EPUIZAT':p.stock<=cfg.minStock?'SCĂZUT':'OK']);
+  });
+  sd.push([],['','','','','TOTAL','','','',ts]);
+  var ws1=XLSX.utils.aoa_to_sheet(sd);
+  ws1['!cols']=[{wch:16},{wch:34},{wch:13},{wch:6},{wch:10},{wch:12},{wch:12},{wch:15},{wch:10}];
+  ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}}];
+  XLSX.utils.book_append_sheet(wb,ws1,'📦 Stoc Curent');
+
+  // Intrări
+  var id=[[shop+' — INTRĂRI — '+now],[],['Data','Cod Bară','Denumire','Furnizor','Nr. Factură','Cant.','P.Ach.','Valoare','Categorie','Operator']];
+  var ti=0; db.movements.filter(function(m){ return m.t==='in'; }).forEach(function(m){
+    var v=m.qty*m.price; ti+=v;
+    id.push([m.date,m.bc,m.name,m.partner||'',m.doc||'',m.qty,m.price,v,m.cat||'',m.op]);
+  });
+  id.push([],['','','','','TOTAL','','','',ti,'']);
+  var ws2=XLSX.utils.aoa_to_sheet(id);
+  ws2['!cols']=[{wch:12},{wch:16},{wch:32},{wch:18},{wch:13},{wch:8},{wch:12},{wch:12},{wch:13},{wch:13}];
+  ws2['!merges']=[{s:{r:0,c:0},e:{r:0,c:9}}];
+  XLSX.utils.book_append_sheet(wb,ws2,'📥 Intrări');
+
+  // Ieșiri
+  var od=[[shop+' — IEȘIRI — '+now],[],['Data','Cod Bară','Denumire','Client','Nr. Document','Cant.','P.Vânz.','Valoare','P.Ach.','Profit','Operator']];
+  var to2=0,tpro=0; db.movements.filter(function(m){ return m.t==='out'; }).forEach(function(m){
+    var p=db.products.find(function(x){ return x.bc===m.bc; });
+    var v=m.qty*m.price; var pr=(m.price-(p?p.buy:0))*m.qty; to2+=v; tpro+=pr;
+    od.push([m.date,m.bc,m.name,m.partner||'',m.doc||'',m.qty,m.price,v,p?p.buy:0,pr,m.op]);
+  });
+  od.push([],['','','','','TOTAL','','','',to2,'',tpro,'']);
+  var ws3=XLSX.utils.aoa_to_sheet(od);
+  ws3['!cols']=[{wch:12},{wch:16},{wch:30},{wch:18},{wch:13},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:13}];
+  ws3['!merges']=[{s:{r:0,c:0},e:{r:0,c:10}}];
+  XLSX.utils.book_append_sheet(wb,ws3,'📤 Ieșiri');
+
+  // Retururi
+  var rd=[[shop+' — RETURURI — '+now],[],['Data','Tip','Cod Bară','Denumire','Partner','Doc Orig','Cant.','Valoare Ramburs.','Motiv','Nr. Fișă','Obs.','Restoc','Operator']];
+  var tr=0; db.movements.filter(function(m){ return m.t==='ret'; }).forEach(function(r){
+    tr+=r.val||0;
+    rd.push([r.date,r.tip==='client'?'Retur Client':'Retur Furnizor',r.bc,r.name,r.partner||'',r.docOrig||'',
+      r.qty,r.val||0,r.motiv||'',r.fisa||'',r.obs||'',r.restoc==='da'?'DA':'NU',r.op]);
+  });
+  rd.push([],['','','','','','TOTAL RAMBURSAT','','',tr,'','','','']);
+  var ws4=XLSX.utils.aoa_to_sheet(rd);
+  ws4['!cols']=[{wch:12},{wch:16},{wch:14},{wch:28},{wch:16},{wch:13},{wch:7},{wch:16},{wch:24},{wch:11},{wch:20},{wch:7},{wch:13}];
+  ws4['!merges']=[{s:{r:0,c:0},e:{r:0,c:12}}];
+  XLSX.utils.book_append_sheet(wb,ws4,'↩️ Retururi');
+
+  // Raport Zilnic
+  var t2=tod();
+  var tIn=db.movements.filter(function(m){ return m.t==='in'&&m.date===t2; });
+  var tOut=db.movements.filter(function(m){ return m.t==='out'&&m.date===t2; });
+  var tRet=db.movements.filter(function(m){ return m.t==='ret'&&m.date===t2; });
+  var tP=tOut.reduce(function(s,m){ var p=db.products.find(function(x){ return x.bc===m.bc; }); return s+(m.price-(p?p.buy:0))*m.qty; },0);
+  var rap=[[shop+' — RAPORT ZILNIC — '+t2],[],['INDICATOR','VALOARE'],
+    ['📦 Valoare Totală Stoc (RON)',ts],
+    ['📥 Total Intrări Azi (RON)',tIn.reduce(function(s,m){ return s+m.qty*m.price; },0)],
+    ['📤 Total Vânzări Azi (RON)',tOut.reduce(function(s,m){ return s+m.qty*m.price; },0)],
+    ['↩️ Total Retururi Azi (RON)',tRet.reduce(function(s,m){ return s+(m.val||0); },0)],
+    ['📈 Profit Net Azi (RON)',tP],
+    ['🔴 Produse Stoc Scăzut',db.products.filter(function(p){ return p.stock<=cfg.minStock; }).length],
+    ['📋 Nr. Tranzacții Azi',tIn.length+tOut.length+tRet.length],
+    ['📦 Total Produse în Stoc',db.products.length],
+    [],[shop+' · Chișoda, Timiș · Tel: 0766551313 · vanzari@pieseautotm.ro · www.pieseautotm.ro']];
+  var ws5=XLSX.utils.aoa_to_sheet(rap);
+  ws5['!cols']=[{wch:36},{wch:18}];
+  ws5['!merges']=[{s:{r:0,c:0},e:{r:0,c:1}},{s:{r:rap.length-1,c:0},e:{r:rap.length-1,c:1}}];
+  XLSX.utils.book_append_sheet(wb,ws5,'📊 Raport Zilnic');
+
+  XLSX.writeFile(wb,'SPL_Piese_Auto_'+t2.replace(/\//g,'-')+'.xlsx');
+  toast('Excel exportat cu succes! (5 foi)','⬇');
+}
+function copyCod(){
+  var ta=$('gs-cod'); ta.select();
+  try{ document.execCommand('copy'); toast('Cod copiat în clipboard!','📋'); }
+  catch(e){ toast('Selectați manual și copiați','⚠️',true); }
+}
+
+// ═══════════════════════════════════
+// RESET
+// ═══════════════════════════════════
+function resetData(){
+  if(!confirm('Ștergeți TOATE datele (produse + mișcări)? Această acțiune este ireversibilă!')) return;
+  localStorage.removeItem(DB_K);
+  db={products:[],movements:[]};
+  renderDash(); renderStoc(); renderIst(''); renderRetList();
+  toast('Toate datele au fost șterse. Baza de date este goală.','🗑️');
+}
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+loadAll();
+// hdr-dt stays as website domain - date shown in dashboard cards
+renderDash();
+renderStoc();
+renderIst('');
+checkCam();
+</script>
+</body>
+</html>
