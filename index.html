@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SPL Piese">
 <meta name="theme-color" content="#c0392b">
+<link rel="manifest" id="pwa-manifest">
 <title>SPL Piese Auto – Chișoda</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap');
@@ -219,17 +221,22 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 .pwd-e{font-size:11px;color:var(--red);min-height:16px;margin-bottom:8px}
 
 /* INSTALL BANNER */
-#ibn{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(to top,var(--c1),var(--c2));
-  border-top:2px solid var(--acc);padding:12px 14px 20px;z-index:8000;display:none;animation:ibnu .35s ease}
+#ibn{position:fixed;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,var(--c1),rgba(17,20,32,.97));
+  border-top:2px solid var(--acc);padding:14px 16px 22px;z-index:8500;
+  display:none;animation:ibnu .4s cubic-bezier(.34,1.56,.64,1)}
 #ibn.on{display:block}
-@keyframes ibnu{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.ibn-w{display:flex;align-items:center;gap:10px;max-width:500px;margin:0 auto}
-.ibn-ico{width:42px;height:42px;border-radius:9px;background:linear-gradient(135deg,var(--acc),#922b21);
-  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 14px rgba(192,57,43,.4)}
-.ibn-t{flex:1}.ibn-t h3{font-size:12px;font-weight:700;margin-bottom:1px}
+@keyframes ibnu{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.ibn-w{display:flex;align-items:center;gap:12px;max-width:500px;margin:0 auto}
+.ibn-ico{width:46px;height:46px;border-radius:11px;
+  background:linear-gradient(135deg,var(--acc),#922b21);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+  box-shadow:0 4px 16px rgba(192,57,43,.5)}
+.ibn-t{flex:1}
+.ibn-t h3{font-size:13px;font-weight:700;margin-bottom:2px;color:var(--txt)}
 .ibn-t p{font-size:10px;color:var(--t2);line-height:1.4}
 .ibn-b{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
-.ibn-b .btn{padding:6px 11px;font-size:10px;white-space:nowrap}
+.ibn-b .btn{padding:7px 13px;font-size:10px;white-space:nowrap}
 
 /* CINFO */
 .cinfo{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:13px}
@@ -259,10 +266,12 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 <div id="ibn">
   <div class="ibn-w">
     <div class="ibn-ico">🔧</div>
-    <div class="ibn-t"><h3>📲 Instalează SPL Piese pe telefon</h3>
-      <p>Acces rapid de pe ecranul principal, fără browser</p></div>
+    <div class="ibn-t">
+      <h3 id="ibn-title">📲 Instalează SPL Piese pe dispozitiv</h3>
+      <p id="ibn-sub">Acces rapid de pe ecranul principal, funcționează offline</p>
+    </div>
     <div class="ibn-b">
-      <button class="btn ba" id="ibn-ok" onclick="doInstall()">📲 Instalează</button>
+      <button class="btn ba" id="ibn-ok">📲 Instalează</button>
       <button class="btn bgh" onclick="dismissBanner()">Mai târziu</button>
     </div>
   </div>
@@ -369,7 +378,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="bi-s" onclick="setMode('in','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-in"><video id="vid-in" playsinline></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cvw" id="cv-in"><video id="vid-in" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Cod Bară / SKU</label>
@@ -390,7 +399,10 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <div class="fg"><label>Cantitate</label><input type="number" id="in-qty" min="1" placeholder="0"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Preț Achiziție (RON/buc)</label><input type="number" id="in-prt" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Preț Achiziție (RON/buc)</label><input type="number" id="in-prt" placeholder="0.00" step="0.01" oninput="calcSell()"></div>
+        <div class="fg"><label>Preț Vânzare (RON/buc) <span style="color:var(--grn);font-size:9px">+25% auto</span></label><input type="number" id="in-sell" placeholder="0.00" step="0.01" style="border-color:rgba(39,174,96,.4);background:rgba(39,174,96,.04)"></div>
+      </div>
+      <div class="fr fr1">
         <div class="fg"><label>Categorie</label>
           <select id="in-cat"><option value="">— Alege —</option>
             <option>Filtre</option><option>Frane</option><option>Aprindere</option>
@@ -416,7 +428,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="bo-s" onclick="setMode('out','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-out"><video id="vid-out" playsinline></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cvw" id="cv-out"><video id="vid-out" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Cod Bară / SKU</label>
@@ -437,7 +449,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <div class="fg"><label>Cantitate</label><input type="number" id="out-qty" min="1" placeholder="0"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Preț Vânzare (RON/buc)</label><input type="number" id="out-prt" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Preț Vânzare (RON/buc) <span style="color:var(--grn);font-size:9px">+25% din achiziție</span></label><input type="number" id="out-prt" placeholder="0.00" step="0.01" style="border-color:rgba(39,174,96,.4);background:rgba(39,174,96,.04)"></div>
         <div class="fg"><label>Operator</label><input type="text" id="out-op" placeholder="Numele operatorului"></div>
       </div>
       <div class="acts">
@@ -457,7 +469,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="br-s" onclick="setMode('ret','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-ret"><video id="vid-ret" playsinline></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cvw" id="cv-ret"><video id="vid-ret" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Tip Retur</label>
@@ -726,20 +738,22 @@ function doGet(){
   </div>
 
   <div class="ss">
-    <div class="sh">📲 Instalare ca Aplicație pe Telefon</div>
+    <div class="sh">📲 Instalare ca Aplicație</div>
     <div class="sb">
       <div class="ibox">
         <b>Android (Chrome / Edge):</b><br>
-        1. Meniu ⋮ (colțul dreapta sus)<br>
-        2. „Adaugă pe ecranul principal" sau „Instalează aplicația"<br>
-        3. Confirmați — iconița SPL apare pe Home Screen ✅<br><br>
+        1. Apăsați butonul de mai jos sau meniu ⋮ → „Instalează aplicația"<br>
+        2. Confirmați — iconița SPL apare pe Home Screen ✅<br><br>
         <b>iPhone / iPad (Safari):</b><br>
         1. Deschideți în <b>Safari</b> (nu Chrome!)<br>
         2. Apăsați □↑ (Partajare) din bara de jos<br>
         3. „Adaugă pe ecranul principal" → Adaugă ✅<br>
-        <span style="color:var(--acc2)">⚠️ Pe iPhone folosiți obligatoriu Safari!</span>
+        <span style="color:var(--acc2)">⚠️ Pe iPhone folosiți obligatoriu Safari!</span><br><br>
+        <b>Desktop (Chrome / Edge):</b><br>
+        1. Apăsați butonul ⊕ din bara de adrese sau butonul de mai jos<br>
+        2. Confirmați instalarea ✅
       </div>
-      <button class="btn ba" style="width:100%;display:none" id="pwa-btn" onclick="doInstall()">📲 Instalează Aplicația (Android)</button>
+      <button class="btn ba" style="width:100%" id="pwa-btn-set" onclick="doInstall()">📲 Instalează Aplicația</button>
     </div>
   </div>
 
@@ -890,8 +904,9 @@ function chkPwd(){
 function lockNow(){ settingsOk=false; _goTo('dash'); toast('Setări blocate 🔒','🔒'); }
 
 // ═══════════════════════════════════
-// SCANNER
+// SCANNER — ZXing (Google)
 // ═══════════════════════════════════
+var zxReaders={};  // { type: CodeReader instance }
 var scanOn={in:false,out:false,ret:false};
 
 function setMode(type,mode){
@@ -906,62 +921,130 @@ function setMode(type,mode){
     cv.classList.remove('on'); stopCam(type);
   }
 }
+
 function startCam(type){
   if(scanOn[type]) return;
-  if(typeof Quagga==='undefined'){ toast('Scanner indisponibil','⚠️',true); setMode(type,'m'); return; }
+  if(typeof ZXing==='undefined'){
+    toast('Scanner indisponibil — verificați conexiunea','⚠️',true);
+    setMode(type,'m'); return;
+  }
+  // Request camera permission first
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    toast('Camera nu este suportată pe acest browser','⚠️',true);
+    setMode(type,'m'); return;
+  }
   scanOn[type]=true;
-  Quagga.init({
-    inputStream:{name:'Live',type:'LiveStream',target:$('vid-'+type),
-      constraints:{facingMode:'environment',width:{ideal:640},height:{ideal:280}}},
-    decoder:{readers:['ean_reader','ean_8_reader','code_128_reader','code_39_reader','upc_reader']}
-  },function(err){
-    if(err){ scanOn[type]=false; toast('Camera indisponibilă','⚠️',true); setMode(type,'m'); return; }
-    Quagga.start();
-    // Register handler AFTER init, inside callback to avoid accumulation
-    Quagga.onDetected(function(r){
-      var code=r.codeResult.code;
-      stopCam(type); setMode(type,'m');
-      $(type+'-bc').value=code;
-      lookup(type,code);
-      toast('Cod scanat: '+code,'📷');
-    });
+  // Stop any existing reader for this type
+  if(zxReaders[type]){ try{ zxReaders[type].reset(); }catch(e){} }
+
+  var hints=new Map();
+  var formats=[
+    ZXing.BarcodeFormat.EAN_13,
+    ZXing.BarcodeFormat.EAN_8,
+    ZXing.BarcodeFormat.CODE_128,
+    ZXing.BarcodeFormat.CODE_39,
+    ZXing.BarcodeFormat.UPC_A,
+    ZXing.BarcodeFormat.UPC_E,
+    ZXing.BarcodeFormat.ITF,
+    ZXing.BarcodeFormat.QR_CODE
+  ];
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+  hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+  var reader=new ZXing.BrowserMultiFormatReader(hints, 300);
+  zxReaders[type]=reader;
+
+  var videoEl=$('vid-'+type);
+
+  reader.decodeFromConstraints(
+    {
+      audio: false,
+      video: {
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    },
+    videoEl,
+    function(result, err){
+      if(result){
+        var code=result.getText();
+        stopCam(type);
+        setMode(type,'m');
+        $(type+'-bc').value=code;
+        lookup(type,code);
+        toast('Cod scanat: '+code,'📷');
+      }
+      // err is normal when no barcode found in frame — ignore
+    }
+  ).catch(function(err){
+    scanOn[type]=false;
+    var msg=err&&err.name==='NotAllowedError'
+      ?'Acces cameră refuzat! Activați din setările browser-ului.'
+      :err&&err.name==='NotFoundError'
+      ?'Camera nu a fost găsită pe dispozitiv.'
+      :'Camera indisponibilă: '+(err?err.message||err:'');
+    toast(msg,'❌',true);
+    setMode(type,'m');
   });
 }
-function stopCam(type){ scanOn[type]=false; try{ Quagga.stop(); }catch(e){} }
+
+function stopCam(type){
+  scanOn[type]=false;
+  if(zxReaders[type]){
+    try{ zxReaders[type].reset(); }catch(e){}
+    zxReaders[type]=null;
+  }
+}
 
 // ═══════════════════════════════════
 // CAMERA PERMISSION
 // ═══════════════════════════════════
 var CAM_K='spl3_cam';
 function checkCam(){
-  var saved=localStorage.getItem(CAM_K);
-  if(saved==='granted'){ updateCamUI('granted'); return; }
-  if(saved==='denied'){  updateCamUI('denied');  return; }
+  // Check if camera is available at all
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    updateCamUI('denied'); return;
+  }
   if(navigator.permissions){
     navigator.permissions.query({name:'camera'}).then(function(r){
-      if(r.state==='granted'){ localStorage.setItem(CAM_K,'granted'); updateCamUI('granted'); }
-      else if(r.state==='denied'){ localStorage.setItem(CAM_K,'denied'); updateCamUI('denied'); }
-      else { $('m-cam').classList.remove('off'); }
-    }).catch(function(){ $('m-cam').classList.remove('off'); });
-  } else { $('m-cam').classList.remove('off'); }
+      if(r.state==='granted'){ updateCamUI('granted'); }
+      else if(r.state==='denied'){ updateCamUI('denied'); }
+      else {
+        // 'prompt' state — show modal to ask user
+        $('m-cam').classList.remove('off');
+      }
+      // Watch for changes (user grants/revokes in browser settings)
+      r.onchange=function(){ checkCam(); };
+    }).catch(function(){
+      // permissions API not supported — show modal
+      $('m-cam').classList.remove('off');
+    });
+  } else {
+    // No permissions API — show modal
+    $('m-cam').classList.remove('off');
+  }
 }
 function reqCam(){
-  if(!navigator.mediaDevices){ toast('Camera indisponibilă pe acest dispozitiv','⚠️',true); return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    toast('Camera nu este suportată pe acest browser/dispozitiv','⚠️',true); return;
+  }
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
     stream.getTracks().forEach(function(t){ t.stop(); });
-    localStorage.setItem(CAM_K,'granted');
     updateCamUI('granted');
     $('m-cam').classList.add('off');
     toast('Cameră activată! Puteți scana coduri de bare ✅','📷');
-  }).catch(function(){
-    localStorage.setItem(CAM_K,'denied');
+  }).catch(function(err){
+    var msg=err&&err.name==='NotAllowedError'
+      ?'Acces refuzat. Activați camera din setările browser-ului.'
+      :'Camera indisponibilă: '+(err?err.message||err:'');
     updateCamUI('denied');
     $('m-cam').classList.add('off');
-    toast('Acces refuzat. Activați camera din setările browser-ului.','❌',true);
+    toast(msg,'❌',true);
   });
 }
 function skipCam(){ $('m-cam').classList.add('off'); toast('Continuați fără cameră. Activați oricând din Setări.','ℹ️'); }
-function resetCam(){ localStorage.removeItem(CAM_K); checkCam(); toast('Permisiunea camerei a fost resetată.','📷'); }
+function resetCam(){ checkCam(); toast('Permisiunea camerei a fost reverificată.','📷'); }
 function updateCamUI(state){
   var d=$('cam-dot'),l=$('cam-lbl'),b=$('cam-status');
   if(d){ d.className='msd'+(state==='granted'?' ok':state==='denied'?' no':''); }
@@ -974,55 +1057,103 @@ function updateCamUI(state){
 }
 
 // ═══════════════════════════════════
-// PWA INSTALL
+// PWA — MANIFEST + INSTALL
 // ═══════════════════════════════════
+(function buildManifest(){
+  var iconSvg="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23c0392b'/%3E%3Crect x='40' y='40' width='432' height='432' rx='60' fill='%23a93226'/%3E%3Ctext x='256' y='195' font-family='Arial Black,sans-serif' font-weight='900' font-size='130' fill='white' text-anchor='middle'%3ESPL%3C/text%3E%3Crect x='60' y='220' width='392' height='4' fill='rgba(255,255,255,.3)'/%3E%3Ctext x='256' y='310' font-family='Arial,sans-serif' font-weight='700' font-size='90' fill='rgba(255,255,255,.92)' text-anchor='middle'%3EPIESE%3C/text%3E%3Ctext x='256' y='390' font-family='Arial,sans-serif' font-weight='600' font-size='66' fill='rgba(255,255,255,.65)' text-anchor='middle'%3EAUTO%3C/text%3E%3C/svg%3E";
+  var manifest={
+    name:'SPL Piese Auto — Chișoda',
+    short_name:'SPL Piese',
+    description:'Gestiune piese auto: intrări, ieșiri, stoc, retururi',
+    start_url:'./',
+    display:'standalone',
+    background_color:'#0b0d15',
+    theme_color:'#c0392b',
+    orientation:'portrait-primary',
+    lang:'ro',
+    categories:['business','productivity'],
+    icons:[
+      {src:iconSvg,sizes:'192x192',type:'image/svg+xml',purpose:'any'},
+      {src:iconSvg,sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}
+    ]
+  };
+  var blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var link=$('pwa-manifest');
+  if(!link){ link=document.createElement('link'); link.rel='manifest'; link.id='pwa-manifest'; document.head.appendChild(link); }
+  link.href=url;
+})();
+
 var IBN_K='spl3_ibn', deferredPWA=null;
+
+// Android/Desktop Chrome — native install prompt
 window.addEventListener('beforeinstallprompt',function(e){
-  e.preventDefault(); deferredPWA=e;
-  var b=$('pwa-btn'); if(b) b.style.display='block';
+  e.preventDefault();
+  deferredPWA=e;
+  // Show install button in settings
+  var bs=$('pwa-btn-set');
+  if(bs){ bs.style.display='block'; bs.textContent='📲 Instalează Aplicația (Click Aici)'; }
+  // Show banner if not dismissed
   if(!localStorage.getItem(IBN_K)){
-    // Show immediately on mobile, after 2.5s on desktop
-    var delay=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?500:2500;
-    setTimeout(function(){ $('ibn').classList.add('on'); },delay);
+    var delay=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?800:2000;
+    setTimeout(showInstallBanner,delay);
   }
 });
-// On mobile Safari show a custom banner with instructions (no beforeinstallprompt)
-(function(){
-  var isSafariMobile=/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window.MSStream;
-  var isStandalone=window.navigator.standalone===true;
-  if(isSafariMobile&&!isStandalone&&!localStorage.getItem(IBN_K)){
-    setTimeout(function(){
-      $('ibn-ok').textContent='ℹ️ Cum instalezi';
-      $('ibn-ok').onclick=function(){
-        alert('📲 Instalare pe iPhone/iPad:\n\n1. Apăsați \u2191 (Partajare) din bara Safari\n2. Derulați și apăsați „Adaugă pe ecranul principal"\n3. Apăsați Adaugă ✅');
-      };
-      $('ibn').classList.add('on');
-    },1000);
+
+window.addEventListener('appinstalled',function(){
+  $('ibn').classList.remove('on');
+  localStorage.setItem(IBN_K,'1');
+  toast('SPL Piese Auto instalat cu succes! 🎉','🎉');
+});
+
+function showInstallBanner(){
+  var isSafariIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!window.MSStream&&!navigator.userAgent.includes('CriOS');
+  var isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  if(isStandalone) return; // already installed
+  var ibn=$('ibn');
+  if(isSafariIOS){
+    // Safari iOS — manual instructions
+    $('ibn-title').textContent='📲 Adaugă pe ecranul principal';
+    $('ibn-sub').textContent='Apăsați □↑ (Partajare) → „Adaugă pe ecranul principal"';
+    $('ibn-ok').textContent='ℹ️ Cum instalezi';
+    $('ibn-ok').onclick=function(){
+      alert('📲 Instalare iPhone/iPad:\n\n1. Apăsați □↑ (Partajare) din bara Safari de jos\n2. Derulați și apăsați „Adaugă pe ecranul principal"\n3. Apăsați „Adaugă" ✅\n\nAplicația va apărea ca iconiță pe Home Screen!');
+    };
+  } else if(deferredPWA){
+    $('ibn-ok').onclick=doInstall;
+  } else {
+    return; // nothing to show
   }
-})();
+  ibn.classList.add('on');
+}
+
 function doInstall(){
-  if(!deferredPWA) return;
+  if(!deferredPWA){ toast('Instalarea nu este disponibilă în acest browser. Folosiți Chrome sau Edge.','⚠️',true); return; }
   deferredPWA.prompt();
   deferredPWA.userChoice.then(function(r){
     if(r.outcome==='accepted'){
-      toast('Aplicație instalată! Accesați de pe ecranul principal 🎉','📲');
+      toast('Se instalează SPL Piese Auto...','📲');
       $('ibn').classList.remove('on');
       localStorage.setItem(IBN_K,'1');
+    } else {
+      toast('Instalare anulată. Puteți instala oricând din Setări.','ℹ️');
     }
     deferredPWA=null;
   });
 }
-function dismissBanner(){ $('ibn').classList.remove('on'); localStorage.setItem(IBN_K,'1'); }
-window.addEventListener('appinstalled',function(){ $('ibn').classList.remove('on'); toast('SPL Piese Auto instalat!','🎉'); });
-(function injectManifest(){
-  var m={name:'SPL Piese Auto',short_name:'SPL Piese',start_url:'./',display:'standalone',
-    background_color:'#0b0d15',theme_color:'#c0392b',orientation:'portrait-primary',
-    icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%23c0392b'/%3E%3Ctext x='96' y='78' font-family='Arial Black' font-weight='900' font-size='52' fill='white' text-anchor='middle'%3ESPL%3C/text%3E%3Cline x1='20' y1='90' x2='172' y2='90' stroke='rgba(255,255,255,.3)' stroke-width='3'/%3E%3Ctext x='96' y='126' font-family='Arial' font-weight='700' font-size='36' fill='rgba(255,255,255,.9)' text-anchor='middle'%3EPIESE%3C/text%3E%3Ctext x='96' y='158' font-family='Arial' font-weight='600' font-size='26' fill='rgba(255,255,255,.65)' text-anchor='middle'%3EAUTO%3C/text%3E%3C/svg%3E",sizes:'192x192',type:'image/svg+xml',purpose:'any maskable'}]};
-  var b=new Blob([JSON.stringify(m)],{type:'application/json'});
-  var u=URL.createObjectURL(b);
-  var l=document.createElement('link'); l.rel='manifest'; l.href=u;
-  document.head.appendChild(l);
+
+function dismissBanner(){
+  $('ibn').classList.remove('on');
+  localStorage.setItem(IBN_K,'1');
+}
+
+// Show install banner on first visit (after 1.5s) for Safari iOS too
+(function(){
+  if(!localStorage.getItem(IBN_K)){
+    setTimeout(showInstallBanner, 1500);
+  }
 })();
+
 
 // ═══════════════════════════════════
 // PRODUCT LOOKUP
@@ -1038,8 +1169,8 @@ function lookup(type,bc){
     var se=$(type+'-pfs'); se.textContent=p.stock+' buc';
     se.style.color=p.stock<=cfg.minStock?'var(--red)':'var(--grn)';
     pf.classList.add('on');
-    if(type==='in'){ sv('in-prt',p.buy); sv('in-cat',p.cat); }
-    if(type==='out'){ sv('out-prt',p.sell); }
+    if(type==='in'){ sv('in-prt',p.buy); sv('in-sell',(p.sell||Math.round(p.buy*1.25*100)/100)); sv('in-cat',p.cat); }
+    if(type==='out'){ sv('out-prt',p.sell||Math.round(p.buy*1.25*100)/100); }
     if(type==='ret'){ sv('ret-val',p.sell); }
     if(cfg.defaultOp){ var oe=$(type+'-op'); if(oe) oe.value=cfg.defaultOp; }
   } else { pf.classList.remove('on'); }
@@ -1047,6 +1178,17 @@ function lookup(type,bc){
 function gpLookup(bc){
   var p=db.products.find(function(x){ return x.bc===bc.trim(); });
   if(p) sv('gp-nm',p.name);
+}
+
+// ═══════════════════════════════════
+// AUTO PRICE CALCULATION
+// ═══════════════════════════════════
+function calcSell(){
+  var buy=parseFloat(gv('in-prt'))||0;
+  if(buy>0){
+    var sell=Math.round(buy*1.25*100)/100;
+    sv('in-sell',sell);
+  } else { sv('in-sell',''); }
 }
 
 // ═══════════════════════════════════
@@ -1059,6 +1201,7 @@ function subMov(type){
   var par=type==='in'?gv('in-sup').trim():gv('out-clt').trim();
   var doc=type==='in'?gv('in-doc').trim():gv('out-doc').trim();
   var cat=type==='in'?gv('in-cat').trim():'';
+  var sellPrt=type==='in'?parseFloat(gv('in-sell'))||Math.round(prt*1.25*100)/100:0;
   if(!bc) return toast('Introduceți codul de bară!','⚠️',true);
   if(!nm) return toast('Introduceți denumirea piesei!','⚠️',true);
   if(!qty||qty<1) return toast('Cantitate invalidă!','⚠️',true);
@@ -1068,8 +1211,8 @@ function subMov(type){
     if(!prod) return toast('Cod bară negăsit în stoc!','❌',true);
     if(prod.stock<qty) return toast('Stoc insuficient! Disponibil: '+prod.stock+' buc','❌',true);
   }
-  if(!prod){ prod={bc:bc,name:nm,cat:cat,um:'BUC',stock:0,buy:prt,sell:0}; db.products.push(prod); }
-  if(type==='in'){ prod.stock+=qty; prod.buy=prt; if(cat) prod.cat=cat; if(!prod.name) prod.name=nm; }
+  if(!prod){ prod={bc:bc,name:nm,cat:cat,um:'BUC',stock:0,buy:prt,sell:sellPrt}; db.products.push(prod); }
+  if(type==='in'){ prod.stock+=qty; prod.buy=prt; prod.sell=sellPrt; if(cat) prod.cat=cat; if(!prod.name) prod.name=nm; }
   else { prod.stock-=qty; prod.sell=prt; }
   var mov={t:type,date:tod(),bc:bc,name:nm,partner:par,doc:doc,qty:qty,price:prt,op:op,cat:cat,ts:Date.now()};
   db.movements.unshift(mov);
@@ -1079,7 +1222,7 @@ function subMov(type){
 function clearF(type){
   ['bc','nm','prt','op'].forEach(function(f){ sv(type+'-'+f,''); });
   sv(type+'-qty','');
-  if(type==='in'){ sv('in-sup',''); sv('in-doc',''); sv('in-cat',''); }
+  if(type==='in'){ sv('in-sup',''); sv('in-doc',''); sv('in-cat',''); sv('in-sell',''); }
   if(type==='out'){ sv('out-clt',''); sv('out-doc',''); }
   var pf=$(type+'-pf'); if(pf) pf.classList.remove('on');
 }
@@ -1500,11 +1643,27 @@ function resetData(){
 // INIT
 // ═══════════════════════════════════
 loadAll();
-// hdr-dt stays as website domain - date shown in dashboard cards
 renderDash();
 renderStoc();
 renderIst('');
 checkCam();
+
+// Register inline Service Worker for PWA installability
+if('serviceWorker' in navigator){
+  var swCode=[
+    "const CACHE='spl-piese-v1';",
+    "const ASSETS=['./', './index.html'];",
+    "self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).catch(()=>{})); self.skipWaiting(); });",
+    "self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });",
+    "self.addEventListener('fetch',e=>{ if(e.request.method!=='GET') return;",
+    "  e.respondWith(fetch(e.request).then(r=>{ const c=r.clone(); caches.open(CACHE).then(cache=>cache.put(e.request,c)); return r; })",
+    "  .catch(()=>caches.match(e.request))); });"
+  ].join('\n');
+  var swBlob=new Blob([swCode],{type:'application/javascript'});
+  var swUrl=URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).catch(function(){});
+}
+
 </script>
 </body>
 </html>
