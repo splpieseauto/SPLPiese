@@ -558,6 +558,71 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
     </div>
   </div>
 
+  <!-- FACTURĂ CLIENT -->
+  <div class="card">
+    <div class="ch"><h2>🧾 Generare Factură Client</h2>
+      <button class="btn bg" style="padding:5px 10px;font-size:10px" onclick="addFacLinie()">+ Adaugă Linie</button>
+    </div>
+    <div class="cb">
+      <div class="fr">
+        <div class="fg"><label>Nr. Factură</label><input type="text" id="fac-nr" placeholder="auto-generat"></div>
+        <div class="fg"><label>Data</label><input type="text" id="fac-dt"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Client (Cumpărător)</label><input type="text" id="fac-cl" placeholder="Numele clientului / firmei"></div>
+        <div class="fg"><label>CUI / CNP Client</label><input type="text" id="fac-cl-cui" placeholder="CUI sau CNP (opțional)"></div>
+      </div>
+      <div class="fr fr1">
+        <div class="fg"><label>Adresă Client</label><input type="text" id="fac-cl-adr" placeholder="Adresa clientului (opțional)"></div>
+      </div>
+      <div style="border:1px solid var(--brd);border-radius:7px;overflow:hidden;margin-bottom:9px">
+        <div style="background:var(--c2);padding:7px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:2fr 0.6fr 0.9fr 0.9fr 0.5fr;gap:6px">
+          <span>Denumire Produs/Serviciu</span><span>UM</span><span>Cant.</span><span>Preț Unit.</span><span></span>
+        </div>
+        <div id="fac-linii"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:9px">
+        <div style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;padding:10px 14px;min-width:200px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px">
+            <span>Subtotal (fără TVA):</span><span id="fac-sub">0.00 RON</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:6px">
+            <span>TVA 19%:</span><span id="fac-tva">0.00 RON</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--grn);font-family:'Barlow Condensed',sans-serif">
+            <span>TOTAL:</span><span id="fac-tot">0.00 RON</span>
+          </div>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Scadență</label><input type="text" id="fac-scad" placeholder="Data scadenței"></div>
+        <div class="fg"><label>Metodă Plată</label>
+          <select id="fac-plata">
+            <option>Numerar</option>
+            <option>Card bancar</option>
+            <option>Transfer bancar</option>
+            <option>CEC / Bilet la ordin</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr fr1">
+        <div class="fg"><label>Observații Factură</label><input type="text" id="fac-obs" placeholder="ex: Conform ofertei nr. ..., Mulțumim pentru colaborare!"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>TVA</label>
+          <select id="fac-tva-tip" onchange="calcFac()">
+            <option value="19">TVA 19%</option>
+            <option value="9">TVA 9%</option>
+            <option value="5">TVA 5%</option>
+            <option value="0">Fără TVA (scutit)</option>
+          </select>
+        </div>
+        <div class="fg"><label>Operator / Emitent</label><input type="text" id="fac-op" placeholder="Numele emitentului"></div>
+      </div>
+      <button class="btn ba" style="width:100%;margin-top:6px" onclick="printFactura()">🖨️ Generează / Printează Factura</button>
+    </div>
+  </div>
+
   <!-- GARANȚIE PIESE -->
   <div class="card">
     <div class="ch"><h2>🔧 Certificat Garanție Piesă Auto</h2></div>
@@ -663,7 +728,11 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
       <div class="fr">
         <div class="fg"><label>Adresă</label><input type="text" id="s-adr" placeholder="Str., Nr., Chișoda" onchange="saveCfg()"></div>
-        <div class="fg"><label>Număr Înmatriculare / CUI</label><input type="text" id="s-cui" placeholder="RO..." onchange="saveCfg()"></div>
+        <div class="fg"><label>Număr Înmatriculare / CUI</label><input type="text" id="s-cui" placeholder="RO44870892" onchange="saveCfg()"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Nr. Reg. Comerțului</label><input type="text" id="s-reg" placeholder="J20/1003624352" onchange="saveCfg()"></div>
+        <div class="fg"><label>Nr. Factură Următor</label><input type="number" id="s-invnr" placeholder="1" min="1" onchange="saveCfg()"></div>
       </div>
       <div class="fr">
         <div class="fg"><label>Email</label><input type="email" id="s-eml" placeholder="vanzari@pieseautotm.ro" onchange="saveCfg()"></div>
@@ -820,8 +889,12 @@ function expDate(per){
 var DB_K='spl3_db', CFG_K='spl3_cfg';
 var db={products:[],movements:[]};
 var GS_URL_PERM='https://script.google.com/macros/s/AKfycbzAlrh39o7IVZlj9mhNylhORvvYr62zf1xpEOPjeAqnnMawZqacCRj0aoT9_Ka06-By/exec';
-var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'',address:'Chișoda, Timiș',
-  phone:'0766551313',email:'vanzari@pieseautotm.ro',cui:'',website:'www.pieseautotm.ro',program:'L–V: 08:00–18:00 | S: 08:00–14:00',minStock:5};
+var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'',
+  address:'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221',
+  phone:'0766551313',email:'vanzari@pieseautotm.ro',
+  cui:'RO44870892',regCom:'J20/1003624352',
+  website:'www.pieseautotm.ro',program:'L–V: 08:00–18:00 | S: 08:00–14:00',minStock:5,
+  invoiceNr:1};
 
 function loadAll(){
   try{ var dbRaw=localStorage.getItem(DB_K); if(dbRaw) db=JSON.parse(dbRaw); }catch(e){}
@@ -832,25 +905,28 @@ function loadAll(){
 }
 function saveDB(){ try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){} }
 function saveCfg(){
-  cfg.gsUrl=GS_URL_PERM; // URL permanent – nu poate fi modificat
+  cfg.gsUrl=GS_URL_PERM;
   cfg.shopName=gv('s-shop'); cfg.defaultOp=gv('s-op')||gv('s-op2');
   cfg.address=gv('s-adr'); cfg.phone=gv('s-tel'); cfg.email=gv('s-eml');
-  cfg.cui=gv('s-cui'); cfg.website=gv('s-web'); cfg.program=gv('s-prg');
+  cfg.cui=gv('s-cui'); cfg.regCom=gv('s-reg'); cfg.website=gv('s-web'); cfg.program=gv('s-prg');
   cfg.minStock=parseInt(gv('s-min'))||5;
+  cfg.invoiceNr=parseInt(gv('s-invnr'))||cfg.invoiceNr||1;
   try{ localStorage.setItem(CFG_K,JSON.stringify(cfg)); }catch(e){}
   updateSyncUI();
 }
 function applySettings(){
   sv('s-shop',cfg.shopName||'SPL Piese Auto');
   sv('s-op',cfg.defaultOp||'');
-  sv('s-adr',cfg.address||'Chișoda, Timiș');
+  sv('s-adr',cfg.address||'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221');
   sv('s-tel',cfg.phone||'0766551313');
   sv('s-eml',cfg.email||'vanzari@pieseautotm.ro');
-  sv('s-cui',cfg.cui||'');
+  sv('s-cui',cfg.cui||'RO44870892');
+  sv('s-reg',cfg.regCom||'J20/1003624352');
   sv('s-web',cfg.website||'www.pieseautotm.ro');
   sv('s-prg',cfg.program||'');
   sv('s-min',cfg.minStock||5);
-  sv('s-gs',GS_URL_PERM); // afișat doar; blocat la modificare
+  sv('s-invnr',cfg.invoiceNr||1);
+  sv('s-gs',GS_URL_PERM);
   updateSyncUI();
 }
 // seed() removed – aplicația pornește goală, fără date demo
@@ -1366,6 +1442,14 @@ function prepActe(){
   if(!gv('ac-dt')) sv('ac-dt',tod());
   if(!gv('gp-dt')) sv('gp-dt',tod());
   if(!gv('gb-dt')) sv('gb-dt',tod());
+  // Factura init
+  var nr=cfg.invoiceNr||1;
+  var yrMo=new Date().toLocaleDateString('ro-RO',{year:'2-digit',month:'2-digit'}).replace(/\./g,'');
+  sv('fac-nr','FAC-'+yrMo+'-'+String(nr).padStart(4,'0'));
+  if(!gv('fac-dt')) sv('fac-dt',tod());
+  if(!gv('fac-scad')){ var sc=new Date(); sc.setDate(sc.getDate()+30); sv('fac-scad',sc.toLocaleDateString('ro-RO')); }
+  if(cfg.defaultOp&&!gv('fac-op')) sv('fac-op',cfg.defaultOp);
+  if(!$('fac-linii').children.length) addFacLinie();
 }
 function preloadRetur(){
   var idx=parseInt(gv('ac-sel')); if(isNaN(idx)) return;
@@ -1380,13 +1464,16 @@ function docHdr(col){
   var web=cfg.website||'www.pieseautotm.ro';
   var phone=cfg.phone||'0766551313';
   var email=cfg.email||'vanzari@pieseautotm.ro';
-  var sub=[cfg.address||'Chișoda, Timiș', phone, email].filter(Boolean).join(' | ');
+  var cui=cfg.cui||'RO44870892';
+  var reg=cfg.regCom||'J20/1003624352';
+  var adr=cfg.address||'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221';
   return '<div style="text-align:center;border-bottom:3px solid '+col+';padding-bottom:12px;margin-bottom:16px">'+
-    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:3px">'+
-    '<div style="width:36px;height:36px;background:'+col+';border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px">🔧</div>'+
-    '<div style="font-size:20px;font-weight:900;font-family:Arial Black,sans-serif;color:'+col+'">'+shop+'</div></div>'+
-    '<div style="font-size:11px;color:#777">'+sub+'</div>'+
-    '<div style="font-size:10px;color:#aaa;margin-top:2px">🌐 '+web+' &nbsp;·&nbsp; Instagram & TikTok: @spl_piese</div></div>';
+    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px">'+
+    '<div style="width:40px;height:40px;background:'+col+';border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">🔧</div>'+
+    '<div><div style="font-size:22px;font-weight:900;font-family:Arial Black,sans-serif;color:'+col+'">'+shop+'</div>'+
+    '<div style="font-size:10px;color:#888;margin-top:1px">CUI: '+cui+' &nbsp;|&nbsp; Reg. Com.: '+reg+'</div></div></div>'+
+    '<div style="font-size:11px;color:#666;margin-top:3px">📍 '+adr+'</div>'+
+    '<div style="font-size:11px;color:#666;margin-top:1px">📞 '+phone+' &nbsp;·&nbsp; ✉️ '+email+' &nbsp;·&nbsp; 🌐 '+web+'</div></div>';
 }
 
 function openPrint(h){
@@ -1503,8 +1590,184 @@ function printGarBat(){
 }
 
 // ═══════════════════════════════════
-// GOOGLE SHEETS SYNC
+// FACTURI
 // ═══════════════════════════════════
+var facLiniiCount=0;
+function addFacLinie(nm,um,qty,pret){
+  var id='fl'+facLiniiCount++;
+  var el=document.createElement('div');
+  el.id=id; el.style.cssText='display:grid;grid-template-columns:2fr 0.6fr 0.9fr 0.9fr 0.5fr;gap:6px;padding:7px 11px;border-top:1px solid rgba(36,41,63,.5);align-items:center';
+  el.innerHTML=
+    '<input type="text" value="'+(nm||'')+'" placeholder="Denumire produs / serviciu" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:7px 9px;outline:none;width:100%">'+
+    '<input type="text" value="'+(um||'BUC')+'" placeholder="BUC" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:7px 9px;outline:none;width:100%">'+
+    '<input type="number" value="'+(qty||1)+'" min="0.01" step="0.01" placeholder="1" oninput="calcFac()" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:7px 9px;outline:none;width:100%">'+
+    '<input type="number" value="'+(pret||'')+'" min="0" step="0.01" placeholder="0.00" oninput="calcFac()" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:7px 9px;outline:none;width:100%">'+
+    '<button onclick="document.getElementById(\''+id+'\').remove();calcFac()" style="background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.3);border-radius:6px;color:#e74c3c;cursor:pointer;font-size:14px;padding:6px;width:100%">✕</button>';
+  $('fac-linii').appendChild(el);
+  calcFac();
+}
+function calcFac(){
+  var linii=$('fac-linii').children;
+  var subtotal=0;
+  for(var i=0;i<linii.length;i++){
+    var inputs=linii[i].querySelectorAll('input');
+    var qty=parseFloat(inputs[2].value)||0;
+    var pret=parseFloat(inputs[3].value)||0;
+    subtotal+=qty*pret;
+  }
+  var tvaPct=parseFloat(gv('fac-tva-tip'))||19;
+  var tva=Math.round(subtotal*tvaPct)/100;
+  var total=subtotal+tva;
+  $('fac-sub').textContent=subtotal.toFixed(2)+' RON';
+  $('fac-tva').textContent=tva.toFixed(2)+' RON';
+  $('fac-tot').textContent=total.toFixed(2)+' RON';
+}
+
+function printFactura(){
+  var nr=gv('fac-nr')||('FAC-'+Date.now().toString().slice(-6));
+  var dt=gv('fac-dt')||tod();
+  var scad=gv('fac-scad')||'—';
+  var cl=gv('fac-cl')||'—';
+  var clCui=gv('fac-cl-cui')||'';
+  var clAdr=gv('fac-cl-adr')||'';
+  var plata=gv('fac-plata')||'Numerar';
+  var obs=gv('fac-obs')||'';
+  var op=gv('fac-op')||cfg.defaultOp||'—';
+  var tvaPct=parseFloat(gv('fac-tva-tip'))||19;
+
+  var shop=cfg.shopName||'SPL Piese Auto';
+  var cui=cfg.cui||'RO44870892';
+  var reg=cfg.regCom||'J20/1003624352';
+  var adr=cfg.address||'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221';
+  var phone=cfg.phone||'0766551313';
+  var email=cfg.email||'vanzari@pieseautotm.ro';
+  var web=cfg.website||'www.pieseautotm.ro';
+
+  // Collect lines
+  var linii=$('fac-linii').children;
+  if(!linii.length) return toast('Adăugați cel puțin o linie pe factură!','⚠️',true);
+  var subtotal=0, rows='';
+  var hasData=false;
+  for(var i=0;i<linii.length;i++){
+    var inputs=linii[i].querySelectorAll('input');
+    var nm=inputs[0].value||'—';
+    var um=inputs[1].value||'BUC';
+    var qty=parseFloat(inputs[2].value)||0;
+    var pret=parseFloat(inputs[3].value)||0;
+    var val=qty*pret;
+    subtotal+=val;
+    if(nm!=='—'||qty>0||pret>0) hasData=true;
+    rows+='<tr><td>'+(i+1)+'</td><td>'+nm+'</td><td style="text-align:center">'+um+'</td>'+
+      '<td style="text-align:right">'+qty.toFixed(2)+'</td>'+
+      '<td style="text-align:right">'+pret.toFixed(2)+'</td>'+
+      '<td style="text-align:right;font-weight:600">'+val.toFixed(2)+'</td></tr>';
+  }
+  if(!hasData) return toast('Completați liniile facturii!','⚠️',true);
+  var tva=Math.round(subtotal*tvaPct)/100;
+  var total=subtotal+tva;
+
+  // Save and increment invoice number
+  cfg.invoiceNr=(cfg.invoiceNr||1)+1;
+  sv('s-invnr',cfg.invoiceNr);
+  try{ localStorage.setItem(CFG_K,JSON.stringify(cfg)); }catch(e){}
+
+  openPrint('<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8">'+
+    '<title>Factură '+nr+'</title>'+
+    '<style>'+
+    'body{font-family:Arial,sans-serif;max-width:780px;margin:20px auto;padding:20px;color:#222;font-size:13px}'+
+    '.hdr-tbl{width:100%;border-collapse:collapse;margin-bottom:16px}'+
+    '.hdr-tbl td{vertical-align:top;padding:0}'+
+    '.firm-box{background:#fdf2f0;border:2px solid #c0392b;border-radius:8px;padding:12px 16px}'+
+    '.firm-nm{font-size:20px;font-weight:900;color:#c0392b;font-family:Arial Black,sans-serif}'+
+    '.firm-det{font-size:11px;color:#555;line-height:1.8;margin-top:4px}'+
+    '.fac-box{background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:12px 16px;text-align:right}'+
+    '.fac-nm{font-size:26px;font-weight:900;color:#c0392b;letter-spacing:1px}'+
+    '.fac-nr{font-size:14px;font-weight:700;color:#333;margin-top:4px}'+
+    '.fac-dt{font-size:11px;color:#666;margin-top:2px}'+
+    '.client-box{background:#f0f7ff;border:1px solid #2980b9;border-radius:7px;padding:10px 14px;margin-bottom:14px}'+
+    '.client-box h4{font-size:11px;color:#2980b9;text-transform:uppercase;letter-spacing:.5px;margin:0 0 5px;font-weight:700}'+
+    '.client-box p{margin:0;font-size:13px;font-weight:600;color:#1a252f}'+
+    '.client-box span{font-size:11px;color:#555}'+
+    'table.prod{width:100%;border-collapse:collapse;margin-bottom:14px}'+
+    'table.prod th{background:#c0392b;color:#fff;padding:8px 10px;font-size:11px;text-align:left;font-weight:700}'+
+    'table.prod td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}'+
+    'table.prod tr:nth-child(even) td{background:#fafafa}'+
+    '.total-box{display:flex;justify-content:flex-end;margin-bottom:14px}'+
+    '.total-inner{border:2px solid #c0392b;border-radius:8px;padding:12px 18px;min-width:250px}'+
+    '.total-row{display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px}'+
+    '.total-final{display:flex;justify-content:space-between;font-size:17px;font-weight:900;color:#c0392b;border-top:2px solid #c0392b;padding-top:8px;margin-top:6px}'+
+    '.info-bar{display:flex;gap:16px;background:#f8f9fa;border:1px solid #eee;border-radius:7px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#555}'+
+    '.info-bar b{display:block;color:#333;font-size:12px}'+
+    '.semnat{display:flex;gap:30px;margin-top:24px}'+
+    '.semnat div{flex:1;border-top:2px solid #c0392b;padding-top:10px;text-align:center;font-size:11px;color:#666}'+
+    '.semnat div b{display:block;font-size:13px;color:#333;margin-bottom:4px}'+
+    '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:16px;border-top:1px solid #eee;padding-top:8px}'+
+    '@media print{button{display:none}.no-print{display:none}}'+
+    '</style></head><body>'+
+
+    // Header: firma left, factura right
+    '<table class="hdr-tbl"><tr>'+
+    '<td style="width:55%">'+
+    '<div class="firm-box">'+
+    '<div class="firm-nm">🔧 '+shop+'</div>'+
+    '<div class="firm-det">'+
+    'CUI: <b>'+cui+'</b> &nbsp;|&nbsp; Reg. Com.: <b>'+reg+'</b><br>'+
+    '📍 '+adr+'<br>'+
+    '📞 '+phone+' &nbsp;|&nbsp; ✉️ '+email+'<br>'+
+    '🌐 '+web+
+    '</div></div></td>'+
+    '<td style="width:8px"></td>'+
+    '<td>'+
+    '<div class="fac-box">'+
+    '<div class="fac-nm">FACTURĂ FISCALĂ</div>'+
+    '<div class="fac-nr">Nr. '+nr+'</div>'+
+    '<div class="fac-dt">Data emiterii: <b>'+dt+'</b></div>'+
+    '<div class="fac-dt">Scadentă: <b>'+scad+'</b></div>'+
+    '</div></td></tr></table>'+
+
+    // Client
+    '<div class="client-box">'+
+    '<h4>Cumpărător / Client</h4>'+
+    '<p>'+cl+'</p>'+
+    (clCui?'<span>CUI/CNP: '+clCui+'</span><br>':'')+
+    (clAdr?'<span>Adresă: '+clAdr+'</span>':'')+
+    '</div>'+
+
+    // Tabel produse
+    '<table class="prod">'+
+    '<thead><tr><th style="width:30px">#</th><th>Denumire Produs / Serviciu</th>'+
+    '<th style="text-align:center;width:50px">UM</th>'+
+    '<th style="text-align:right;width:70px">Cant.</th>'+
+    '<th style="text-align:right;width:90px">Preț Unit.</th>'+
+    '<th style="text-align:right;width:90px">Valoare</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table>'+
+
+    // Totaluri
+    '<div class="total-box"><div class="total-inner">'+
+    '<div class="total-row"><span>Subtotal (fără TVA):</span><span>'+subtotal.toFixed(2)+' RON</span></div>'+
+    '<div class="total-row"><span>TVA '+tvaPct+'%:</span><span>'+tva.toFixed(2)+' RON</span></div>'+
+    '<div class="total-final"><span>TOTAL DE PLATĂ:</span><span>'+total.toFixed(2)+' RON</span></div>'+
+    '</div></div>'+
+
+    // Info plată
+    '<div class="info-bar">'+
+    '<div><b>Metodă Plată</b>'+plata+'</div>'+
+    '<div><b>Emis de</b>'+op+'</div>'+
+    (obs?'<div><b>Observații</b>'+obs+'</div>':'')+
+    '</div>'+
+
+    // Semnături
+    '<div class="semnat">'+
+    '<div><b>Furnizor</b>'+shop+'<br><br>Semnătură și ștampilă<br><br>_______________</div>'+
+    '<div><b>Cumpărător</b>'+cl+'<br><br>Semnătură și ștampilă<br><br>_______________</div>'+
+    '</div>'+
+
+    '<div class="footer">'+shop+' · CUI: '+cui+' · '+adr+' · '+phone+' · @spl_piese · Factura a fost emisă electronic și este valabilă fără semnătură olografă conform legislației în vigoare.</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨️ Printează Factura</button>'+
+    '</body></html>');
+}
+
+
 function updateSyncUI(state){
   if(state===false){
     // Eroare conexiune temporară
