@@ -319,8 +319,8 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
   </div>
   <div class="hdr-r">
     <div class="xbtn" onclick="exportExcel()">⬇ Excel</div>
-    <div class="pill" onclick="syncFromSheets()" title="Sincronizează datele din Google Sheets" style="cursor:pointer">
-      <span style="font-size:12px" id="sync-ico">🔄</span>
+    <div class="pill" onclick="syncFromSheets()" title="Sincronizează din Google Sheets" style="padding:5px 9px">
+      <span style="font-size:13px;line-height:1" id="sync-ico">🔄</span>
     </div>
     <div class="pill" onclick="testSync()">
       <div class="sdt" id="sdt"></div>
@@ -777,7 +777,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
       <div class="fg" style="margin-bottom:9px">
         <label>URL Google Apps Script</label>
-        <input type="url" id="s-gs" value="https://script.google.com/macros/s/AKfycbzAlrh39o7IVZlj9mhNylhORvvYr62zf1xpEOPjeAqnnMawZqacCRj0aoT9_Ka06-By/exec" readonly style="color:var(--grn);font-size:10px;cursor:default;opacity:.8" title="URL conectat permanent">
+        <input type="url" id="s-gs" value="https://script.google.com/macros/s/AKfycby15sPcu5LyS7-rQG6shN__vJKeU2rnnlZIftw26zZ7QFJJYabt8pnORFMK6wVGiDqr/exec" readonly style="color:var(--grn);font-size:10px;cursor:default;opacity:.8" title="URL conectat permanent">
         <div class="hint">✅ Conectat permanent la Google Sheets SPL Piese Auto</div>
       </div>
       <div style="display:flex;gap:8px">
@@ -1013,7 +1013,7 @@ function expDate(per){
 // ═══════════════════════════════════
 var DB_K='spl3_db', CFG_K='spl3_cfg';
 var db={products:[],movements:[]};
-var GS_URL_PERM='https://script.google.com/macros/s/AKfycbzAlrh39o7IVZlj9mhNylhORvvYr62zf1xpEOPjeAqnnMawZqacCRj0aoT9_Ka06-By/exec';
+var GS_URL_PERM='https://script.google.com/macros/s/AKfycby15sPcu5LyS7-rQG6shN__vJKeU2rnnlZIftw26zZ7QFJJYabt8pnORFMK6wVGiDqr/exec';
 var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
   address:'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221',
   phone:'0766551313',email:'vanzari@pieseautotm.ro',
@@ -1022,15 +1022,13 @@ var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
   invoiceNr:1};
 
 function loadAll(){
-  // Curata orice date locale vechi — sursa de adevar este Google Sheets
+  // Sterge orice date locale vechi — sursa de adevar este Google Sheets
   try{ localStorage.removeItem(DB_K); }catch(e){}
-  // Incarca configuratia salvata local
+  // Incarca configuratia firmei salvata local
   try{ var cfgRaw=localStorage.getItem(CFG_K); if(cfgRaw) cfg=Object.assign(cfg,JSON.parse(cfgRaw)); }catch(e){}
   cfg.gsUrl=GS_URL_PERM;
   applySettings();
-  // Afiseaza loading state
   showSyncLoading(true);
-  // Incearca sa citeasca datele din Google Sheets (sursa de adevar)
   fetch(GS_URL_PERM+'?action=getData',{mode:'cors'})
     .then(function(r){ return r.json(); })
     .then(function(data){
@@ -1038,34 +1036,21 @@ function loadAll(){
       if(data.ok && (data.products||data.movements)){
         db.products = data.products||[];
         db.movements = data.movements||[];
-        saveDB();
         renderDash(); renderStoc(); renderIst(''); renderRetList();
-        toast('Date sincronizate din Google Sheets ('+db.products.length+' produse, '+db.movements.length+' miscari)','🔄');
         updateSyncUI(true);
+        toast('Sincronizat: '+db.products.length+' produse, '+db.movements.length+' miscari','🔄');
       } else {
-        loadFromLocal();
+        db={products:[],movements:[]};
+        renderDash(); renderStoc(); renderIst(''); renderRetList();
+        toast('Conectat la Sheets — nicio inregistrare inca','ℹ️');
       }
     })
     .catch(function(){
       showSyncLoading(false);
-      loadFromLocal();
+      db={products:[],movements:[]};
+      renderDash(); renderStoc(); renderIst(''); renderRetList();
+      toast('Nu s-a putut conecta la Google Sheets. Verificati conexiunea.','⚠️',true);
     });
-}
-function loadFromLocal(){
-  // Nu mai incarca din localStorage — datele sunt doar in Google Sheets
-  db={products:[],movements:[]};
-  try{ localStorage.removeItem(DB_K); }catch(e){}
-  renderDash(); renderStoc(); renderIst(''); renderRetList();
-  toast('Nu s-a putut conecta la Google Sheets. Verificați conexiunea.','⚠️',true);
-}
-function showSyncLoading(on){
-  var el=$('sync-loading');
-  if(el) el.style.display=on?'flex':'none';
-  var ico=$('sync-ico');
-  if(ico){
-    if(on){ ico.style.animation='spin .7s linear infinite'; }
-    else { ico.style.animation=''; }
-  }
 }
 function saveDB(){ /* date gestionate exclusiv in Google Sheets — nu se salveaza local */ }
 function saveCfg(){
@@ -2066,8 +2051,14 @@ function copyCod(){
 }
 
 // ═══════════════════════════════════
-// SYNC FROM SHEETS
+// SYNC LOADING + SYNC FROM SHEETS
 // ═══════════════════════════════════
+function showSyncLoading(on){
+  var el=$('sync-loading');
+  if(el) el.style.display=on?'flex':'none';
+  var ico=$('sync-ico');
+  if(ico) ico.style.animation=on?'spin .7s linear infinite':'';
+}
 function syncFromSheets(){
   toast('Se sincronizează...','🔄');
   showSyncLoading(true);
@@ -2078,7 +2069,6 @@ function syncFromSheets(){
       if(data.ok && (data.products||data.movements)){
         db.products = data.products||[];
         db.movements = data.movements||[];
-        saveDB();
         renderDash(); renderStoc(); renderIst(''); renderRetList();
         updateSyncUI(true);
         toast('Sincronizat! '+db.products.length+' produse, '+db.movements.length+' miscari','✅');
@@ -2087,7 +2077,7 @@ function syncFromSheets(){
         updateSyncUI(false);
       }
     })
-    .catch(function(err){
+    .catch(function(){
       showSyncLoading(false);
       updateSyncUI(false);
       toast('Eroare conexiune Google Sheets','❌',true);
