@@ -394,7 +394,18 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <div style="text-align:right"><div class="pfs" id="in-pfs">—</div><div class="pfl">stoc actual</div></div>
       </div>
       <div class="fr fr3">
-        <div class="fg"><label>Furnizor</label><input type="text" id="in-sup" placeholder="Furnizor"></div>
+        <div class="fg"><label>Furnizor</label>
+          <select id="in-sup">
+            <option value="">— Alege furnizor —</option>
+            <option>Intercars</option>
+            <option>Bardi</option>
+            <option>Autototal</option>
+            <option>Materom</option>
+            <option>Unix</option>
+            <option>Elit</option>
+            <option>Connex</option>
+          </select>
+        </div>
         <div class="fg"><label>Nr. Factură</label><input type="text" id="in-doc" placeholder="FAC-001"></div>
         <div class="fg"><label>Cantitate</label><input type="number" id="in-qty" min="1" placeholder="0"></div>
       </div>
@@ -405,12 +416,18 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       <div class="fr fr1">
         <div class="fg"><label>Categorie</label>
           <select id="in-cat"><option value="">— Alege —</option>
-            <option>Filtre</option><option>Frane</option><option>Aprindere</option>
-            <option>Distributie</option><option>Suspensie</option><option>Electronica</option>
-            <option>Caroserie</option><option>Motor</option><option>Transmisie</option>
-            <option>Baterii</option><option>Altele</option></select></div>
+            <option>Motor</option><option>Caroserie</option><option>Sistem franare</option>
+            <option>Sistem suspensie</option><option>Alimentare combustibil</option><option>Sistem esapament</option>
+            <option>Sistem ambreiaj</option><option>Sistem directie</option><option>Sistem distributie</option>
+            <option>Cutie de viteze</option><option>Angrenare roata</option><option>Antrenare punte</option>
+            <option>Sistem tractiune</option><option>Sistem aprindere</option><option>Sistem electric</option>
+            <option>Sistem confort</option><option>Sistem inchidere</option><option>Sistem racire motor</option>
+            <option>Sistem aer conditionat</option><option>Sistem admisie</option><option>Componente interior</option>
+            <option>Ulei</option><option>Filtre</option><option>Garnituri</option>
+            <option>Consumabile</option><option>Acumulatori</option><option>Accesorii</option>
+            <option>Roti</option><option>Anvelope</option></select></div>
       </div>
-      <div class="fr fr1"><div class="fg"><label>Operator</label><input type="text" id="in-op" placeholder="Numele operatorului"></div></div>
+      <div class="fr fr1"><div class="fg"><label>Operator</label><input type="text" id="in-op" placeholder="Camela Dan" value="Camela Dan"></div></div>
       <div class="acts">
         <button class="btn bgh" onclick="clearF('in')">✕ Anulează</button>
         <button class="btn bg" onclick="subMov('in')">✓ Înregistrează Intrare</button>
@@ -450,7 +467,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
       <div class="fr">
         <div class="fg"><label>Preț Vânzare (RON/buc) <span style="color:var(--grn);font-size:9px">+25% din achiziție</span></label><input type="number" id="out-prt" placeholder="0.00" step="0.01" style="border-color:rgba(39,174,96,.4);background:rgba(39,174,96,.04)"></div>
-        <div class="fg"><label>Operator</label><input type="text" id="out-op" placeholder="Numele operatorului"></div>
+        <div class="fg"><label>Operator</label><input type="text" id="out-op" placeholder="Camela Dan" value="Camela Dan"></div>
       </div>
       <div class="acts">
         <button class="btn bgh" onclick="clearF('out')">✕ Anulează</button>
@@ -511,7 +528,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
       <div class="fr fr1"><div class="fg"><label>Observații / Stare piesă</label><input type="text" id="ret-obs" placeholder="ex: ambalaj intact, piesă neutilizată..."></div></div>
       <div class="fr">
-        <div class="fg"><label>Operator</label><input type="text" id="ret-op" placeholder="Numele operatorului"></div>
+        <div class="fg"><label>Operator</label><input type="text" id="ret-op" placeholder="Camela Dan" value="Camela Dan"></div>
         <div class="fg"><label>Reintrare în stoc?</label>
           <select id="ret-rst">
             <option value="da">✅ Da — reintrare în stoc</option>
@@ -552,7 +569,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
       <div class="fr">
         <div class="fg"><label>Valoare Rambursată (RON)</label><input type="number" id="ac-vl" placeholder="0.00" step="0.01"></div>
-        <div class="fg"><label>Operator</label><input type="text" id="ac-op" placeholder="Operator"></div>
+        <div class="fg"><label>Operator</label><input type="text" id="ac-op" placeholder="Camela Dan" value="Camela Dan"></div>
       </div>
       <button class="btn ba" style="width:100%;margin-top:6px" onclick="printFisa()">🖨️ Generează / Printează Fișă Retur</button>
     </div>
@@ -617,7 +634,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
             <option value="0">Fără TVA (scutit)</option>
           </select>
         </div>
-        <div class="fg"><label>Operator / Emitent</label><input type="text" id="fac-op" placeholder="Numele emitentului"></div>
+        <div class="fg"><label>Operator / Emitent</label><input type="text" id="fac-op" placeholder="Camela Dan" value="Camela Dan"></div>
       </div>
       <button class="btn ba" style="width:100%;margin-top:6px" onclick="printFactura()">🖨️ Generează / Printează Factura</button>
     </div>
@@ -724,7 +741,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
     <div class="sb">
       <div class="fr">
         <div class="fg"><label>Nume Magazin</label><input type="text" id="s-shop" onchange="saveCfg()"></div>
-        <div class="fg"><label>Operator Implicit</label><input type="text" id="s-op" placeholder="Numele dvs." onchange="saveCfg()"></div>
+        <div class="fg"><label>Operator Implicit</label><input type="text" id="s-op" placeholder="Camela Dan" value="Camela Dan" onchange="saveCfg()"></div>
       </div>
       <div class="fr">
         <div class="fg"><label>Adresă</label><input type="text" id="s-adr" placeholder="Str., Nr., Chișoda" onchange="saveCfg()"></div>
@@ -736,14 +753,14 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
       <div class="fr">
         <div class="fg"><label>Email</label><input type="email" id="s-eml" placeholder="vanzari@pieseautotm.ro" onchange="saveCfg()"></div>
-        <div class="fg"><label>Operator Implicit</label><input type="text" id="s-op2" placeholder="Numele operatorului" onchange="saveCfg()"></div>
+        <div class="fg"><label>Operator Implicit</label><input type="text" id="s-op2" placeholder="Camela Dan" value="Camela Dan" onchange="saveCfg()"></div>
       </div>
       <div class="fr">
         <div class="fg"><label>Website</label><input type="text" id="s-web" placeholder="www.pieseautotm.ro" onchange="saveCfg()"></div>
         <div class="fg"><label>Telefon</label><input type="tel" id="s-tel" placeholder="0766551313" onchange="saveCfg()"></div>
       </div>
       <div class="fr">
-        <div class="fg"><label>Program de Lucru</label><input type="text" id="s-prg" placeholder="L–V: 08-18, S: 08-14" onchange="saveCfg()"></div>
+        <div class="fg"><label>Program de Lucru</label><input type="text" id="s-prg" placeholder="L–V: 08:00–17:00" onchange="saveCfg()"></div>
         <div class="fg"><label>Stoc Minim Alertă (buc)</label><input type="number" id="s-min" value="5" onchange="saveCfg()"></div>
       </div>
     </div>
@@ -889,11 +906,11 @@ function expDate(per){
 var DB_K='spl3_db', CFG_K='spl3_cfg';
 var db={products:[],movements:[]};
 var GS_URL_PERM='https://script.google.com/macros/s/AKfycbzAlrh39o7IVZlj9mhNylhORvvYr62zf1xpEOPjeAqnnMawZqacCRj0aoT9_Ka06-By/exec';
-var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'',
+var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camela Dan',
   address:'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221',
   phone:'0766551313',email:'vanzari@pieseautotm.ro',
   cui:'RO44870892',regCom:'J20/1003624352',
-  website:'www.pieseautotm.ro',program:'L–V: 08:00–18:00 | S: 08:00–14:00',minStock:5,
+  website:'www.pieseautotm.ro',program:'L–V: 08:00–17:00',minStock:5,
   invoiceNr:1};
 
 function loadAll(){
@@ -916,14 +933,14 @@ function saveCfg(){
 }
 function applySettings(){
   sv('s-shop',cfg.shopName||'SPL Piese Auto');
-  sv('s-op',cfg.defaultOp||'');
+  sv('s-op',cfg.defaultOp||'Camela Dan');
   sv('s-adr',cfg.address||'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221');
   sv('s-tel',cfg.phone||'0766551313');
   sv('s-eml',cfg.email||'vanzari@pieseautotm.ro');
   sv('s-cui',cfg.cui||'RO44870892');
   sv('s-reg',cfg.regCom||'J20/1003624352');
   sv('s-web',cfg.website||'www.pieseautotm.ro');
-  sv('s-prg',cfg.program||'');
+  sv('s-prg',cfg.program||'L–V: 08:00–17:00');
   sv('s-min',cfg.minStock||5);
   sv('s-invnr',cfg.invoiceNr||1);
   sv('s-gs',GS_URL_PERM);
@@ -1296,8 +1313,9 @@ function subMov(type){
   toast(type==='in'?'Intrare: +'+qty+' × '+nm:'Vânzare: −'+qty+' × '+nm, type==='in'?'📥':'📤');
 }
 function clearF(type){
-  ['bc','nm','prt','op'].forEach(function(f){ sv(type+'-'+f,''); });
+  ['bc','nm','prt'].forEach(function(f){ sv(type+'-'+f,''); });
   sv(type+'-qty','');
+  sv(type+'-op', cfg.defaultOp||'Camela Dan');
   if(type==='in'){ sv('in-sup',''); sv('in-doc',''); sv('in-cat',''); sv('in-sell',''); }
   if(type==='out'){ sv('out-clt',''); sv('out-doc',''); }
   var pf=$(type+'-pf'); if(pf) pf.classList.remove('on');
@@ -1331,7 +1349,8 @@ function subRet(){
   toast('Retur înregistrat: '+qty+' × '+nm,'↩️');
 }
 function clearRet(){
-  ['bc','nm','par','dor','val','fis','obs','op'].forEach(function(f){ sv('ret-'+f,''); });
+  ['bc','nm','par','dor','val','fis','obs'].forEach(function(f){ sv('ret-'+f,''); });
+  sv('ret-op', cfg.defaultOp||'Camela Dan');
   sv('ret-qty','');
   var pf=$('ret-pf'); if(pf) pf.classList.remove('on');
 }
@@ -1449,6 +1468,7 @@ function prepActe(){
   if(!gv('fac-dt')) sv('fac-dt',tod());
   if(!gv('fac-scad')){ var sc=new Date(); sc.setDate(sc.getDate()+30); sv('fac-scad',sc.toLocaleDateString('ro-RO')); }
   if(cfg.defaultOp&&!gv('fac-op')) sv('fac-op',cfg.defaultOp);
+  if(!gv('ac-op')) sv('ac-op', cfg.defaultOp||'Camela Dan');
   if(!$('fac-linii').children.length) addFacLinie();
 }
 function preloadRetur(){
