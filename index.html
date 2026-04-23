@@ -581,9 +581,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 
   <!-- FACTURĂ CLIENT -->
   <div class="card">
-    <div class="ch"><h2>🧾 Generare Factură Client</h2>
-      <button class="btn bg" style="padding:5px 10px;font-size:10px" onclick="addFacLinie()">+ Adaugă Linie</button>
-    </div>
+    <div class="ch"><h2>&#x1F9FE; Generare Factură Client</h2></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Nr. Factură</label><input type="text" id="fac-nr" placeholder="auto-generat"></div>
@@ -596,39 +594,48 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       <div class="fr fr1">
         <div class="fg"><label>Adresă Client</label><input type="text" id="fac-cl-adr" placeholder="Adresa clientului (opțional)"></div>
       </div>
+
+      <!-- Adaugă produs -->
+      <div style="background:rgba(39,174,96,.06);border:1px solid rgba(39,174,96,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">&#x2795; Adaugă Produs pe Factură</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px">
+          <div class="fg">
+            <label>Caută în stoc</label>
+            <input type="text" id="fac-search" placeholder="Tastează denumire sau cod..." oninput="facSearch(this.value)" autocomplete="off" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
+            <div id="fac-search-res" style="display:none;background:var(--c1);border:1px solid var(--brd);border-radius:6px;margin-top:3px;max-height:160px;overflow-y:auto;position:relative;z-index:100"></div>
+          </div>
+          <div class="fg">
+            <label>Sau tastează manual</label>
+            <input type="text" id="fac-add-nm" placeholder="Denumire produs / serviciu" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:0.5fr 0.8fr 0.8fr auto;gap:7px;align-items:flex-end">
+          <div class="fg"><label>UM</label><input type="text" id="fac-add-um" value="BUC" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
+          <div class="fg"><label>Cantitate</label><input type="number" id="fac-add-qty" value="1" min="0.01" step="0.01" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
+          <div class="fg"><label>Preț Unitar (RON)</label><input type="number" id="fac-add-prt" min="0" step="0.01" placeholder="0.00" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
+          <button class="btn bg" style="padding:9px 14px;white-space:nowrap" onclick="addFacLinieFromForm()">+ Adaugă</button>
+        </div>
+      </div>
+
+      <!-- Tabel linii -->
       <div style="border:1px solid var(--brd);border-radius:7px;overflow:hidden;margin-bottom:9px">
-        <div style="background:var(--c2);padding:7px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:2fr 0.6fr 0.9fr 0.9fr 0.5fr;gap:6px">
-          <span>Denumire Produs/Serviciu</span><span>UM</span><span>Cant.</span><span>Preț Unit.</span><span></span>
+        <div style="background:var(--c2);padding:7px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:24px 2.5fr 0.6fr 0.8fr 1fr 0.7fr 32px;gap:6px;align-items:center">
+          <span>#</span><span>Denumire</span><span>UM</span><span style="text-align:center">Cant.</span><span style="text-align:right">Preț Unit.</span><span style="text-align:right">Valoare</span><span></span>
         </div>
-        <div id="fac-linii"></div>
+        <div id="fac-linii"><div id="fac-empty" style="padding:18px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:22px;display:block;margin-bottom:6px;opacity:.4">&#x1F9FE;</span>Niciun produs — adăugați din câmpul de mai sus</div></div>
       </div>
+
+      <!-- Totaluri -->
       <div style="display:flex;justify-content:flex-end;margin-bottom:9px">
-        <div style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;padding:10px 14px;min-width:200px">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px">
-            <span>Subtotal (fără TVA):</span><span id="fac-sub">0.00 RON</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:6px">
-            <span id="fac-tva-lbl">TVA 0%:</span><span id="fac-tva">0.00 RON</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--grn);font-family:'Barlow Condensed',sans-serif">
-            <span>TOTAL:</span><span id="fac-tot">0.00 RON</span>
-          </div>
+        <div style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;padding:10px 14px;min-width:220px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px"><span>Subtotal (fără TVA):</span><span id="fac-sub">0.00 RON</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:6px"><span id="fac-tva-lbl">TVA 0%:</span><span id="fac-tva">0.00 RON</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--grn);font-family:'Barlow Condensed',sans-serif"><span>TOTAL:</span><span id="fac-tot">0.00 RON</span></div>
+          <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--brd);font-size:10px;color:var(--t2);text-align:right" id="fac-nrlinii">0 produse</div>
         </div>
       </div>
-      <div class="fr">
-        <div class="fg"><label>Scadență</label><input type="text" id="fac-scad" placeholder="Data scadenței"></div>
-        <div class="fg"><label>Metodă Plată</label>
-          <select id="fac-plata">
-            <option>Numerar</option>
-            <option>Card bancar</option>
-            <option>Transfer bancar</option>
-            <option>CEC / Bilet la ordin</option>
-          </select>
-        </div>
-      </div>
-      <div class="fr fr1">
-        <div class="fg"><label>Observații Factură</label><input type="text" id="fac-obs" placeholder="ex: Conform ofertei nr. ..., Mulțumim pentru colaborare!"></div>
-      </div>
+
+      <!-- Opțiuni -->
       <div class="fr">
         <div class="fg"><label>TVA</label>
           <select id="fac-tva-tip" onchange="calcFac()">
@@ -636,13 +643,27 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
             <option value="21">TVA 21%</option>
           </select>
         </div>
+        <div class="fg"><label>Metodă Plată</label>
+          <select id="fac-plata">
+            <option>Numerar</option><option>Card bancar</option><option>Transfer bancar</option><option>CEC / Bilet la ordin</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Scadență</label><input type="text" id="fac-scad" placeholder="Data scadenței"></div>
         <div class="fg"><label>Operator / Emitent</label><input type="text" id="fac-op" placeholder="Camelia Dan" value="Camelia Dan"></div>
       </div>
-      <button class="btn ba" style="width:100%;margin-top:6px" onclick="printFactura()">🖨️ Generează / Printează Factura</button>
+      <div class="fr fr1">
+        <div class="fg"><label>Observații Factură</label><input type="text" id="fac-obs" placeholder="ex: Conform ofertei nr. ..., Mulțumim pentru colaborare!"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn bgh" style="padding:10px 14px" onclick="clearFactura()">&#x2715; Golește</button>
+        <button class="btn ba" style="flex:1" onclick="printFactura()">&#x1F5A8;&#xFE0F; Generează / Printează Factura</button>
+      </div>
     </div>
   </div>
 
-  <!-- GARANȚIE PIESE -->
+    <!-- GARANȚIE PIESE -->
   <div class="card">
     <div class="ch"><h2>🔧 Certificat Garanție Piesă Auto</h2></div>
     <div class="cb">
@@ -1598,7 +1619,7 @@ function prepActe(){
   if(!gv('fac-scad')){ var sc=new Date(); sc.setDate(sc.getDate()+30); sv('fac-scad',sc.toLocaleDateString('ro-RO')); }
   if(cfg.defaultOp&&!gv('fac-op')) sv('fac-op',cfg.defaultOp);
   if(!gv('ac-op')) sv('ac-op', cfg.defaultOp||'Camelia Dan');
-  if(!$('fac-linii').children.length) addFacLinie();
+  // fac-linii starts with empty state
 }
 function preloadRetur(){
   var idx=parseInt(gv('ac-sel')); if(isNaN(idx)) return;
@@ -1745,27 +1766,89 @@ function printGarBat(){
 // FACTURI
 // ═══════════════════════════════════
 var facLiniiCount=0;
+
+function facSearch(q){
+  var res=$('fac-search-res');
+  if(!q||q.length<2){ res.style.display='none'; return; }
+  var ql=q.toLowerCase();
+  var hits=db.products.filter(function(p){
+    return p.name.toLowerCase().indexOf(ql)>=0||p.bc.toLowerCase().indexOf(ql)>=0;
+  }).slice(0,8);
+  if(!hits.length){ res.style.display='none'; return; }
+  res.style.display='block';
+  res.innerHTML=hits.map(function(p){
+    var bc=p.bc.replace(/'/g,"\\'");
+    return '<div onclick="facSelectProd(\''+bc+'\')" style="padding:8px 11px;cursor:pointer;border-bottom:1px solid rgba(36,41,63,.5);font-size:12px" onmouseover="this.style.background=\'rgba(39,174,96,.08)\'" onmouseout="this.style.background=\'\'">'+
+      '<span style="font-weight:600">'+p.name+'</span>'+
+      '<span style="color:var(--t2);font-size:10px;margin-left:8px">'+p.bc+'</span>'+
+      '<span style="float:right;color:var(--grn);font-weight:700">'+p.sell.toFixed(2)+' RON</span>'+
+      '<span style="float:right;color:var(--t2);font-size:10px;margin-right:8px">Stoc: '+p.stock+'</span>'+
+    '</div>';
+  }).join('');
+}
+function facSelectProd(bc){
+  var p=db.products.find(function(x){ return x.bc===bc; });
+  if(!p) return;
+  sv('fac-add-nm',p.name);
+  sv('fac-add-um',p.um||'BUC');
+  sv('fac-add-qty',1);
+  sv('fac-add-prt',p.sell||p.buy||0);
+  sv('fac-search','');
+  $('fac-search-res').style.display='none';
+  $('fac-add-qty').focus();
+}
+function addFacLinieFromForm(){
+  var nm=gv('fac-add-nm').trim();
+  var um=gv('fac-add-um').trim()||'BUC';
+  var qty=parseFloat(gv('fac-add-qty'))||1;
+  var prt=parseFloat(gv('fac-add-prt'))||0;
+  if(!nm) return toast('Introduc\u021bi denumirea produsului!','\u26a0\ufe0f',true);
+  addFacLinie(nm,um,qty,prt);
+  sv('fac-add-nm',''); sv('fac-add-qty',1); sv('fac-add-prt','');
+  sv('fac-search',''); $('fac-search-res').style.display='none';
+  $('fac-add-nm').focus();
+}
 function addFacLinie(nm,um,qty,pret){
+  var empty=$('fac-empty'); if(empty) empty.remove();
   var id='fl'+facLiniiCount++;
+  var nr=$('fac-linii').querySelectorAll('[id^="fl"]').length+1;
   var el=document.createElement('div');
-  el.id=id; el.style.cssText='display:grid;grid-template-columns:2fr 0.6fr 0.9fr 0.9fr 0.5fr;gap:6px;padding:7px 11px;border-top:1px solid rgba(36,41,63,.5);align-items:center';
+  el.id=id;
+  el.style.cssText='display:grid;grid-template-columns:24px 2.5fr 0.6fr 0.8fr 1fr 0.7fr 32px;gap:6px;padding:7px 11px;border-top:1px solid rgba(36,41,63,.5);align-items:center';
+  var inp='background:var(--c2);border:1px solid var(--brd);border-radius:5px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:6px 8px;outline:none;width:100%';
   el.innerHTML=
-    '<input type="text" value="'+(nm||'')+'" placeholder="Denumire produs / serviciu" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:7px 9px;outline:none;width:100%">'+
-    '<input type="text" value="'+(um||'BUC')+'" placeholder="BUC" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:7px 9px;outline:none;width:100%">'+
-    '<input type="number" value="'+(qty||1)+'" min="0.01" step="0.01" placeholder="1" oninput="calcFac()" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:7px 9px;outline:none;width:100%">'+
-    '<input type="number" value="'+(pret||'')+'" min="0" step="0.01" placeholder="0.00" oninput="calcFac()" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:7px 9px;outline:none;width:100%">'+
-    '<button onclick="document.getElementById(\''+id+'\').remove();calcFac()" style="background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.3);border-radius:6px;color:#e74c3c;cursor:pointer;font-size:14px;padding:6px;width:100%">✕</button>';
+    '<span class="nr-linie" style="font-size:10px;color:var(--t2);font-weight:700;text-align:center">'+nr+'</span>'+
+    '<input type="text" value="'+(nm||'')+'" placeholder="Denumire" style="'+inp+'" oninput="calcFac()">'+
+    '<input type="text" value="'+(um||'BUC')+'" placeholder="BUC" style="'+inp+'">'+
+    '<input type="number" value="'+(qty||1)+'" min="0.01" step="0.01" placeholder="1" oninput="calcFac()" style="'+inp+';text-align:center">'+
+    '<input type="number" value="'+(pret||'')+'" min="0" step="0.01" placeholder="0.00" oninput="calcFac()" style="'+inp+';text-align:right">'+
+    '<span class="val-linie" style="font-size:12px;font-weight:700;color:var(--grn);text-align:right;font-family:\'Barlow Condensed\',sans-serif">'+((qty||0)*(pret||0)).toFixed(2)+'</span>'+
+    '<button onclick="document.getElementById(\''+id+'\').remove();renumFacLinii();calcFac()" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.25);border-radius:5px;color:#e74c3c;cursor:pointer;font-size:12px;padding:5px;width:100%">\u00d7</button>';
   $('fac-linii').appendChild(el);
   calcFac();
 }
+function renumFacLinii(){
+  var linii=$('fac-linii').querySelectorAll('.nr-linie');
+  for(var i=0;i<linii.length;i++) linii[i].textContent=i+1;
+  if(!$('fac-linii').querySelectorAll('[id^="fl"]').length){
+    var empty=document.createElement('div');
+    empty.id='fac-empty';
+    empty.style.cssText='padding:18px;text-align:center;color:var(--t2);font-size:12px';
+    empty.innerHTML='<span style="font-size:22px;display:block;margin-bottom:6px;opacity:.4">&#x1F9FE;</span>Niciun produs \u2014 ad\u0103uga\u021bi din c\u00e2mpul de mai sus';
+    $('fac-linii').appendChild(empty);
+  }
+}
 function calcFac(){
-  var linii=$('fac-linii').children;
-  var subtotal=0;
+  var linii=$('fac-linii').querySelectorAll('[id^="fl"]');
+  var subtotal=0; var nrLinii=linii.length;
   for(var i=0;i<linii.length;i++){
     var inputs=linii[i].querySelectorAll('input');
+    if(inputs.length<4) continue;
     var qty=parseFloat(inputs[2].value)||0;
-    var pret=parseFloat(inputs[3].value)||0;
-    subtotal+=qty*pret;
+    var prt=parseFloat(inputs[3].value)||0;
+    var val=qty*prt; subtotal+=val;
+    var valEl=linii[i].querySelector('.val-linie');
+    if(valEl) valEl.textContent=val.toFixed(2);
   }
   var tvaPct=parseFloat(gv('fac-tva-tip'))||0;
   var tva=Math.round(subtotal*tvaPct)/100;
@@ -1774,6 +1857,12 @@ function calcFac(){
   $('fac-tva').textContent=tva.toFixed(2)+' RON';
   $('fac-tot').textContent=total.toFixed(2)+' RON';
   var lbl=$('fac-tva-lbl'); if(lbl) lbl.textContent='TVA '+tvaPct+'%:';
+  var nl=$('fac-nrlinii'); if(nl) nl.textContent=nrLinii+' produs'+(nrLinii===1?'':'e');
+}
+function clearFactura(){
+  if(!confirm('Goli\u021bi toate liniile facturii?')) return;
+  $('fac-linii').innerHTML='<div id="fac-empty" style="padding:18px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:22px;display:block;margin-bottom:6px;opacity:.4">&#x1F9FE;</span>Niciun produs \u2014 ad\u0103uga\u021bi din c\u00e2mpul de mai sus</div>';
+  facLiniiCount=0; calcFac();
 }
 
 function printFactura(){
