@@ -777,14 +777,22 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <input type="url" id="s-gs" value="https://script.google.com/macros/s/AKfycbzAlrh39o7IVZlj9mhNylhORvvYr62zf1xpEOPjeAqnnMawZqacCRj0aoT9_Ka06-By/exec" readonly style="color:var(--grn);font-size:10px;cursor:default;opacity:.8" title="URL conectat permanent">
         <div class="hint">✅ Conectat permanent la Google Sheets SPL Piese Auto</div>
       </div>
-      <button class="btn bgh" style="width:100%" onclick="testSync()">🔗 Verifică Conexiunea Google Sheets</button>
+      <div style="display:flex;gap:8px">
+      <button class="btn bgh" style="flex:1" onclick="testSync()">🔗 Verifică Conexiunea</button>
+      <button class="btn bg" style="flex:1" onclick="syncFromSheets()">🔄 Sincronizează Acum</button>
+    </div>
     </div>
   </div>
 
   <div class="ss">
     <div class="sh">📋 Cod Google Apps Script</div>
     <div class="sb">
-      <textarea class="scode" readonly id="gs-cod">function doPost(e){
+      <textarea class="scode" readonly id="gs-cod">// ═══════════════════════════════════════════════
+// SPL Piese Auto — Google Apps Script v2
+// Suporta POST (salvare) si GET (citire date)
+// ═══════════════════════════════════════════════
+
+function doPost(e){
   try{
     var ss=SpreadsheetApp.getActiveSpreadsheet();
     var d=JSON.parse(e.postData.contents);
@@ -800,6 +808,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
     return ContentService.createTextOutput(JSON.stringify({ok:false,e:err.message}))
       .setMimeType(ContentService.MimeType.JSON);}
 }
+
 function updStoc(ss,d){
   var s=ss.getSheetByName('Stoc Curent')||ss.insertSheet('Stoc Curent');
   if(s.getLastRow()===0){s.appendRow(['Cod','Denumire','Cat','Stoc','P.Ach','P.Vanz']);
@@ -814,9 +823,95 @@ function updStoc(ss,d){
     if(d.type==='out'&&d.pretV)s.getRange(ri,6).setValue(d.pretV);
   }else if(d.type==='in'){s.appendRow([bc,d.name||'',d.cat||'',qty,d.pret||0,0]);}
 }
-function doGet(){
-  return ContentService.createTextOutput(JSON.stringify({ok:true}))
+
+// ── GET: returneaza toate datele pentru sincronizare ──
+function doGet(e){
+  var action = e && e.parameter && e.parameter.action ? e.parameter.action : 'ping';
+
+  if(action === 'ping'){
+    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if(action === 'getData'){
+    try{
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var products = [], movements = [];
+
+      // Citeste Stoc Curent
+      var sStoc = ss.getSheetByName('Stoc Curent');
+      if(sStoc && sStoc.getLastRow() > 1){
+        var stocData = sStoc.getRange(2,1,sStoc.getLastRow()-1,6).getValues();
+        stocData.forEach(function(r){
+          if(!r[0]) return;
+          products.push({bc:String(r[0]),name:String(r[1]||''),cat:String(r[2]||''),
+            stock:Number(r[3])||0,buy:Number(r[4])||0,sell:Number(r[5])||0,um:'BUC'});
+        });
+      }
+
+      // Citeste Intrari
+      var sIn = ss.getSheetByName('Intrari');
+      if(sIn && sIn.getLastRow() > 1){
+        var inData = sIn.getRange(2,1,sIn.getLastRow()-1,10).getValues();
+        inData.forEach(function(r){
+          if(!r[0]) return;
+          movements.push({t:'in',date:fmtDate(r[0]),bc:String(r[1]||''),
+            name:String(r[2]||''),partner:String(r[3]||''),doc:String(r[4]||''),
+            qty:Number(r[5])||0,price:Number(r[6])||0,cat:String(r[8]||''),
+            op:String(r[9]||''),ts:0});
+        });
+      }
+
+      // Citeste Iesiri
+      var sOut = ss.getSheetByName('Iesiri');
+      if(sOut && sOut.getLastRow() > 1){
+        var outData = sOut.getRange(2,1,sOut.getLastRow()-1,11).getValues();
+        outData.forEach(function(r){
+          if(!r[0]) return;
+          movements.push({t:'out',date:fmtDate(r[0]),bc:String(r[1]||''),
+            name:String(r[2]||''),partner:String(r[3]||''),doc:String(r[4]||''),
+            qty:Number(r[5])||0,price:Number(r[6])||0,cat:'',
+            op:String(r[10]||''),ts:0});
+        });
+      }
+
+      // Citeste Retururi
+      var sRet = ss.getSheetByName('Retururi');
+      if(sRet && sRet.getLastRow() > 1){
+        var retData = sRet.getRange(2,1,sRet.getLastRow()-1,13).getValues();
+        retData.forEach(function(r){
+          if(!r[0]) return;
+          movements.push({t:'ret',date:fmtDate(r[0]),
+            tip:String(r[1]||'')==='Retur Client'?'client':'furnizor',
+            bc:String(r[2]||''),name:String(r[3]||''),partner:String(r[4]||''),
+            docOrig:String(r[5]||''),qty:Number(r[6])||0,val:Number(r[7])||0,
+            motiv:String(r[8]||''),fisa:String(r[9]||''),obs:String(r[10]||''),
+            restoc:String(r[11]||'').toLowerCase()==='da'?'da':'nu',
+            op:String(r[12]||''),ts:0});
+        });
+      }
+
+      movements.sort(function(a,b){return a.date<b.date?1:-1;});
+
+      return ContentService.createTextOutput(
+        JSON.stringify({ok:true,products:products,movements:movements})
+      ).setMimeType(ContentService.MimeType.JSON);
+
+    }catch(err){
+      return ContentService.createTextOutput(
+        JSON.stringify({ok:false,e:err.message})
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ok:false,e:'unknown action'}))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function fmtDate(v){
+  if(!v) return '';
+  if(v instanceof Date) return v.toLocaleDateString('ro-RO');
+  return String(v);
 }</textarea>
       <button class="btn bgh" style="width:100%;margin-top:8px" onclick="copyCod()">📋 Copiază Codul</button>
     </div>
@@ -871,6 +966,17 @@ function doGet(){
 <!-- TOAST -->
 <div id="toast"><span id="t-i">✅</span>&nbsp;<span id="t-m"></span></div>
 
+
+<!-- SYNC LOADING OVERLAY -->
+<div id="sync-loading" style="display:none;position:fixed;inset:0;background:rgba(11,13,21,.92);
+  z-index:9990;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+  <div style="width:44px;height:44px;border:3px solid var(--brd);border-top-color:var(--acc);
+    border-radius:50%;animation:spin .8s linear infinite"></div>
+  <div style="font-size:13px;font-weight:600;color:var(--t3)">Se sincronizează cu Google Sheets...</div>
+  <div style="font-size:11px;color:var(--t2)">Prima încărcare poate dura câteva secunde</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
 <script>
 'use strict';
 
@@ -913,11 +1019,41 @@ var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
   invoiceNr:1};
 
 function loadAll(){
-  try{ var dbRaw=localStorage.getItem(DB_K); if(dbRaw) db=JSON.parse(dbRaw); }catch(e){}
+  // Incarca configuratia salvata local
   try{ var cfgRaw=localStorage.getItem(CFG_K); if(cfgRaw) cfg=Object.assign(cfg,JSON.parse(cfgRaw)); }catch(e){}
-  // Always restore permanent GS URL even if overwritten by saved cfg
   cfg.gsUrl=GS_URL_PERM;
   applySettings();
+  // Afiseaza loading state
+  showSyncLoading(true);
+  // Incearca sa citeasca datele din Google Sheets (sursa de adevar)
+  fetch(GS_URL_PERM+'?action=getData',{mode:'cors'})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      showSyncLoading(false);
+      if(data.ok && (data.products||data.movements)){
+        db.products = data.products||[];
+        db.movements = data.movements||[];
+        saveDB();
+        renderDash(); renderStoc(); renderIst(''); renderRetList();
+        toast('Date sincronizate din Google Sheets ('+db.products.length+' produse, '+db.movements.length+' miscari)','🔄');
+        updateSyncUI(true);
+      } else {
+        loadFromLocal();
+      }
+    })
+    .catch(function(){
+      showSyncLoading(false);
+      loadFromLocal();
+    });
+}
+function loadFromLocal(){
+  try{ var dbRaw=localStorage.getItem(DB_K); if(dbRaw) db=JSON.parse(dbRaw); }catch(e){}
+  renderDash(); renderStoc(); renderIst(''); renderRetList();
+  toast('Date incarcate local (offline)','💾');
+}
+function showSyncLoading(on){
+  var el=$('sync-loading');
+  if(el) el.style.display=on?'flex':'none';
 }
 function saveDB(){ try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){} }
 function saveCfg(){
@@ -1918,6 +2054,35 @@ function copyCod(){
 }
 
 // ═══════════════════════════════════
+// SYNC FROM SHEETS
+// ═══════════════════════════════════
+function syncFromSheets(){
+  toast('Se sincronizează...','🔄');
+  showSyncLoading(true);
+  fetch(GS_URL_PERM+'?action=getData',{mode:'cors'})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      showSyncLoading(false);
+      if(data.ok && (data.products||data.movements)){
+        db.products = data.products||[];
+        db.movements = data.movements||[];
+        saveDB();
+        renderDash(); renderStoc(); renderIst(''); renderRetList();
+        updateSyncUI(true);
+        toast('Sincronizat! '+db.products.length+' produse, '+db.movements.length+' miscari','✅');
+      } else {
+        toast('Eroare la citirea datelor din Sheets','❌',true);
+        updateSyncUI(false);
+      }
+    })
+    .catch(function(err){
+      showSyncLoading(false);
+      updateSyncUI(false);
+      toast('Eroare conexiune Google Sheets','❌',true);
+    });
+}
+
+// ═══════════════════════════════════
 // RESET
 // ═══════════════════════════════════
 function resetData(){
@@ -1932,9 +2097,6 @@ function resetData(){
 // INIT
 // ═══════════════════════════════════
 loadAll();
-renderDash();
-renderStoc();
-renderIst('');
 checkCam();
 
 // Register inline Service Worker for PWA installability
