@@ -319,6 +319,9 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
   </div>
   <div class="hdr-r">
     <div class="xbtn" onclick="exportExcel()">⬇ Excel</div>
+    <div class="pill" onclick="syncFromSheets()" title="Sincronizează datele din Google Sheets" style="cursor:pointer">
+      <span style="font-size:12px" id="sync-ico">🔄</span>
+    </div>
     <div class="pill" onclick="testSync()">
       <div class="sdt" id="sdt"></div>
       <span id="slbl">Sheets</span>
@@ -1019,6 +1022,8 @@ var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
   invoiceNr:1};
 
 function loadAll(){
+  // Curata orice date locale vechi — sursa de adevar este Google Sheets
+  try{ localStorage.removeItem(DB_K); }catch(e){}
   // Incarca configuratia salvata local
   try{ var cfgRaw=localStorage.getItem(CFG_K); if(cfgRaw) cfg=Object.assign(cfg,JSON.parse(cfgRaw)); }catch(e){}
   cfg.gsUrl=GS_URL_PERM;
@@ -1047,15 +1052,22 @@ function loadAll(){
     });
 }
 function loadFromLocal(){
-  try{ var dbRaw=localStorage.getItem(DB_K); if(dbRaw) db=JSON.parse(dbRaw); }catch(e){}
+  // Nu mai incarca din localStorage — datele sunt doar in Google Sheets
+  db={products:[],movements:[]};
+  try{ localStorage.removeItem(DB_K); }catch(e){}
   renderDash(); renderStoc(); renderIst(''); renderRetList();
-  toast('Date incarcate local (offline)','💾');
+  toast('Nu s-a putut conecta la Google Sheets. Verificați conexiunea.','⚠️',true);
 }
 function showSyncLoading(on){
   var el=$('sync-loading');
   if(el) el.style.display=on?'flex':'none';
+  var ico=$('sync-ico');
+  if(ico){
+    if(on){ ico.style.animation='spin .7s linear infinite'; }
+    else { ico.style.animation=''; }
+  }
 }
-function saveDB(){ try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){} }
+function saveDB(){ /* date gestionate exclusiv in Google Sheets — nu se salveaza local */ }
 function saveCfg(){
   cfg.gsUrl=GS_URL_PERM;
   cfg.shopName=gv('s-shop'); cfg.defaultOp=gv('s-op')||gv('s-op2');
