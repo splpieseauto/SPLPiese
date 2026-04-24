@@ -473,9 +473,107 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <div class="fg"><label>Preț Vânzare (RON/buc) <span style="color:var(--grn);font-size:9px">+25% din achiziție</span></label><input type="number" id="out-prt" placeholder="0.00" step="0.01" style="border-color:rgba(39,174,96,.4);background:rgba(39,174,96,.04)"></div>
         <div class="fg"><label>Operator</label><input type="text" id="out-op" placeholder="Camelia Dan" value="Camelia Dan"></div>
       </div>
+
+      <!-- Tip document -->
+      <div style="background:rgba(52,152,219,.07);border:1px solid rgba(52,152,219,.25);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;color:var(--blu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🧾 Tip Document Vânzare</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--txt)">
+            <input type="radio" name="out-doctype" id="out-dt-bon" value="bon" checked onchange="toggleOutDocType()" style="accent-color:var(--grn);width:15px;height:15px">
+            🧾 Bon Fiscal
+          </label>
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--txt)">
+            <input type="radio" name="out-doctype" id="out-dt-fac" value="factura" onchange="toggleOutDocType()" style="accent-color:var(--blu);width:15px;height:15px">
+            🧾 Generare Factură Client
+          </label>
+        </div>
+      </div>
+
+      <!-- Formular factură inline (ascuns implicit) -->
+      <div id="out-fac-form" style="display:none;background:rgba(39,174,96,.04);border:1px solid rgba(39,174,96,.2);border-radius:8px;padding:12px;margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px">🧾 Date Factură Client</div>
+        <div class="fr">
+          <div class="fg"><label>Nr. Factură</label><input type="text" id="fac-nr" placeholder="auto-generat"></div>
+          <div class="fg"><label>Data</label><input type="text" id="fac-dt"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Client (Cumpărător)</label><input type="text" id="fac-cl" placeholder="Numele clientului / firmei"></div>
+          <div class="fg"><label>CUI / CNP Client</label><input type="text" id="fac-cl-cui" placeholder="CUI sau CNP (opțional)"></div>
+        </div>
+        <div class="fr fr1">
+          <div class="fg"><label>Adresă Client</label><input type="text" id="fac-cl-adr" placeholder="Adresa clientului (opțional)"></div>
+        </div>
+
+        <!-- Adaugă produs -->
+        <div style="background:rgba(39,174,96,.06);border:1px solid rgba(39,174,96,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+          <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">➕ Adaugă Produs pe Factură</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px">
+            <div class="fg">
+              <label>Caută în stoc</label>
+              <input type="text" id="fac-search" placeholder="Tastează denumire sau cod..." oninput="facSearch(this.value)" autocomplete="off" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
+              <div id="fac-search-res" style="display:none;background:var(--c1);border:1px solid var(--brd);border-radius:6px;margin-top:3px;max-height:160px;overflow-y:auto;position:relative;z-index:100"></div>
+            </div>
+            <div class="fg">
+              <label>Sau tastează manual</label>
+              <input type="text" id="fac-add-nm" placeholder="Denumire produs / serviciu" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:0.5fr 0.8fr 0.8fr auto;gap:7px;align-items:flex-end">
+            <div class="fg"><label>UM</label><input type="text" id="fac-add-um" value="BUC" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
+            <div class="fg"><label>Cantitate</label><input type="number" id="fac-add-qty" value="1" min="0.01" step="0.01" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
+            <div class="fg"><label>Preț Unitar (RON)</label><input type="number" id="fac-add-prt" min="0" step="0.01" placeholder="0.00" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
+            <button class="btn bg" style="padding:9px 14px;white-space:nowrap" onclick="addFacLinieFromForm()">+ Adaugă</button>
+          </div>
+        </div>
+
+        <!-- Tabel linii -->
+        <div style="border:1px solid var(--brd);border-radius:7px;overflow:hidden;margin-bottom:9px">
+          <div style="background:var(--c2);padding:7px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:24px 2.5fr 0.6fr 0.8fr 1fr 0.7fr 32px;gap:6px;align-items:center">
+            <span>#</span><span>Denumire</span><span>UM</span><span style="text-align:center">Cant.</span><span style="text-align:right">Preț Unit.</span><span style="text-align:right">Valoare</span><span></span>
+          </div>
+          <div id="fac-linii"><div id="fac-empty" style="padding:18px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:22px;display:block;margin-bottom:6px;opacity:.4">🧾</span>Niciun produs — adăugați din câmpul de mai sus</div></div>
+        </div>
+
+        <!-- Totaluri -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:9px">
+          <div style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;padding:10px 14px;min-width:220px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px"><span>Subtotal (fără TVA):</span><span id="fac-sub">0.00 RON</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:6px"><span id="fac-tva-lbl">TVA 0%:</span><span id="fac-tva">0.00 RON</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--grn);font-family:'Barlow Condensed',sans-serif"><span>TOTAL:</span><span id="fac-tot">0.00 RON</span></div>
+            <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--brd);font-size:10px;color:var(--t2);text-align:right" id="fac-nrlinii">0 produse</div>
+          </div>
+        </div>
+
+        <!-- Opțiuni factură -->
+        <div class="fr">
+          <div class="fg"><label>TVA</label>
+            <select id="fac-tva-tip" onchange="calcFac()">
+              <option value="0" selected>Fără TVA (scutit)</option>
+              <option value="21">TVA 21%</option>
+            </select>
+          </div>
+          <div class="fg"><label>Metodă Plată</label>
+            <select id="fac-plata">
+              <option>Numerar</option><option>Card bancar</option><option>Transfer bancar</option><option>CEC / Bilet la ordin</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Scadență</label><input type="text" id="fac-scad" placeholder="Data scadenței"></div>
+          <div class="fg"><label>Operator / Emitent</label><input type="text" id="fac-op" placeholder="Camelia Dan" value="Camelia Dan"></div>
+        </div>
+        <div class="fr fr1">
+          <div class="fg"><label>Observații Factură</label><input type="text" id="fac-obs" placeholder="ex: Conform ofertei nr. ..., Mulțumim pentru colaborare!"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn bgh" style="padding:10px 14px" onclick="clearFactura()">✕ Golește Factură</button>
+          <button class="btn ba" style="flex:1" onclick="printFactura()">🖨️ Generează / Printează Factura</button>
+        </div>
+      </div>
+
       <div class="acts">
         <button class="btn bgh" onclick="clearF('out')">✕ Anulează</button>
-        <button class="btn ba" onclick="subMov('out')">✓ Înregistrează Vânzare</button>
+        <button class="btn ba" id="out-reg-btn" onclick="subMov('out')">✓ Înregistrează Vânzare (Bon Fiscal)</button>
       </div>
     </div>
   </div>
@@ -554,91 +652,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 <!-- ====== ACTE ====== -->
 <div class="pg" id="pg-acte">
 
-  <!-- FACTURĂ CLIENT -->
-  <div class="card">
-    <div class="ch"><h2>&#x1F9FE; Generare Factură Client</h2></div>
-    <div class="cb">
-      <div class="fr">
-        <div class="fg"><label>Nr. Factură</label><input type="text" id="fac-nr" placeholder="auto-generat"></div>
-        <div class="fg"><label>Data</label><input type="text" id="fac-dt"></div>
-      </div>
-      <div class="fr">
-        <div class="fg"><label>Client (Cumpărător)</label><input type="text" id="fac-cl" placeholder="Numele clientului / firmei"></div>
-        <div class="fg"><label>CUI / CNP Client</label><input type="text" id="fac-cl-cui" placeholder="CUI sau CNP (opțional)"></div>
-      </div>
-      <div class="fr fr1">
-        <div class="fg"><label>Adresă Client</label><input type="text" id="fac-cl-adr" placeholder="Adresa clientului (opțional)"></div>
-      </div>
-
-      <!-- Adaugă produs -->
-      <div style="background:rgba(39,174,96,.06);border:1px solid rgba(39,174,96,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px">
-        <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">&#x2795; Adaugă Produs pe Factură</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px">
-          <div class="fg">
-            <label>Caută în stoc</label>
-            <input type="text" id="fac-search" placeholder="Tastează denumire sau cod..." oninput="facSearch(this.value)" autocomplete="off" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
-            <div id="fac-search-res" style="display:none;background:var(--c1);border:1px solid var(--brd);border-radius:6px;margin-top:3px;max-height:160px;overflow-y:auto;position:relative;z-index:100"></div>
-          </div>
-          <div class="fg">
-            <label>Sau tastează manual</label>
-            <input type="text" id="fac-add-nm" placeholder="Denumire produs / serviciu" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:0.5fr 0.8fr 0.8fr auto;gap:7px;align-items:flex-end">
-          <div class="fg"><label>UM</label><input type="text" id="fac-add-um" value="BUC" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
-          <div class="fg"><label>Cantitate</label><input type="number" id="fac-add-qty" value="1" min="0.01" step="0.01" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
-          <div class="fg"><label>Preț Unitar (RON)</label><input type="number" id="fac-add-prt" min="0" step="0.01" placeholder="0.00" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
-          <button class="btn bg" style="padding:9px 14px;white-space:nowrap" onclick="addFacLinieFromForm()">+ Adaugă</button>
-        </div>
-      </div>
-
-      <!-- Tabel linii -->
-      <div style="border:1px solid var(--brd);border-radius:7px;overflow:hidden;margin-bottom:9px">
-        <div style="background:var(--c2);padding:7px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:24px 2.5fr 0.6fr 0.8fr 1fr 0.7fr 32px;gap:6px;align-items:center">
-          <span>#</span><span>Denumire</span><span>UM</span><span style="text-align:center">Cant.</span><span style="text-align:right">Preț Unit.</span><span style="text-align:right">Valoare</span><span></span>
-        </div>
-        <div id="fac-linii"><div id="fac-empty" style="padding:18px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:22px;display:block;margin-bottom:6px;opacity:.4">&#x1F9FE;</span>Niciun produs — adăugați din câmpul de mai sus</div></div>
-      </div>
-
-      <!-- Totaluri -->
-      <div style="display:flex;justify-content:flex-end;margin-bottom:9px">
-        <div style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;padding:10px 14px;min-width:220px">
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:4px"><span>Subtotal (fără TVA):</span><span id="fac-sub">0.00 RON</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:6px"><span id="fac-tva-lbl">TVA 0%:</span><span id="fac-tva">0.00 RON</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;color:var(--grn);font-family:'Barlow Condensed',sans-serif"><span>TOTAL:</span><span id="fac-tot">0.00 RON</span></div>
-          <div style="margin-top:7px;padding-top:7px;border-top:1px solid var(--brd);font-size:10px;color:var(--t2);text-align:right" id="fac-nrlinii">0 produse</div>
-        </div>
-      </div>
-
-      <!-- Opțiuni -->
-      <div class="fr">
-        <div class="fg"><label>TVA</label>
-          <select id="fac-tva-tip" onchange="calcFac()">
-            <option value="0" selected>Fără TVA (scutit)</option>
-            <option value="21">TVA 21%</option>
-          </select>
-        </div>
-        <div class="fg"><label>Metodă Plată</label>
-          <select id="fac-plata">
-            <option>Numerar</option><option>Card bancar</option><option>Transfer bancar</option><option>CEC / Bilet la ordin</option>
-          </select>
-        </div>
-      </div>
-      <div class="fr">
-        <div class="fg"><label>Scadență</label><input type="text" id="fac-scad" placeholder="Data scadenței"></div>
-        <div class="fg"><label>Operator / Emitent</label><input type="text" id="fac-op" placeholder="Camelia Dan" value="Camelia Dan"></div>
-      </div>
-      <div class="fr fr1">
-        <div class="fg"><label>Observații Factură</label><input type="text" id="fac-obs" placeholder="ex: Conform ofertei nr. ..., Mulțumim pentru colaborare!"></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:6px">
-        <button class="btn bgh" style="padding:10px 14px" onclick="clearFactura()">&#x2715; Golește</button>
-        <button class="btn ba" style="flex:1" onclick="printFactura()">&#x1F5A8;&#xFE0F; Generează / Printează Factura</button>
-      </div>
-    </div>
-  </div>
-
-    <!-- FIȘĂ RETUR -->
+  <!-- FIȘĂ RETUR -->
   <div class="card">
     <div class="ch"><h2>📄 Fișă de Retur</h2></div>
     <div class="cb">
@@ -1459,15 +1473,54 @@ function subMov(type){
   else { prod.stock-=qty; prod.sell=prt; }
   var mov={t:type,date:tod(),bc:bc,name:nm,partner:par,doc:doc,qty:qty,price:prt,op:op,cat:cat,ts:Date.now()};
   db.movements.unshift(mov);
-  saveDB(); syncGS(mov,prod); clearF(type);
-  toast(type==='in'?'Intrare: +'+qty+' × '+nm:'Vânzare: −'+qty+' × '+nm, type==='in'?'📥':'📤');
+  saveDB(); syncGS(mov,prod);
+  // If factura option is selected for out, auto-add item to invoice and trigger print
+  var isFac = type==='out' && document.getElementById('out-dt-fac') && document.getElementById('out-dt-fac').checked;
+  if(isFac){
+    // Auto-populate client from out-clt if fac-cl is empty
+    if(!gv('fac-cl') && par) sv('fac-cl', par);
+    // Auto-add the sold item to invoice if no lines exist yet
+    var existingLines = $('fac-linii') ? $('fac-linii').querySelectorAll('[id^="fl"]').length : 0;
+    if(existingLines === 0){
+      addFacLinie(nm, 'BUC', qty, prt);
+    }
+    // Clear the sale form fields (but not the invoice form)
+    ['bc','nm','prt'].forEach(function(f){ sv('out-'+f,''); });
+    sv('out-qty','');
+    sv('out-op', cfg.defaultOp||'Camelia Dan');
+    sv('out-clt',''); sv('out-doc','');
+    var pf=$('out-pf'); if(pf) pf.classList.remove('on');
+    toast('Vânzare înregistrată! Completați factura și printați.','📤');
+  } else {
+    clearF(type);
+    toast(type==='in'?'Intrare: +'+qty+' × '+nm:'Vânzare: −'+qty+' × '+nm, type==='in'?'📥':'📤');
+  }
 }
+function toggleOutDocType(){
+  var isFac = document.getElementById('out-dt-fac') && document.getElementById('out-dt-fac').checked;
+  var facForm = $('out-fac-form');
+  var regBtn = $('out-reg-btn');
+  if(facForm) facForm.style.display = isFac ? 'block' : 'none';
+  if(regBtn) regBtn.textContent = isFac ? '🧾 Înregistrează + Generează Factură' : '✓ Înregistrează Vânzare (Bon Fiscal)';
+  if(isFac){
+    // Pre-fill client name from out-clt if available
+    var clt = gv('out-clt');
+    if(clt && !gv('fac-cl')) sv('fac-cl', clt);
+    prepActe();
+  }
+}
+
 function clearF(type){
   ['bc','nm','prt'].forEach(function(f){ sv(type+'-'+f,''); });
   sv(type+'-qty','');
   sv(type+'-op', cfg.defaultOp||'Camelia Dan');
   if(type==='in'){ sv('in-sup',''); sv('in-doc',''); sv('in-cat',''); sv('in-sell',''); }
-  if(type==='out'){ sv('out-clt',''); sv('out-doc',''); }
+  if(type==='out'){
+    sv('out-clt',''); sv('out-doc','');
+    // Reset doc type selector back to bon fiscal
+    var bonRadio = document.getElementById('out-dt-bon');
+    if(bonRadio){ bonRadio.checked = true; toggleOutDocType(); }
+  }
   var pf=$(type+'-pf'); if(pf) pf.classList.remove('on');
 }
 
@@ -1859,9 +1912,15 @@ function calcFac(){
   var nl=$('fac-nrlinii'); if(nl) nl.textContent=nrLinii+' produs'+(nrLinii===1?'':'e');
 }
 function clearFactura(){
-  if(!confirm('Goli\u021bi toate liniile facturii?')) return;
+  if(!confirm('Goliți toate liniile facturii?')) return;
   $('fac-linii').innerHTML='<div id="fac-empty" style="padding:18px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:22px;display:block;margin-bottom:6px;opacity:.4">&#x1F9FE;</span>Niciun produs \u2014 ad\u0103uga\u021bi din c\u00e2mpul de mai sus</div>';
-  facLiniiCount=0; calcFac();
+  facLiniiCount=0;
+  ['fac-cl','fac-cl-cui','fac-cl-adr','fac-obs','fac-scad'].forEach(function(id){ sv(id,''); });
+  sv('fac-tva-tip','0'); sv('fac-plata','Numerar');
+  calcFac();
+  // Reset back to Bon Fiscal
+  var bonRadio = document.getElementById('out-dt-bon');
+  if(bonRadio){ bonRadio.checked = true; toggleOutDocType(); }
 }
 
 function printFactura(){
