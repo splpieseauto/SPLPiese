@@ -343,7 +343,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
   <button class="nb on" data-pg="dash">📊 Board</button>
   <button class="nb" data-pg="intrare">📥 Intrare</button>
   <button class="nb" data-pg="iesire">📤 Ieșire</button>
-  <button class="nb" data-pg="retur">↩️ Retur</button>
+  <button class="nb" data-pg="ofertare">📋 Ofertare</button>
   <button class="nb" data-pg="acte">📄 Acte</button>
   <button class="nb" data-pg="stoc">📦 Stoc</button>
   <button class="nb" data-pg="istoric">📋 Istoric</button>
@@ -592,73 +592,89 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
   </div>
 </div>
 
-<!-- ====== RETUR ====== -->
-<div class="pg" id="pg-retur">
+<!-- ====== OFERTARE ====== -->
+<div class="pg" id="pg-ofertare">
   <div class="card">
-    <div class="ch"><h2>↩️ Înregistrare Retur</h2>
-      <div class="mtg">
-        <button class="mbt on" id="br-m" onclick="setMode('ret','m')">Manual</button>
-        <button class="mbt" id="br-s" onclick="setMode('ret','s')">📷 Scan</button>
-      </div>
+    <div class="ch"><h2>📋 Creare Ofertă Client</h2>
+      <span style="font-size:10px;color:var(--t2)">până la 20 poziții</span>
     </div>
-    <div class="cvw" id="cv-ret"><div id="vid-ret" style="width:100%;height:100%;"></div><div class="scan-line"></div><div class="scan-overlay"></div><div class="scan-hint">📷 Îndreptat spre cod de bare — scanare automată</div></div>
     <div class="cb">
-      <div class="fr">
-        <div class="fg"><label>Tip Retur</label>
-          <select id="ret-tip">
-            <option value="client">🔄 Retur de la Client</option>
-            <option value="furnizor">📦 Retur la Furnizor (comandă greșită)</option>
-          </select></div>
-        <div class="fg"><label>Motiv Retur</label>
-          <select id="ret-mot"><option value="">— Alege motivul —</option>
-            <option>Piesă comandată greșit</option>
-            <option>Piesă defectă / neconformă</option>
-            <option>Piesă incompatibilă</option>
-            <option>Client s-a răzgândit</option>
-            <option>Deteriorată la livrare</option>
-            <option>Garanție — defect în funcționare</option>
-            <option>Altele</option></select></div>
+      <!-- Date client / vehicul -->
+      <div style="background:rgba(52,152,219,.07);border:1px solid rgba(52,152,219,.25);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="font-size:9px;font-weight:700;color:var(--blu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px">🚗 Date Client / Autovehicul</div>
+        <div class="fr">
+          <div class="fg"><label>Vin Autovehicul / Număr înmatriculare</label><input type="text" id="of-vin" placeholder="ex: WVWZZZ1JZ3W386752 sau TM-01-ABC"></div>
+          <div class="fg"><label>Nume Client</label><input type="text" id="of-client" placeholder="Numele clientului"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Model Autovehicul</label><input type="text" id="of-model" placeholder="ex: VW Golf, Dacia Logan, BMW 320d"></div>
+          <div class="fg"><label>An Fabricație</label><input type="number" id="of-an" placeholder="ex: 2018" min="1970" max="2030"></div>
+        </div>
       </div>
-      <div class="fr">
-        <div class="fg"><label>Cod Bară / SKU</label>
-          <div class="iw"><input class="bc" type="text" id="ret-bc" autocomplete="off"
-            placeholder="Scanați sau tastați..." oninput="lookup('ret',this.value)">
-            <span class="si" onclick="setMode('ret','s')">⊞</span></div></div>
-        <div class="fg"><label>Denumire Piesă</label>
-          <input type="text" id="ret-nm" placeholder="Auto-completat la scanare"></div>
+
+      <!-- Pozitii oferta -->
+      <div style="background:rgba(39,174,96,.05);border:1px solid rgba(39,174,96,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">➕ Adaugă Piesă</div>
+        <div style="display:grid;grid-template-columns:1.2fr 2fr 0.6fr 0.7fr 0.8fr auto;gap:7px;align-items:flex-end">
+          <div class="fg">
+            <label>Cod Produs</label>
+            <div style="position:relative">
+              <input type="text" id="of-add-cod" placeholder="Cod / SKU" autocomplete="off"
+                oninput="ofSearchProd(this.value)"
+                style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
+              <div id="of-search-res" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--c1);border:1px solid var(--brd);border-radius:6px;margin-top:2px;max-height:160px;overflow-y:auto;z-index:200"></div>
+            </div>
+          </div>
+          <div class="fg"><label>Denumire Produs</label>
+            <input type="text" id="of-add-nm" placeholder="Denumire piesă / serviciu"
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
+          <div class="fg"><label>UM</label>
+            <select id="of-add-um" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
+              <option value="buc">buc</option>
+              <option value="l">l</option>
+              <option value="set">set</option>
+              <option value="ml">ml</option>
+              <option value="kg">kg</option>
+            </select>
+          </div>
+          <div class="fg"><label>Cantitate</label>
+            <input type="number" id="of-add-qty" value="1" min="0.01" step="0.01"
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%;text-align:center"></div>
+          <div class="fg"><label>Preț (RON)</label>
+            <input type="number" id="of-add-prt" min="0" step="0.01" placeholder="0.00"
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%;text-align:right"></div>
+          <button class="btn bg" style="padding:9px 14px;white-space:nowrap" onclick="addOfertaLinie()">+ Adaugă</button>
+        </div>
       </div>
-      <div class="pfb" id="ret-pf">
-        <span style="font-size:20px">↩️</span>
-        <div style="flex:1"><div class="pfn" id="ret-pfn">—</div><div class="pfm" id="ret-pfm">—</div></div>
-        <div style="text-align:right"><div class="pfs" id="ret-pfs">—</div><div class="pfl">stoc actual</div></div>
+
+      <!-- Tabel pozitii -->
+      <div style="border:1px solid var(--brd);border-radius:7px;overflow:hidden;margin-bottom:12px">
+        <div style="background:var(--c2);padding:8px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:24px 1.2fr 2fr 0.6fr 0.7fr 1fr 0.8fr 32px;gap:6px;align-items:center">
+          <span>#</span><span>Cod</span><span>Denumire</span><span>UM</span><span style="text-align:center">Cant.</span><span style="text-align:right">Preț Unit.</span><span style="text-align:right">Valoare</span><span></span>
+        </div>
+        <div id="of-linii"><div id="of-empty" style="padding:20px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:24px;display:block;margin-bottom:7px;opacity:.35">📋</span>Nicio piesă — adăugați din câmpul de mai sus</div></div>
       </div>
-      <div class="fr fr3">
-        <div class="fg"><label id="ret-pl">Client / Furnizor</label><input type="text" id="ret-par" placeholder="Numele"></div>
-        <div class="fg"><label>Doc. Original</label><input type="text" id="ret-dor" placeholder="BON/FAC original"></div>
-        <div class="fg"><label>Cantitate</label><input type="number" id="ret-qty" min="1" placeholder="0"></div>
+
+      <!-- Total -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <div style="background:var(--c2);border:1px solid var(--brd);border-radius:8px;padding:12px 16px;min-width:240px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--t2);margin-bottom:6px"><span>Nr. poziții:</span><span id="of-nr-poz" style="font-weight:700;color:var(--txt)">0</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--grn)"><span>TOTAL:</span><span id="of-total">0.00 RON</span></div>
+        </div>
       </div>
-      <div class="fr">
-        <div class="fg"><label>Valoare Rambursată (RON)</label><input type="number" id="ret-val" placeholder="0.00" step="0.01"></div>
-        <div class="fg"><label>Nr. Fișă Retur</label><input type="text" id="ret-fis" placeholder="RET-001"></div>
-      </div>
-      <div class="fr fr1"><div class="fg"><label>Observații / Stare piesă</label><input type="text" id="ret-obs" placeholder="ex: ambalaj intact, piesă neutilizată..."></div></div>
-      <div class="fr">
-        <div class="fg"><label>Operator</label><input type="text" id="ret-op" placeholder="Camelia Dan" value="Camelia Dan"></div>
-        <div class="fg"><label>Reintrare în stoc?</label>
-          <select id="ret-rst">
-            <option value="da">✅ Da — reintrare în stoc</option>
-            <option value="nu">❌ Nu — deteriorată / înapoi la furnizor</option>
-          </select></div>
-      </div>
-      <div class="acts">
-        <button class="btn bgh" onclick="clearRet()">✕ Anulează</button>
-        <button class="btn bp" onclick="subRet()">↩️ Înregistrează Retur</button>
+
+      <!-- Actiuni -->
+      <div style="display:flex;gap:8px">
+        <button class="btn bgh" style="padding:10px 14px" onclick="clearOferta()">✕ Golește Oferta</button>
+        <button class="btn ba" style="flex:1;font-size:13px" onclick="genPDFOferta()">📄 Generează Ofertă PDF</button>
       </div>
     </div>
   </div>
+
+  <!-- Lista oferte salvate -->
   <div class="card">
-    <div class="ch"><h2>📋 Registru Retururi</h2><span style="font-size:10px;color:var(--t2)" id="ret-cnt"></span></div>
-    <div id="ret-list"></div>
+    <div class="ch"><h2>📂 Oferte Salvate</h2><span style="font-size:10px;color:var(--t2)" id="of-cnt"></span></div>
+    <div id="of-list"></div>
   </div>
 </div>
 
@@ -776,7 +792,6 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <option value="">Toate</option>
         <option value="in">Intrări</option>
         <option value="out">Ieșiri</option>
-        <option value="ret">Retururi</option>
       </select>
     </div>
     <div id="ist-list"></div>
@@ -1081,7 +1096,7 @@ function loadAll(){
     var dbRaw=localStorage.getItem(DB_K);
     if(dbRaw){ var parsed=JSON.parse(dbRaw); db.products=parsed.products||[]; db.movements=parsed.movements||[]; }
   }catch(e){}
-  renderDash(); renderStoc(); renderIst(''); renderRetList();
+  renderDash(); renderStoc(); renderIst(''); renderOfertaList();
   showSyncLoading(false);
   fetch(GS_URL_PERM+'?action=getData',{redirect:'follow'})
     .then(function(r){ return r.json(); })
@@ -1089,7 +1104,7 @@ function loadAll(){
       if(data.ok && (data.products||[]).length>=db.products.length){
         db.products=data.products||[]; db.movements=data.movements||[];
         try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){}
-        renderDash(); renderStoc(); renderIst(''); renderRetList();
+        renderDash(); renderStoc(); renderIst(''); renderOfertaList();
         updateSyncUI(true);
         toast('Sincronizat ✔️ — '+db.products.length+' produse, '+db.movements.length+' mișcări','✅');
       } else {
@@ -1153,7 +1168,7 @@ function _goTo(pg){
   if(pg==='dash')    renderDash();
   if(pg==='stoc')    renderStoc();
   if(pg==='istoric') renderIst('');
-  if(pg==='retur')   renderRetList();
+  if(pg==='ofertare') renderOfertaList();
   if(pg==='acte')    prepActe();
 }
 document.querySelectorAll('.nb').forEach(function(b){
@@ -1565,8 +1580,14 @@ function subMov(type){
     if(prod.stock<qty) return toast('Stoc insuficient! Disponibil: '+prod.stock+' buc','❌',true);
   }
   if(!prod){ prod={bc:bc,name:nm,cat:cat,um:'BUC',stock:0,buy:prt,sell:sellPrt}; db.products.push(prod); }
-  if(type==='in'){ prod.stock+=qty; prod.buy=prt; prod.sell=sellPrt; if(cat) prod.cat=cat; if(!prod.name) prod.name=nm; }
-  else { prod.stock-=qty; prod.sell=prt; }
+  if(type==='in'){
+    prod.stock+=qty; prod.buy=prt;
+    // Always update sell price to latest entered — stock value recalculates automatically
+    prod.sell=sellPrt;
+    if(cat) prod.cat=cat; if(!prod.name) prod.name=nm;
+  }
+  else { prod.stock-=qty; }
+  // For out: always use current prod.sell (last intake sell price) — do NOT overwrite it
   var mov={t:type,date:tod(),bc:bc,name:nm,partner:par,doc:doc,qty:qty,price:prt,op:op,cat:cat,ts:Date.now()};
   db.movements.unshift(mov);
   saveDB(); syncGS(mov,prod);
@@ -1621,52 +1642,226 @@ function clearF(type){
 }
 
 // ═══════════════════════════════════
-// RETUR
+// OFERTARE
 // ═══════════════════════════════════
-function subRet(){
-  var bc=gv('ret-bc').trim(), nm=gv('ret-nm').trim();
-  var tip=gv('ret-tip'), mot=gv('ret-mot');
-  var par=gv('ret-par').trim(), dor=gv('ret-dor').trim();
-  var qty=parseInt(gv('ret-qty')), val=parseFloat(gv('ret-val'))||0;
-  var fis=gv('ret-fis').trim()||('RET-'+Date.now().toString().slice(-4));
-  var obs=gv('ret-obs').trim(), op=gv('ret-op').trim()||cfg.defaultOp||'Operator';
-  var rst=gv('ret-rst');
-  if(!bc) return toast('Introduceți codul de bară!','⚠️',true);
-  if(!nm) return toast('Introduceți denumirea!','⚠️',true);
-  if(!qty||qty<1) return toast('Cantitate invalidă!','⚠️',true);
-  if(!mot) return toast('Alegeți motivul returului!','⚠️',true);
-  var prod=db.products.find(function(x){ return x.bc===bc; });
-  if(rst==='da'&&tip==='client'){
-    if(!prod){ prod={bc:bc,name:nm,cat:'',um:'BUC',stock:0,buy:0,sell:val}; db.products.push(prod); }
-    prod.stock+=qty;
-  }
-  if(rst==='da'&&tip==='furnizor'&&prod) prod.stock=Math.max(0,prod.stock-qty);
-  var ret={t:'ret',date:tod(),bc:bc,name:nm,tip:tip,motiv:mot,partner:par,
-    docOrig:dor,qty:qty,val:val,fisa:fis,obs:obs,op:op,restoc:rst,ts:Date.now()};
-  db.movements.unshift(ret);
-  saveDB(); syncGSRet(ret); clearRet(); renderRetList();
-  toast('Retur înregistrat: '+qty+' × '+nm,'↩️');
-}
-function clearRet(){
-  ['bc','nm','par','dor','val','fis','obs'].forEach(function(f){ sv('ret-'+f,''); });
-  sv('ret-op', cfg.defaultOp||'Camelia Dan');
-  sv('ret-qty','');
-  var pf=$('ret-pf'); if(pf) pf.classList.remove('on');
-}
-function renderRetList(){
-  var rets=db.movements.filter(function(m){ return m.t==='ret'; });
-  $('ret-cnt').textContent=rets.length+' total';
-  if(!rets.length){ $('ret-list').innerHTML='<div class="empty"><span>↩️</span>Niciun retur înregistrat</div>'; return; }
-  $('ret-list').innerHTML=rets.map(function(r){
-    return '<div class="hr"><div class="hi ret">↩️</div>'+
-      '<div class="hd"><div class="hn">'+r.name+'</div>'+
-      '<div class="hm">'+(r.tip==='client'?'Client':'Furnizor')+': '+(r.partner||'—')+' · '+(r.motiv||'—')+
-      ' · Fișă: '+(r.fisa||'—')+' · <span style="color:'+(r.restoc==='da'?'var(--grn)':'var(--red)')+'">'+
-      (r.restoc==='da'?'Reintrare stoc':'Fără restoc')+'</span></div></div>'+
-      '<div class="hrt"><div class="hq ret">↩️ '+r.qty+' × '+(r.val||0).toFixed(2)+' RON</div>'+
-      '<div class="ht">'+r.date+' '+ftm(r.ts)+' · '+r.op+'</div></div></div>';
+var ofertaLiniiCount=0;
+var oferte=[]; // saved offers array
+
+function ofSearchProd(q){
+  var res=$('of-search-res');
+  if(!q||q.length<2){ res.style.display='none'; return; }
+  var ql=q.toLowerCase();
+  var hits=db.products.filter(function(p){
+    return p.name.toLowerCase().indexOf(ql)>=0||p.bc.toLowerCase().indexOf(ql)>=0;
+  }).slice(0,8);
+  if(!hits.length){ res.style.display='none'; return; }
+  res.style.display='block';
+  res.innerHTML=hits.map(function(p){
+    var bc=p.bc.replace(/'/g,"\\'");
+    return '<div onclick="ofSelectProd(\''+bc+'\')" style="padding:8px 11px;cursor:pointer;border-bottom:1px solid rgba(36,41,63,.5);font-size:12px" onmouseover="this.style.background=\'rgba(39,174,96,.08)\'" onmouseout="this.style.background=\'\'">'+
+      '<span style="font-weight:600;color:var(--t3);font-size:10px">'+p.bc+'</span>'+
+      '<span style="font-weight:700;margin-left:8px">'+p.name+'</span>'+
+      '<span style="float:right;color:var(--grn);font-weight:700">'+p.sell.toFixed(2)+' RON</span>'+
+    '</div>';
   }).join('');
 }
+
+function ofSelectProd(bc){
+  var p=db.products.find(function(x){ return x.bc===bc; });
+  if(!p) return;
+  sv('of-add-cod',p.bc);
+  sv('of-add-nm',p.name);
+  sv('of-add-um',p.um&&p.um.toLowerCase()==='l'?'l':'buc');
+  sv('of-add-qty',1);
+  sv('of-add-prt',p.sell||p.buy||0);
+  $('of-search-res').style.display='none';
+  $('of-add-qty').focus();
+}
+
+function addOfertaLinie(){
+  var cod=gv('of-add-cod').trim();
+  var nm=gv('of-add-nm').trim();
+  var um=gv('of-add-um')||'buc';
+  var qty=parseFloat(gv('of-add-qty'))||1;
+  var prt=parseFloat(gv('of-add-prt'))||0;
+  if(!nm) return toast('Introduceți denumirea produsului!','⚠️',true);
+  // Limit to 20 positions
+  var existing=$('of-linii').querySelectorAll('[id^="ol"]');
+  if(existing.length>=20) return toast('Maximum 20 de poziții pe ofertă!','⚠️',true);
+  var empty=$('of-empty'); if(empty) empty.remove();
+  var id='ol'+ofertaLiniiCount++;
+  var nr=existing.length+1;
+  var el=document.createElement('div');
+  el.id=id;
+  var inp='background:var(--c2);border:1px solid var(--brd);border-radius:5px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:6px 8px;outline:none;width:100%';
+  el.style.cssText='display:grid;grid-template-columns:24px 1.2fr 2fr 0.6fr 0.7fr 1fr 0.8fr 32px;gap:6px;padding:7px 11px;border-top:1px solid rgba(36,41,63,.5);align-items:center';
+  el.innerHTML=
+    '<span class="of-nr-linie" style="font-size:10px;color:var(--t2);font-weight:700;text-align:center">'+nr+'</span>'+
+    '<input type="text" value="'+(cod||'')+'" placeholder="Cod" style="'+inp+'" oninput="calcOferta()">'+
+    '<input type="text" value="'+(nm||'')+'" placeholder="Denumire" style="'+inp+'" oninput="calcOferta()">'+
+    '<select style="'+inp+'"><option value="buc"'+(um==='buc'?' selected':'')+'>buc</option><option value="l"'+(um==='l'?' selected':'')+'>l</option><option value="set"'+(um==='set'?' selected':'')+'>set</option><option value="ml"'+(um==='ml'?' selected':'')+'>ml</option><option value="kg"'+(um==='kg'?' selected':'')+'>kg</option></select>'+
+    '<input type="number" value="'+(qty||1)+'" min="0.01" step="0.01" oninput="calcOferta()" style="'+inp+';text-align:center">'+
+    '<input type="number" value="'+(prt||'')+'" min="0" step="0.01" placeholder="0.00" oninput="calcOferta()" style="'+inp+';text-align:right">'+
+    '<span class="of-val-linie" style="font-size:12px;font-weight:700;color:var(--grn);text-align:right;font-family:\'Barlow Condensed\',sans-serif">'+((qty||0)*(prt||0)).toFixed(2)+' RON</span>'+
+    '<button onclick="document.getElementById(\''+id+'\').remove();renumOfertaLinii();calcOferta()" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.25);border-radius:5px;color:#e74c3c;cursor:pointer;font-size:12px;padding:5px;width:100%">\u00d7</button>';
+  $('of-linii').appendChild(el);
+  // clear add form
+  sv('of-add-cod',''); sv('of-add-nm',''); sv('of-add-qty',1); sv('of-add-prt','');
+  $('of-search-res').style.display='none';
+  calcOferta();
+  $('of-add-cod').focus();
+}
+
+function renumOfertaLinii(){
+  var linii=$('of-linii').querySelectorAll('.of-nr-linie');
+  for(var i=0;i<linii.length;i++) linii[i].textContent=i+1;
+  if(!$('of-linii').querySelectorAll('[id^="ol"]').length){
+    var empty=document.createElement('div');
+    empty.id='of-empty';
+    empty.style.cssText='padding:20px;text-align:center;color:var(--t2);font-size:12px';
+    empty.innerHTML='<span style="font-size:24px;display:block;margin-bottom:7px;opacity:.35">📋</span>Nicio piesă — adăugați din câmpul de mai sus';
+    $('of-linii').appendChild(empty);
+  }
+}
+
+function calcOferta(){
+  var linii=$('of-linii').querySelectorAll('[id^="ol"]');
+  var total=0;
+  for(var i=0;i<linii.length;i++){
+    var inputs=linii[i].querySelectorAll('input');
+    if(inputs.length<4) continue;
+    var qty=parseFloat(inputs[3].value)||0;
+    var prt=parseFloat(inputs[4].value)||0;
+    var val=qty*prt; total+=val;
+    var valEl=linii[i].querySelector('.of-val-linie');
+    if(valEl) valEl.textContent=val.toFixed(2)+' RON';
+  }
+  var nrPoz=linii.length;
+  var totEl=$('of-total'); if(totEl) totEl.textContent=total.toFixed(2)+' RON';
+  var nrEl=$('of-nr-poz'); if(nrEl) nrEl.textContent=nrPoz;
+}
+
+function clearOferta(){
+  if(!confirm('Goliți oferta curentă?')) return;
+  $('of-linii').innerHTML='<div id="of-empty" style="padding:20px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:24px;display:block;margin-bottom:7px;opacity:.35">📋</span>Nicio piesă — adăugați din câmpul de mai sus</div>';
+  ofertaLiniiCount=0;
+  sv('of-vin',''); sv('of-client',''); sv('of-model',''); sv('of-an','');
+  sv('of-add-cod',''); sv('of-add-nm',''); sv('of-add-qty',1); sv('of-add-prt','');
+  calcOferta();
+}
+
+function getOfertaLinii(){
+  var linii=$('of-linii').querySelectorAll('[id^="ol"]');
+  var rows=[];
+  for(var i=0;i<linii.length;i++){
+    var inputs=linii[i].querySelectorAll('input');
+    var sel=linii[i].querySelector('select');
+    if(inputs.length<4) continue;
+    rows.push({
+      cod:inputs[0].value||'',
+      nm:inputs[1].value||'',
+      um:sel?sel.value:'buc',
+      qty:parseFloat(inputs[3].value)||0,
+      prt:parseFloat(inputs[4].value)||0
+    });
+  }
+  return rows;
+}
+
+function genPDFOferta(){
+  var vin=gv('of-vin').trim();
+  var client=gv('of-client').trim();
+  var model=gv('of-model').trim();
+  var an=gv('of-an').trim();
+  var linii=getOfertaLinii();
+  if(!linii.length) return toast('Adăugați cel puțin o piesă pe ofertă!','⚠️',true);
+  if(!client&&!vin) return toast('Introduceți VIN-ul/nr. înmatriculare sau numele clientului!','⚠️',true);
+
+  var total=linii.reduce(function(s,r){ return s+r.qty*r.prt; },0);
+  var shop=cfg.shopName||'SPL Piese Auto';
+  var dt=tod();
+  var nrOf='OF-'+Date.now().toString().slice(-5);
+
+  // Save to oferte list
+  oferte.unshift({nr:nrOf,date:dt,client:client||vin,model:model,total:total,ts:Date.now()});
+  renderOfertaList();
+
+  var rows='';
+  linii.forEach(function(r,i){
+    var val=r.qty*r.prt;
+    rows+='<tr>'+
+      '<td style="text-align:center">'+(i+1)+'</td>'+
+      '<td>'+r.nm+'</td>'+
+      '<td style="text-align:center">'+r.um+'</td>'+
+      '<td style="text-align:center">'+r.qty.toFixed(2)+'</td>'+
+      '<td style="text-align:right">'+r.prt.toFixed(2)+' RON</td>'+
+      '<td style="text-align:right;font-weight:700">'+val.toFixed(2)+' RON</td>'+
+      '</tr>';
+  });
+
+  openPrint('<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8"><title>Ofertă '+nrOf+'</title>'+
+    '<style>'+
+    'body{font-family:Arial,sans-serif;max-width:750px;margin:30px auto;padding:20px;color:#222}'+
+    'h2{text-align:center;background:#fff3ee;border:2px solid #c0392b;border-radius:7px;padding:10px;font-size:16px;margin:0 0 16px;letter-spacing:.5px}'+
+    '.veh-box{background:#f0f8ff;border:1px solid #2980b9;border-radius:7px;padding:11px 14px;margin-bottom:14px;font-size:13px}'+
+    '.veh-box b{color:#1a5276}'+
+    'table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px}'+
+    'thead tr{background:#c0392b;color:#fff}'+
+    'thead th{padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px}'+
+    'tbody tr:nth-child(even){background:#fafafa}'+
+    'tbody td{padding:8px 10px;border-bottom:1px solid #eee}'+
+    '.total-box{display:flex;justify-content:flex-end;margin-bottom:14px}'+
+    '.total-inner{border:2px solid #c0392b;border-radius:7px;padding:11px 18px;text-align:right}'+
+    '.total-inner .lbl{font-size:12px;color:#888;margin-bottom:3px}'+
+    '.total-inner .val{font-size:22px;font-weight:900;color:#c0392b}'+
+    '.valabil{font-size:11px;color:#888;text-align:center;margin-bottom:12px;font-style:italic}'+
+    '.semnat{display:flex;gap:20px;margin-top:24px}'+
+    '.semnat div{flex:1;border-top:1px solid #bbb;padding-top:8px;text-align:center;font-size:12px;color:#666}'+
+    '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:14px;border-top:1px solid #eee;padding-top:8px}'+
+    '@media print{button{display:none}}'+
+    '</style></head><body>'+
+    docHdr('#c0392b')+
+    '<h2>📋 OFERTĂ DE PREȚ Nr. '+nrOf+' — '+dt+'</h2>'+
+    '<div class="veh-box">'+
+    (vin?'<b>VIN / Nr. înmatriculare:</b> '+vin+'&nbsp;&nbsp; ':'')+ 
+    (client?'<b>Client:</b> '+client+'&nbsp;&nbsp; ':'')+
+    (model?'<b>Model:</b> '+model+'&nbsp;&nbsp; ':'')+
+    (an?'<b>An fabricație:</b> '+an:'')+ 
+    '</div>'+
+    '<table><thead><tr>'+
+      '<th style="width:36px">#</th>'+
+      '<th>Denumire Produs / Serviciu</th>'+
+      '<th style="text-align:center;width:60px">UM</th>'+
+      '<th style="text-align:center;width:70px">Cant.</th>'+
+      '<th style="text-align:right;width:100px">Preț Unit.</th>'+
+      '<th style="text-align:right;width:100px">Valoare</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL OFERTĂ</div><div class="val">'+total.toFixed(2)+' RON</div></div></div>'+
+    '<div class="valabil">* Oferta este valabilă 7 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.</div>'+
+    '<div class="semnat">'+
+    '<div><b>Emis de</b><br><br>'+shop+'<br>_______________</div>'+
+    '<div>Semnătură Client<br><br>_______________</div>'+
+    '</div>'+
+    '<div class="footer">'+shop+' · CUI: '+(cfg.cui||'44870892')+' · '+(cfg.address||'')+' · '+(cfg.phone||'')+' · '+(cfg.email||'')+' · '+(cfg.website||'')+'</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨️ Printează Oferta</button>'+
+    '</body></html>');
+  toast('Ofertă generată! Nr. '+nrOf,'📄');
+}
+
+function renderOfertaList(){
+  var cnt=$('of-cnt'); if(cnt) cnt.textContent=oferte.length+' total';
+  var list=$('of-list'); if(!list) return;
+  if(!oferte.length){ list.innerHTML='<div class="empty"><span>📋</span>Nicio ofertă emisă</div>'; return; }
+  list.innerHTML=oferte.map(function(o){
+    return '<div class="hr">'+
+      '<div class="hi out">📋</div>'+
+      '<div class="hd"><div class="hn">'+o.nr+' — '+(o.client||'—')+'</div>'+
+      '<div class="hm">'+(o.model||'')+(o.model?' · ':'')+'Data: '+o.date+'</div></div>'+
+      '<div class="hrt"><div class="hq out">'+o.total.toFixed(2)+' RON</div>'+
+      '<div class="ht">'+o.date+'</div></div></div>';
+  }).join('');
+}
+
 
 // ═══════════════════════════════════
 // DASHBOARD
@@ -1755,7 +1950,7 @@ function filtIst(v){ renderIst(v); }
 function prepActe(){
   var rets=db.movements.filter(function(m){ return m.t==='ret'; });
   var sel=$('ac-sel');
-  sel.innerHTML='<option value="">— Alege sau completați manual —</option>'+
+  if(sel) sel.innerHTML='<option value="">— Alege sau completați manual —</option>'+
     rets.map(function(r,i){ return '<option value="'+i+'">'+r.date+' · '+r.name+' · Fișă: '+(r.fisa||'—')+'</option>'; }).join('');
   if(!gv('ac-dt')) sv('ac-dt',tod());
   if(!gv('gp-dt')) sv('gp-dt',tod());
@@ -2308,7 +2503,7 @@ function syncFromSheets(){
         db.products = data.products||[];
         db.movements = data.movements||[];
         saveDB();
-        renderDash(); renderStoc(); renderIst(''); renderRetList();
+        renderDash(); renderStoc(); renderIst(''); renderOfertaList();
         updateSyncUI(true);
         toast('Sincronizat ✔️ — '+db.products.length+' produse, '+db.movements.length+' mișcări','✅');
       } else {
@@ -2339,7 +2534,7 @@ function resetData(){
   if(!confirm('Ștergeți TOATE datele (produse + mișcări)? Această acțiune este ireversibilă!')) return;
   try{ localStorage.removeItem(DB_K); }catch(e){}
   db={products:[],movements:[]};
-  renderDash(); renderStoc(); renderIst(''); renderRetList();
+  renderDash(); renderStoc(); renderIst(''); renderOfertaList();
   toast('Toate datele au fost șterse. Baza de date este goală.','🗑️');
 }
 
