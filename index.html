@@ -1070,36 +1070,41 @@ var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
   invoiceNr:124};
 
 function loadAll(){
-  try{ localStorage.removeItem(DB_K); }catch(e){}
   try{ var cfgRaw=localStorage.getItem(CFG_K); if(cfgRaw) cfg=Object.assign(cfg,JSON.parse(cfgRaw)); }catch(e){}
   cfg.gsUrl=GS_URL_PERM;
   applySettings();
-  showSyncLoading(true);
+  try{
+    var dbRaw=localStorage.getItem(DB_K);
+    if(dbRaw){ var parsed=JSON.parse(dbRaw); db.products=parsed.products||[]; db.movements=parsed.movements||[]; }
+  }catch(e){}
+  renderDash(); renderStoc(); renderIst(''); renderRetList();
+  showSyncLoading(false);
   fetch(GS_URL_PERM+'?action=getData',{redirect:'follow'})
     .then(function(r){ return r.json(); })
     .then(function(data){
-      showSyncLoading(false);
-      if(data.ok){
-        db.products = data.products||[];
-        db.movements = data.movements||[];
+      if(data.ok && (data.products||[]).length>=db.products.length){
+        db.products=data.products||[]; db.movements=data.movements||[];
+        try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){}
         renderDash(); renderStoc(); renderIst(''); renderRetList();
         updateSyncUI(true);
         toast('Sincronizat ✔️ — '+db.products.length+' produse, '+db.movements.length+' mișcări','✅');
       } else {
-        db={products:[],movements:[]};
-        renderDash(); renderStoc(); renderIst(''); renderRetList();
-        toast('Conectat la Google Sheets ✔️ — începeți să înregistrați piese!','✅');
+        updateSyncUI(true);
+        if(db.products.length>0) toast('Date locale afișate. Sheets conectat ✔️','✅');
+        else toast('Conectat la Google Sheets ✔️ — începeți să înregistrați piese!','✅');
       }
     })
     .catch(function(){
-      showSyncLoading(false);
-      db={products:[],movements:[]};
-      renderDash(); renderStoc(); renderIst(''); renderRetList();
-      toast('Nu s-a putut conecta la Google Sheets. Verificati conexiunea.','⚠️',true);
+      updateSyncUI(false);
+      if(db.products.length>0) toast('Offline — date locale afișate ('+db.products.length+' produse)','⚠️');
+      else toast('Nu s-a putut conecta la Google Sheets. Verificați conexiunea.','⚠️',true);
     });
 }
 
-function saveDB(){ /* date gestionate exclusiv in Google Sheets — nu se salveaza local */ }
+function saveDB(){
+  try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){}
+  renderDash(); renderStoc();
+}
 function saveCfg(){
   cfg.gsUrl=GS_URL_PERM;
   cfg.shopName=gv('s-shop'); cfg.defaultOp=gv('s-op')||gv('s-op2');
@@ -2307,7 +2312,7 @@ function showSyncLoading(on){
 // ═══════════════════════════════════
 function resetData(){
   if(!confirm('Ștergeți TOATE datele (produse + mișcări)? Această acțiune este ireversibilă!')) return;
-  localStorage.removeItem(DB_K);
+  try{ localStorage.removeItem(DB_K); }catch(e){}
   db={products:[],movements:[]};
   renderDash(); renderStoc(); renderIst(''); renderRetList();
   toast('Toate datele au fost șterse. Baza de date este goală.','🗑️');
