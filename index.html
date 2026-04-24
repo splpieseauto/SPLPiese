@@ -10,7 +10,6 @@
 <meta name="theme-color" content="#c0392b">
 <link rel="manifest" id="pwa-manifest">
 <title>SPL Piese Auto – Chișoda</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap');
@@ -115,12 +114,21 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 .cvw{display:none;position:relative;background:#000;height:220px;overflow:hidden}
 .cvw.on{display:block}
 .cvw video{width:100%!important;height:220px!important;display:block!important;object-fit:cover!important}
-/* html5-qrcode injectează elemente interne — ascunde UI-ul implicit */
-.cvw #qr-shaded-region{border:2px solid var(--acc)!important;border-radius:5px!important;}
-.cvw img{display:none!important}
+/* Scanline animation */
+.scan-line{position:absolute;left:10%;right:10%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--acc),transparent);
+  top:20%;animation:scanmv 1.8s ease-in-out infinite;z-index:8;border-radius:2px;
+  box-shadow:0 0 8px var(--acc)}
+@keyframes scanmv{0%,100%{top:20%;opacity:.9}50%{top:75%;opacity:1}}
+/* Scan overlay corners */
+.scan-overlay{position:absolute;inset:0;z-index:7;pointer-events:none}
+.scan-overlay::before,.scan-overlay::after{content:'';position:absolute;width:28px;height:28px;
+  border-color:var(--acc);border-style:solid;border-radius:3px}
+.scan-overlay::before{top:15%;left:10%;border-width:3px 0 0 3px}
+.scan-overlay::after{bottom:15%;right:10%;border-width:0 3px 3px 0}
 .scan-hint{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
-  font-size:10px;color:rgba(255,255,255,.7);white-space:nowrap;pointer-events:none;z-index:10;
-  background:rgba(0,0,0,.4);padding:2px 8px;border-radius:4px}
+  font-size:10px;color:rgba(255,255,255,.8);white-space:nowrap;pointer-events:none;z-index:10;
+  background:rgba(0,0,0,.5);padding:3px 10px;border-radius:20px;letter-spacing:.3px}
 
 /* BUTTONS */
 .btn{padding:10px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;
@@ -382,7 +390,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="bi-s" onclick="setMode('in','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-in"><div id="vid-in" style="width:100%;height:100%;"></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
+    <div class="cvw" id="cv-in"><div id="vid-in" style="width:100%;height:100%;"></div><div class="scan-line"></div><div class="scan-overlay"></div><div class="scan-hint">📷 Îndreptat spre cod de bare — scanare automată</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Cod Bară / SKU</label>
@@ -450,7 +458,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="bo-s" onclick="setMode('out','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-out"><div id="vid-out" style="width:100%;height:100%;"></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
+    <div class="cvw" id="cv-out"><div id="vid-out" style="width:100%;height:100%;"></div><div class="scan-line"></div><div class="scan-overlay"></div><div class="scan-hint">📷 Îndreptat spre cod de bare — scanare automată</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Cod Bară / SKU</label>
@@ -589,7 +597,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="br-s" onclick="setMode('ret','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-ret"><div id="vid-ret" style="width:100%;height:100%;"></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
+    <div class="cvw" id="cv-ret"><div id="vid-ret" style="width:100%;height:100%;"></div><div class="scan-line"></div><div class="scan-overlay"></div><div class="scan-hint">📷 Îndreptat spre cod de bare — scanare automată</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Tip Retur</label>
@@ -1168,12 +1176,34 @@ function chkPwd(){
 function lockNow(){ settingsOk=false; _goTo('dash'); toast('Setări blocate 🔒','🔒'); }
 
 // ═══════════════════════════════════
-// SCANNER — html5-qrcode (compatibil mobil, camera posterioară)
+// SCANNER — BarcodeDetector API nativ (cel mai rapid pe Android/Chrome)
+// Fără bibliotecă externă; folosește hardware-ul dispozitivului
 // ═══════════════════════════════════
 var scanOn={in:false,out:false,ret:false};
 var scanActive=null;
-var _scanners={}; // Html5Qrcode instances per type
+var _streams={};
+var _videos={};
+var _rafIds={};
 var _lastCode=''; var _lastCodeTime=0;
+var _detector=null; // BarcodeDetector instance (refolosit)
+
+// Formatele de coduri de bare care ne interesează
+var BD_FORMATS=['ean_13','ean_8','code_128','code_39','upc_a','upc_e','itf','codabar','code_93'];
+
+function _initDetector(onReady, onFail){
+  if(_detector){ onReady(); return; }
+  if(typeof BarcodeDetector==='undefined'){ onFail('no_api'); return; }
+  BarcodeDetector.getSupportedFormats().then(function(supported){
+    var use=BD_FORMATS.filter(function(f){ return supported.indexOf(f)!==-1; });
+    if(!use.length) use=['ean_13','ean_8','code_128','code_39'];
+    _detector=new BarcodeDetector({formats:use});
+    onReady();
+  }).catch(function(){
+    // Dacă getSupportedFormats eșuează, încearcă direct cu formatele cunoscute
+    try{ _detector=new BarcodeDetector({formats:BD_FORMATS}); onReady(); }
+    catch(e){ onFail('init_err'); }
+  });
+}
 
 function setMode(type,mode){
   var cv=$('cv-'+type);
@@ -1190,105 +1220,104 @@ function setMode(type,mode){
 
 function startCam(type){
   if(scanOn[type]) return;
-  if(typeof Html5Qrcode==='undefined'){
-    toast('Scanner indisponibil — verificați conexiunea','⚠️',true);
-    setMode(type,'m'); return;
-  }
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     toast('Camera nu este suportată pe acest browser','⚠️',true);
     setMode(type,'m'); return;
   }
-  // Oprește alt scanner activ
-  if(scanActive && scanActive!==type){ stopCam(scanActive); }
-  scanOn[type]=true;
-  scanActive=type;
-  _lastCode=''; _lastCodeTime=0;
-
-  var cvEl=$('cv-'+type);
-  var containerId='vid-'+type;
-
-  // Curăță containerul video înainte de a porni
-  var videoEl=$(containerId);
-  videoEl.innerHTML='';
-
-  // Creează instanță nouă dacă nu există
-  try{
-    if(_scanners[type]){
-      try{ _scanners[type].clear(); }catch(e){}
-    }
-    _scanners[type]=new Html5Qrcode(containerId, {verbose:false});
-  }catch(e){
-    scanOn[type]=false; scanActive=null;
-    toast('Eroare inițializare scanner: '+e.message,'❌',true);
+  if(typeof BarcodeDetector==='undefined'){
+    toast('Scannerul nativ nu este suportat. Folosiți Google Chrome pe Android!','⚠️',true);
     setMode(type,'m'); return;
   }
+  // Oprește alt scanner activ
+  if(scanActive && scanActive!==type){ stopCam(scanActive); }
+  scanOn[type]=true; scanActive=type;
+  _lastCode=''; _lastCodeTime=0;
 
-  var config={
-    fps: 15,
-    qrbox: function(w,h){ var s=Math.min(w,h)*0.7; return {width:Math.round(s),height:Math.round(s*0.5)}; },
-    formatsToSupport:[
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.UPC_E,
-      Html5QrcodeSupportedFormats.ITF
-    ],
-    rememberLastUsedCamera: true,
-    aspectRatio: 1.7778
-  };
+  // Pregătește containerul video
+  var container=$('vid-'+type);
+  container.innerHTML='';
+  var video=document.createElement('video');
+  video.setAttribute('autoplay',''); video.setAttribute('playsinline',''); video.setAttribute('muted','');
+  video.style.cssText='width:100%;height:100%;object-fit:cover;display:block';
+  container.appendChild(video);
+  _videos[type]=video;
 
-  _scanners[type].start(
-    {facingMode:'environment'},
-    config,
-    function(code, result){
-      // onScanSuccess
-      if(!scanOn[type]) return;
-      var now=Date.now();
-      if(code===_lastCode && now-_lastCodeTime<1500) return;
-      _lastCode=code; _lastCodeTime=now;
-      // Feedback vizual
-      cvEl.style.boxShadow='inset 0 0 0 3px var(--grn)';
-      setTimeout(function(){ cvEl.style.boxShadow=''; },400);
-      stopCam(type);
+  _initDetector(
+    function(){
+      // BarcodeDetector gata — pornim camera
+      navigator.mediaDevices.getUserMedia({
+        video:{facingMode:'environment', width:{ideal:1920}, height:{ideal:1080}}
+      }).then(function(stream){
+        if(!scanOn[type]){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+        _streams[type]=stream;
+        video.srcObject=stream;
+        var playPromise=video.play();
+        if(playPromise!==undefined){
+          playPromise.then(function(){ _scheduleScan(type,video); }).catch(function(){ _scheduleScan(type,video); });
+        } else { _scheduleScan(type,video); }
+      }).catch(function(err){
+        scanOn[type]=false; scanActive=null;
+        var msg='';
+        if(err.name==='NotAllowedError') msg='Acces cameră refuzat! Activați din setările browser-ului.';
+        else if(err.name==='NotFoundError') msg='Camera nu a fost găsită pe dispozitiv.';
+        else msg='Camera indisponibilă: '+(err.message||String(err));
+        toast(msg,'❌',true); setMode(type,'m');
+      });
+    },
+    function(reason){
+      scanOn[type]=false; scanActive=null;
+      if(reason==='no_api') toast('BarcodeDetector indisponibil — folosiți Chrome pe Android','⚠️',true);
+      else toast('Eroare inițializare scanner','❌',true);
       setMode(type,'m');
+    }
+  );
+}
+
+function _scheduleScan(type,video){
+  _rafIds[type]=requestAnimationFrame(function(){ _doScan(type,video); });
+}
+
+function _doScan(type,video){
+  if(!scanOn[type]||!_detector) return;
+  // Așteptăm ca video să fie gata
+  if(video.readyState<2){
+    _rafIds[type]=requestAnimationFrame(function(){ _doScan(type,video); });
+    return;
+  }
+  _detector.detect(video).then(function(barcodes){
+    if(!scanOn[type]) return;
+    if(barcodes.length>0){
+      var code=barcodes[0].rawValue;
+      if(!code){ _scheduleScan(type,video); return; }
+      var now=Date.now();
+      if(code===_lastCode && now-_lastCodeTime<2000){ _scheduleScan(type,video); return; }
+      _lastCode=code; _lastCodeTime=now;
+      // Feedback vizual — flash verde
+      var cvEl=$('cv-'+type);
+      cvEl.style.boxShadow='inset 0 0 0 4px var(--grn)';
+      setTimeout(function(){ cvEl.style.boxShadow=''; },500);
+      stopCam(type); setMode(type,'m');
       $(type+'-bc').value=code;
       lookup(type,code);
-      toast('Cod scanat: '+code,'📷');
-    },
-    function(errorMsg){
-      // onScanFailure — ignorat (scanare continuă)
-    }
-  ).catch(function(err){
-    scanOn[type]=false; scanActive=null;
-    var msg='';
-    var errStr=err?String(err.message||err):'';
-    if(errStr.indexOf('NotAllowed')!==-1||errStr.indexOf('Permission')!==-1){
-      msg='Acces cameră refuzat! Activați din setările browser-ului.';
-    } else if(errStr.indexOf('NotFound')!==-1||errStr.indexOf('Requested device not found')!==-1){
-      msg='Camera nu a fost găsită pe dispozitiv.';
+      toast('✅ Cod scanat: '+code,'📷');
     } else {
-      msg='Camera indisponibilă: '+errStr;
+      _scheduleScan(type,video);
     }
-    toast(msg,'❌',true);
-    setMode(type,'m');
+  }).catch(function(){
+    // Eroare la detectare — continuăm (frame curent invalid)
+    if(scanOn[type]) _scheduleScan(type,video);
   });
 }
 
 function stopCam(type){
-  if(!scanOn[type] && scanActive!==type) return;
+  if(!scanOn[type]&&scanActive!==type) return;
   scanOn[type]=false;
   if(scanActive===type) scanActive=null;
-  if(_scanners[type]){
-    try{
-      _scanners[type].stop().then(function(){
-        try{ _scanners[type].clear(); }catch(e){}
-      }).catch(function(){
-        try{ _scanners[type].clear(); }catch(e){}
-      });
-    }catch(e){}
-  }
+  if(_rafIds[type]){ cancelAnimationFrame(_rafIds[type]); delete _rafIds[type]; }
+  if(_streams[type]){ _streams[type].getTracks().forEach(function(t){ t.stop(); }); delete _streams[type]; }
+  if(_videos[type]){ _videos[type].srcObject=null; delete _videos[type]; }
+  var container=$('vid-'+type);
+  if(container) container.innerHTML='';
 }
 
 // ═══════════════════════════════════
