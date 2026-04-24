@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#c0392b">
 <link rel="manifest" id="pwa-manifest">
 <title>SPL Piese Auto – Chișoda</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap');
@@ -112,17 +112,14 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 .mbt.on{background:var(--acc);color:#fff}
 
 /* CAMERA VIEWPORT */
-.cvw{display:none;position:relative;background:#000;height:200px;overflow:hidden}
+.cvw{display:none;position:relative;background:#000;height:220px;overflow:hidden}
 .cvw.on{display:block}
-.cvw video{width:100%;height:200px;display:block;object-fit:cover}
-.cvw canvas.drawingBuffer{position:absolute;top:0;left:0;width:100%!important;height:200px!important;opacity:0}
-.cl{position:absolute;left:0;right:0;height:2px;background:var(--acc);box-shadow:0 0 10px var(--acc);
-  animation:cs 1.5s ease-in-out infinite alternate;z-index:5;pointer-events:none}
-@keyframes cs{0%{top:20%}100%{top:78%}}
-.cfr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.crc{width:240px;height:70px;border:2px solid var(--acc);border-radius:5px;box-shadow:0 0 0 9999px rgba(0,0,0,.5)}
+.cvw video{width:100%!important;height:220px!important;display:block!important;object-fit:cover!important}
+/* html5-qrcode injectează elemente interne — ascunde UI-ul implicit */
+.cvw #qr-shaded-region{border:2px solid var(--acc)!important;border-radius:5px!important;}
+.cvw img{display:none!important}
 .scan-hint{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
-  font-size:10px;color:rgba(255,255,255,.7);white-space:nowrap;pointer-events:none;
+  font-size:10px;color:rgba(255,255,255,.7);white-space:nowrap;pointer-events:none;z-index:10;
   background:rgba(0,0,0,.4);padding:2px 8px;border-radius:4px}
 
 /* BUTTONS */
@@ -385,7 +382,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="bi-s" onclick="setMode('in','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-in"><video id="vid-in" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
+    <div class="cvw" id="cv-in"><div id="vid-in" style="width:100%;height:100%;"></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Cod Bară / SKU</label>
@@ -453,7 +450,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="bo-s" onclick="setMode('out','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-out"><video id="vid-out" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
+    <div class="cvw" id="cv-out"><div id="vid-out" style="width:100%;height:100%;"></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Cod Bară / SKU</label>
@@ -592,7 +589,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="br-s" onclick="setMode('ret','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-ret"><video id="vid-ret" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
+    <div class="cvw" id="cv-ret"><div id="vid-ret" style="width:100%;height:100%;"></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Tip Retur</label>
@@ -1171,11 +1168,11 @@ function chkPwd(){
 function lockNow(){ settingsOk=false; _goTo('dash'); toast('Setări blocate 🔒','🔒'); }
 
 // ═══════════════════════════════════
-// SCANNER — QuaggaJS (rapid, optimizat mobil)
+// SCANNER — html5-qrcode (compatibil mobil, camera posterioară)
 // ═══════════════════════════════════
 var scanOn={in:false,out:false,ret:false};
-var scanActive=null; // tipul activ curent
-var _scanDebounce=null;
+var scanActive=null;
+var _scanners={}; // Html5Qrcode instances per type
 var _lastCode=''; var _lastCodeTime=0;
 
 function setMode(type,mode){
@@ -1193,7 +1190,7 @@ function setMode(type,mode){
 
 function startCam(type){
   if(scanOn[type]) return;
-  if(typeof Quagga==='undefined'){
+  if(typeof Html5Qrcode==='undefined'){
     toast('Scanner indisponibil — verificați conexiunea','⚠️',true);
     setMode(type,'m'); return;
   }
@@ -1207,79 +1204,75 @@ function startCam(type){
   scanActive=type;
   _lastCode=''; _lastCodeTime=0;
 
-  var videoEl=$('vid-'+type);
   var cvEl=$('cv-'+type);
+  var containerId='vid-'+type;
 
-  Quagga.init({
-    inputStream:{
-      type:'LiveStream',
-      target: videoEl,
-      constraints:{
-        facingMode:'environment',
-        width:{min:640, ideal:1280, max:1920},
-        height:{min:480, ideal:720, max:1080},
-        aspectRatio:{ideal:1.7778}
-      },
-      area:{
-        top:'20%', right:'5%', bottom:'20%', left:'5%'
-      },
-      singleChannel: false
-    },
-    locator:{
-      patchSize:'medium',
-      halfSample: true
-    },
-    numOfWorkers: (navigator.hardwareConcurrency||2) > 2 ? 2 : 1,
-    frequency: 15,
-    decoder:{
-      readers:[
-        'ean_reader',
-        'ean_8_reader',
-        'code_128_reader',
-        'code_39_reader',
-        'upc_reader',
-        'upc_e_reader',
-        'i2of5_reader'
-      ],
-      multiple: false
-    },
-    locate: true
-  }, function(err){
-    if(err){
-      scanOn[type]=false; scanActive=null;
-      var msg=err&&(err.name==='NotAllowedError'||err.message&&err.message.includes('Permission'))
-        ?'Acces cameră refuzat! Activați din setările browser-ului.'
-        :err&&(err.name==='NotFoundError')
-        ?'Camera nu a fost găsită pe dispozitiv.'
-        :'Camera indisponibilă: '+(err?err.message||String(err):'');
-      toast(msg,'❌',true);
-      setMode(type,'m'); return;
+  // Curăță containerul video înainte de a porni
+  var videoEl=$(containerId);
+  videoEl.innerHTML='';
+
+  // Creează instanță nouă dacă nu există
+  try{
+    if(_scanners[type]){
+      try{ _scanners[type].clear(); }catch(e){}
     }
-    Quagga.start();
-  });
+    _scanners[type]=new Html5Qrcode(containerId, {verbose:false});
+  }catch(e){
+    scanOn[type]=false; scanActive=null;
+    toast('Eroare inițializare scanner: '+e.message,'❌',true);
+    setMode(type,'m'); return;
+  }
 
-  Quagga.offDetected(); // remove previous listeners
-  Quagga.onDetected(function(data){
-    if(!scanOn[type]) return;
-    var code=data.codeResult&&data.codeResult.code;
-    if(!code) return;
-    // Debounce: ignoră același cod scanat în mai puțin de 1.5s
-    var now=Date.now();
-    if(code===_lastCode && now-_lastCodeTime<1500) return;
-    // Verifică confidența: cel puțin 2 citiri consecutive identice
-    var decodedCodes=data.codeResult.decodedCodes||[];
-    var errors=decodedCodes.filter(function(c){ return c.error!==undefined; });
-    var avgErr=errors.length?errors.reduce(function(s,c){ return s+(c.error||0); },0)/errors.length:1;
-    if(avgErr>0.25) return; // calitate slabă — ignoră
-    _lastCode=code; _lastCodeTime=now;
-    // Feedback vizual
-    cvEl.style.boxShadow='inset 0 0 0 3px var(--grn)';
-    setTimeout(function(){ cvEl.style.boxShadow=''; },400);
-    stopCam(type);
+  var config={
+    fps: 15,
+    qrbox: function(w,h){ var s=Math.min(w,h)*0.7; return {width:Math.round(s),height:Math.round(s*0.5)}; },
+    formatsToSupport:[
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.ITF
+    ],
+    rememberLastUsedCamera: true,
+    aspectRatio: 1.7778
+  };
+
+  _scanners[type].start(
+    {facingMode:'environment'},
+    config,
+    function(code, result){
+      // onScanSuccess
+      if(!scanOn[type]) return;
+      var now=Date.now();
+      if(code===_lastCode && now-_lastCodeTime<1500) return;
+      _lastCode=code; _lastCodeTime=now;
+      // Feedback vizual
+      cvEl.style.boxShadow='inset 0 0 0 3px var(--grn)';
+      setTimeout(function(){ cvEl.style.boxShadow=''; },400);
+      stopCam(type);
+      setMode(type,'m');
+      $(type+'-bc').value=code;
+      lookup(type,code);
+      toast('Cod scanat: '+code,'📷');
+    },
+    function(errorMsg){
+      // onScanFailure — ignorat (scanare continuă)
+    }
+  ).catch(function(err){
+    scanOn[type]=false; scanActive=null;
+    var msg='';
+    var errStr=err?String(err.message||err):'';
+    if(errStr.indexOf('NotAllowed')!==-1||errStr.indexOf('Permission')!==-1){
+      msg='Acces cameră refuzat! Activați din setările browser-ului.';
+    } else if(errStr.indexOf('NotFound')!==-1||errStr.indexOf('Requested device not found')!==-1){
+      msg='Camera nu a fost găsită pe dispozitiv.';
+    } else {
+      msg='Camera indisponibilă: '+errStr;
+    }
+    toast(msg,'❌',true);
     setMode(type,'m');
-    $(type+'-bc').value=code;
-    lookup(type,code);
-    toast('Cod scanat: '+code,'📷');
   });
 }
 
@@ -1287,7 +1280,15 @@ function stopCam(type){
   if(!scanOn[type] && scanActive!==type) return;
   scanOn[type]=false;
   if(scanActive===type) scanActive=null;
-  try{ Quagga.offDetected(); Quagga.stop(); }catch(e){}
+  if(_scanners[type]){
+    try{
+      _scanners[type].stop().then(function(){
+        try{ _scanners[type].clear(); }catch(e){}
+      }).catch(function(){
+        try{ _scanners[type].clear(); }catch(e){}
+      });
+    }catch(e){}
+  }
 }
 
 // ═══════════════════════════════════
