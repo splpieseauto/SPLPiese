@@ -471,6 +471,10 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       <div class="pfb" id="out-pf">
         <span style="font-size:20px">✅</span>
         <div style="flex:1"><div class="pfn" id="out-pfn">—</div><div class="pfm" id="out-pfm">—</div></div>
+        <div style="text-align:right;margin-right:10px">
+          <div class="pfs" id="out-pf-price" style="color:var(--grn)">—</div>
+          <div class="pfl">preț vânzare (+25%)</div>
+        </div>
         <div style="text-align:right"><div class="pfs" id="out-pfs">—</div><div class="pfl">stoc actual</div></div>
       </div>
       <div class="fr fr3">
@@ -1497,11 +1501,32 @@ function lookup(type,bc){
     var se=$(type+'-pfs'); se.textContent=p.stock+' buc';
     se.style.color=p.stock<=cfg.minStock?'var(--red)':'var(--grn)';
     pf.classList.add('on');
-    if(type==='in'){ sv('in-prt',p.buy); sv('in-sell',(p.sell||Math.round(p.buy*1.25*100)/100)); sv('in-cat',p.cat); }
-    if(type==='out'){ sv('out-prt',p.sell||Math.round(p.buy*1.25*100)/100); }
-    if(type==='ret'){ sv('ret-val',p.sell); }
+    if(type==='in'){
+      sv('in-prt',p.buy);
+      sv('in-sell',(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*1.25*100)/100);
+      sv('in-cat',p.cat);
+    }
+    if(type==='out'){
+      // Calculează prețul de vânzare: folosește p.sell dacă există și > 0, altfel buy+25%
+      var sellPrice=(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*1.25*100)/100;
+      sv('out-prt',sellPrice);
+      // Afișează în banner și prețul de vânzare calculat
+      var pfsPriceEl=$('out-pf-price');
+      if(pfsPriceEl){
+        pfsPriceEl.textContent=fron(sellPrice)+' RON';
+      }
+    }
+    if(type==='ret'){ sv('ret-val',(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*1.25*100)/100); }
     if(cfg.defaultOp){ var oe=$(type+'-op'); if(oe) oe.value=cfg.defaultOp; }
-  } else { pf.classList.remove('on'); }
+  } else {
+    pf.classList.remove('on');
+    // Dacă produsul nu e găsit la ieșire, atrage atenția
+    if(type==='out' && bc.length>=3){
+      var nmField=$('out-nm');
+      if(nmField) nmField.value='';
+      sv('out-prt','');
+    }
+  }
 }
 function gpLookup(bc){
   var p=db.products.find(function(x){ return x.bc===bc.trim(); });
