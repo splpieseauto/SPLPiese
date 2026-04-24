@@ -647,8 +647,8 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 
       <!-- Tabel pozitii -->
       <div style="border:1px solid var(--brd);border-radius:7px;overflow:hidden;margin-bottom:12px">
-        <div style="background:var(--c2);padding:8px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:24px 1.2fr 2fr 0.6fr 0.7fr 1fr 0.8fr 32px;gap:6px;align-items:center">
-          <span>#</span><span>Cod</span><span>Denumire</span><span>UM</span><span style="text-align:center">Cant.</span><span style="text-align:right">Preț Unit.</span><span style="text-align:right">Valoare</span><span></span>
+        <div style="background:var(--c2);padding:8px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:24px 2.5fr 0.6fr 0.7fr 1fr 0.8fr 32px;gap:6px;align-items:center">
+          <span>#</span><span>Denumire</span><span>UM</span><span style="text-align:center">Cant.</span><span style="text-align:right">Preț Unit.</span><span style="text-align:right">Valoare</span><span></span>
         </div>
         <div id="of-linii"><div id="of-empty" style="padding:20px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:24px;display:block;margin-bottom:7px;opacity:.35">📋</span>Nicio piesă — adăugați din câmpul de mai sus</div></div>
       </div>
@@ -1995,10 +1995,9 @@ function addOfertaLinie(){
   var el=document.createElement('div');
   el.id=id;
   var inp='background:var(--c2);border:1px solid var(--brd);border-radius:5px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:6px 8px;outline:none;width:100%';
-  el.style.cssText='display:grid;grid-template-columns:24px 1.2fr 2fr 0.6fr 0.7fr 1fr 0.8fr 32px;gap:6px;padding:7px 11px;border-top:1px solid rgba(36,41,63,.5);align-items:center';
+  el.style.cssText='display:grid;grid-template-columns:24px 2.5fr 0.6fr 0.7fr 1fr 0.8fr 32px;gap:6px;padding:7px 11px;border-top:1px solid rgba(36,41,63,.5);align-items:center';
   el.innerHTML=
     '<span class="of-nr-linie" style="font-size:10px;color:var(--t2);font-weight:700;text-align:center">'+nr+'</span>'+
-    '<input type="text" value="'+(cod||'')+'" placeholder="Cod" style="'+inp+'" oninput="calcOferta()">'+
     '<input type="text" value="'+(nm||'')+'" placeholder="Denumire" style="'+inp+'" oninput="calcOferta()">'+
     '<select style="'+inp+'"><option value="buc"'+(um==='buc'?' selected':'')+'>buc</option><option value="l"'+(um==='l'?' selected':'')+'>l</option><option value="set"'+(um==='set'?' selected':'')+'>set</option></select>'+
     '<input type="number" value="'+(qty||1)+'" min="0.01" step="0.01" oninput="calcOferta()" style="'+inp+';text-align:center">'+
@@ -2030,9 +2029,10 @@ function calcOferta(){
   var total=0;
   for(var i=0;i<linii.length;i++){
     var inputs=linii[i].querySelectorAll('input');
-    if(inputs.length<4) continue;
-    var qty=parseFloat(inputs[3].value)||0;
-    var prt=parseFloat(inputs[4].value)||0;
+    if(inputs.length<3) continue;
+    // inputs: [0]=nm, [1]=qty, [2]=prt
+    var qty=parseFloat(inputs[1].value)||0;
+    var prt=parseFloat(inputs[2].value)||0;
     var val=qty*prt; total+=val;
     var valEl=linii[i].querySelector('.of-val-linie');
     if(valEl) valEl.textContent=val.toFixed(2)+' RON';
@@ -2057,13 +2057,12 @@ function getOfertaLinii(){
   for(var i=0;i<linii.length;i++){
     var inputs=linii[i].querySelectorAll('input');
     var sel=linii[i].querySelector('select');
-    if(inputs.length<4) continue;
+    if(inputs.length<3) continue;
     rows.push({
-      cod:inputs[0].value||'',
-      nm:inputs[1].value||'',
+      nm:inputs[0].value||'',
       um:sel?sel.value:'buc',
-      qty:parseFloat(inputs[3].value)||0,
-      prt:parseFloat(inputs[4].value)||0
+      qty:parseFloat(inputs[1].value)||0,
+      prt:parseFloat(inputs[2].value)||0
     });
   }
   return rows;
@@ -2448,7 +2447,7 @@ function calcFac(){
   var subtotal=0; var nrLinii=linii.length;
   for(var i=0;i<linii.length;i++){
     var inputs=linii[i].querySelectorAll('input');
-    if(inputs.length<4) continue;
+    if(inputs.length<3) continue;
     var qty=parseFloat(inputs[2].value)||0;
     var prt=parseFloat(inputs[3].value)||0;
     var val=qty*prt; subtotal+=val;
