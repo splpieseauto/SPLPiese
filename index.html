@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#c0392b">
 <link rel="manifest" id="pwa-manifest">
 <title>SPL Piese Auto – Chișoda</title>
-<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap');
@@ -112,14 +112,18 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 .mbt.on{background:var(--acc);color:#fff}
 
 /* CAMERA VIEWPORT */
-.cvw{display:none;position:relative;background:#000;max-height:175px;overflow:hidden}
+.cvw{display:none;position:relative;background:#000;height:200px;overflow:hidden}
 .cvw.on{display:block}
-.cvw video{width:100%;display:block;max-height:175px;object-fit:cover}
+.cvw video{width:100%;height:200px;display:block;object-fit:cover}
+.cvw canvas.drawingBuffer{position:absolute;top:0;left:0;width:100%!important;height:200px!important;opacity:0}
 .cl{position:absolute;left:0;right:0;height:2px;background:var(--acc);box-shadow:0 0 10px var(--acc);
-  animation:cs 1.8s ease-in-out infinite;z-index:5}
-@keyframes cs{0%{top:15%}100%{top:80%}}
+  animation:cs 1.5s ease-in-out infinite alternate;z-index:5;pointer-events:none}
+@keyframes cs{0%{top:20%}100%{top:78%}}
 .cfr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.crc{width:190px;height:64px;border:2px solid var(--acc);border-radius:5px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+.crc{width:240px;height:70px;border:2px solid var(--acc);border-radius:5px;box-shadow:0 0 0 9999px rgba(0,0,0,.5)}
+.scan-hint{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+  font-size:10px;color:rgba(255,255,255,.7);white-space:nowrap;pointer-events:none;
+  background:rgba(0,0,0,.4);padding:2px 8px;border-radius:4px}
 
 /* BUTTONS */
 .btn{padding:10px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;
@@ -381,7 +385,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="bi-s" onclick="setMode('in','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-in"><video id="vid-in" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cvw" id="cv-in"><video id="vid-in" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Cod Bară / SKU</label>
@@ -449,7 +453,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="bo-s" onclick="setMode('out','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-out"><video id="vid-out" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cvw" id="cv-out"><video id="vid-out" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Cod Bară / SKU</label>
@@ -588,7 +592,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="mbt" id="br-s" onclick="setMode('ret','s')">📷 Scan</button>
       </div>
     </div>
-    <div class="cvw" id="cv-ret"><video id="vid-ret" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div></div>
+    <div class="cvw" id="cv-ret"><video id="vid-ret" playsinline autoplay muted></video><div class="cl"></div><div class="cfr"><div class="crc"></div></div><div class="scan-hint">📷 Centrați codul de bare în dreptunghi</div></div>
     <div class="cb">
       <div class="fr">
         <div class="fg"><label>Tip Retur</label>
@@ -1167,10 +1171,12 @@ function chkPwd(){
 function lockNow(){ settingsOk=false; _goTo('dash'); toast('Setări blocate 🔒','🔒'); }
 
 // ═══════════════════════════════════
-// SCANNER — ZXing (Google)
+// SCANNER — QuaggaJS (rapid, optimizat mobil)
 // ═══════════════════════════════════
-var zxReaders={};  // { type: CodeReader instance }
 var scanOn={in:false,out:false,ret:false};
+var scanActive=null; // tipul activ curent
+var _scanDebounce=null;
+var _lastCode=''; var _lastCodeTime=0;
 
 function setMode(type,mode){
   var cv=$('cv-'+type);
@@ -1187,77 +1193,101 @@ function setMode(type,mode){
 
 function startCam(type){
   if(scanOn[type]) return;
-  if(typeof ZXing==='undefined'){
+  if(typeof Quagga==='undefined'){
     toast('Scanner indisponibil — verificați conexiunea','⚠️',true);
     setMode(type,'m'); return;
   }
-  // Request camera permission first
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     toast('Camera nu este suportată pe acest browser','⚠️',true);
     setMode(type,'m'); return;
   }
+  // Oprește alt scanner activ
+  if(scanActive && scanActive!==type){ stopCam(scanActive); }
   scanOn[type]=true;
-  // Stop any existing reader for this type
-  if(zxReaders[type]){ try{ zxReaders[type].reset(); }catch(e){} }
-
-  var hints=new Map();
-  var formats=[
-    ZXing.BarcodeFormat.EAN_13,
-    ZXing.BarcodeFormat.EAN_8,
-    ZXing.BarcodeFormat.CODE_128,
-    ZXing.BarcodeFormat.CODE_39,
-    ZXing.BarcodeFormat.UPC_A,
-    ZXing.BarcodeFormat.UPC_E,
-    ZXing.BarcodeFormat.ITF,
-    ZXing.BarcodeFormat.QR_CODE
-  ];
-  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-  hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-
-  var reader=new ZXing.BrowserMultiFormatReader(hints, 300);
-  zxReaders[type]=reader;
+  scanActive=type;
+  _lastCode=''; _lastCodeTime=0;
 
   var videoEl=$('vid-'+type);
+  var cvEl=$('cv-'+type);
 
-  reader.decodeFromConstraints(
-    {
-      audio: false,
-      video: {
-        facingMode: 'environment',
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
+  Quagga.init({
+    inputStream:{
+      type:'LiveStream',
+      target: videoEl,
+      constraints:{
+        facingMode:'environment',
+        width:{min:640, ideal:1280, max:1920},
+        height:{min:480, ideal:720, max:1080},
+        aspectRatio:{ideal:1.7778}
+      },
+      area:{
+        top:'20%', right:'5%', bottom:'20%', left:'5%'
+      },
+      singleChannel: false
     },
-    videoEl,
-    function(result, err){
-      if(result){
-        var code=result.getText();
-        stopCam(type);
-        setMode(type,'m');
-        $(type+'-bc').value=code;
-        lookup(type,code);
-        toast('Cod scanat: '+code,'📷');
-      }
-      // err is normal when no barcode found in frame — ignore
+    locator:{
+      patchSize:'medium',
+      halfSample: true
+    },
+    numOfWorkers: (navigator.hardwareConcurrency||2) > 2 ? 2 : 1,
+    frequency: 15,
+    decoder:{
+      readers:[
+        'ean_reader',
+        'ean_8_reader',
+        'code_128_reader',
+        'code_39_reader',
+        'upc_reader',
+        'upc_e_reader',
+        'i2of5_reader'
+      ],
+      multiple: false
+    },
+    locate: true
+  }, function(err){
+    if(err){
+      scanOn[type]=false; scanActive=null;
+      var msg=err&&(err.name==='NotAllowedError'||err.message&&err.message.includes('Permission'))
+        ?'Acces cameră refuzat! Activați din setările browser-ului.'
+        :err&&(err.name==='NotFoundError')
+        ?'Camera nu a fost găsită pe dispozitiv.'
+        :'Camera indisponibilă: '+(err?err.message||String(err):'');
+      toast(msg,'❌',true);
+      setMode(type,'m'); return;
     }
-  ).catch(function(err){
-    scanOn[type]=false;
-    var msg=err&&err.name==='NotAllowedError'
-      ?'Acces cameră refuzat! Activați din setările browser-ului.'
-      :err&&err.name==='NotFoundError'
-      ?'Camera nu a fost găsită pe dispozitiv.'
-      :'Camera indisponibilă: '+(err?err.message||err:'');
-    toast(msg,'❌',true);
+    Quagga.start();
+  });
+
+  Quagga.offDetected(); // remove previous listeners
+  Quagga.onDetected(function(data){
+    if(!scanOn[type]) return;
+    var code=data.codeResult&&data.codeResult.code;
+    if(!code) return;
+    // Debounce: ignoră același cod scanat în mai puțin de 1.5s
+    var now=Date.now();
+    if(code===_lastCode && now-_lastCodeTime<1500) return;
+    // Verifică confidența: cel puțin 2 citiri consecutive identice
+    var decodedCodes=data.codeResult.decodedCodes||[];
+    var errors=decodedCodes.filter(function(c){ return c.error!==undefined; });
+    var avgErr=errors.length?errors.reduce(function(s,c){ return s+(c.error||0); },0)/errors.length:1;
+    if(avgErr>0.25) return; // calitate slabă — ignoră
+    _lastCode=code; _lastCodeTime=now;
+    // Feedback vizual
+    cvEl.style.boxShadow='inset 0 0 0 3px var(--grn)';
+    setTimeout(function(){ cvEl.style.boxShadow=''; },400);
+    stopCam(type);
     setMode(type,'m');
+    $(type+'-bc').value=code;
+    lookup(type,code);
+    toast('Cod scanat: '+code,'📷');
   });
 }
 
 function stopCam(type){
+  if(!scanOn[type] && scanActive!==type) return;
   scanOn[type]=false;
-  if(zxReaders[type]){
-    try{ zxReaders[type].reset(); }catch(e){}
-    zxReaders[type]=null;
-  }
+  if(scanActive===type) scanActive=null;
+  try{ Quagga.offDetected(); Quagga.stop(); }catch(e){}
 }
 
 // ═══════════════════════════════════
