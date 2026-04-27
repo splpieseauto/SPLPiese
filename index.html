@@ -2487,23 +2487,11 @@ function renderDash(){
   var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
   var retStocAzi=tm.filter(function(m){ return m.t==='ret'&&m.dest==='stoc'; }).reduce(function(s,m){ return s+m.qty*(m.val||0); },0);
   sales=Math.max(0, sales-retStocAzi);
-  // Profit azi: (pret vanzare - pret achizitie) x cantitate pentru fiecare iesire
-  // La retur in stoc: scade profitul piesei returnate (pret vanzare - pret achizitie) x cantitate
-  var profit = 0;
-  tm.forEach(function(m){
-    if(m.t === 'out'){
-      var buyPrc = (m.buy > 0) ? m.buy : 0;
-      profit += (m.price - buyPrc) * m.qty;
-    }
-    if(m.t === 'ret' && m.dest === 'stoc'){
-      // Cauta miscarea de iesire originala pentru aceasta piesa ca sa obtinem pretul corect
-      var outMovs = db.movements.filter(function(x){ return x.t==='out' && x.bc===m.bc; });
-      var lastOut = outMovs.length ? outMovs[0] : null;
-      var sellPrc = lastOut ? lastOut.price : (m.val||0);
-      var buyPrc  = lastOut ? (lastOut.buy||0) : 0;
-      profit -= (sellPrc - buyPrc) * m.qty;
-    }
-  });
+  // Profit azi: suma (pret_vanzare - pret_achizitie) x cantitate doar din iesirile de azi
+  var profit = tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){
+    var buyPrc = (m.buy != null && m.buy > 0) ? m.buy : 0;
+    return s + (m.price - buyPrc) * m.qty;
+  }, 0);
   var sv2=db.products.reduce(function(s,p){ return s+p.stock*p.sell; },0);
   var low=db.products.filter(function(p){ return p.stock<=cfg.minStock; }).length;
   if($('k-stoc')) $('k-stoc').textContent=fron(sv2);
