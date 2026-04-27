@@ -2057,13 +2057,20 @@ function subRet(){
   var prod = db.products.find(function(x){ return x.bc===bc; });
 
   if(dest==='stoc'){
-    // Reintrare in stoc magazin — creste cantitativ, actualizeaza pretul
+    // Reintrare in stoc magazin — creste cantitativ, actualizeaza pretul de achizitie
     if(!prod){
-      prod = {bc:bc, name:nm, cat:'', um:'BUC', stock:0, buy:val, sell:val, codPiesa:cp};
+      var mk=(cfg.markup||25)/100+1;
+      prod = {bc:bc, name:nm, cat:'', um:'BUC', stock:0, buy:val, sell:Math.round(val*mk*100)/100, codPiesa:cp};
       db.products.push(prod);
+    } else {
+      prod.buy = val;
+      // Recalculeaza pretul de vanzare daca cel existent e 0 sau lipsa
+      if(!prod.sell||prod.sell<=0){
+        var mk2=(cfg.markup||25)/100+1;
+        prod.sell=Math.round(val*mk2*100)/100;
+      }
     }
     prod.stock += qty;
-    prod.buy = val;
     toast('Retur în stoc: +'+qty+' × '+nm+' · valoare '+val.toFixed(2)+' RON/buc','✅');
   } else {
     // Retur la distribuitor — stocul NU se modifica
@@ -2079,7 +2086,7 @@ function subRet(){
   };
   db.movements.unshift(mov);
   saveDB();
-  syncGSRet(mov);
+  syncGSRet(mov, prod);
   clearRet();
   renderRetList();
 }
@@ -3023,12 +3030,20 @@ function syncGS(mov,prod){
       pretV:isIn?0:mov.price,sellPret:sellPret,codPiesa:mov.cp||''})
   }).then(function(){ updateSyncUI(true); }).catch(function(){});
 }
-function syncGSRet(r){
+function syncGSRet(r, prod){
   var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator','Cod Piesa'];
   var row=[r.date,r.bc,r.name,r.partner||'',r.qty,r.val,r.qty*r.val,r.motiv||'',r.obs||'',r.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',r.op,r.cp||''];
   fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({sheet:'Retururi',type:'ret',headers:headers,row:row,barcode:r.bc,name:r.name,qty:r.qty,codPiesa:r.cp||''})
   }).then(function(){ updateSyncUI(true); }).catch(function(){});
+  if(r.dest==='stoc' && prod){
+    fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'updateStoc',
+        barcode:prod.bc,name:prod.name,cat:prod.cat||'',
+        stock:prod.stock,buy:prod.buy,sell:prod.sell,
+        codPiesa:prod.codPiesa||'',um:prod.um||'BUC'})
+    }).catch(function(){});
+  }
 }
 function syncGSOferta(o){
   // Trimite fiecare linie a ofertei ca rând separat în foaia Oferte
@@ -3374,11 +3389,11 @@ function saveEdit(){
     m.op      = gv('ef-op').trim();
     m.date    = gv('ef-dt').trim();
     // Recalcul stoc daca e reintrare si s-a schimbat cantitatea
-    if(m.dest==='stoc' && (m.qty!==oldQty)){
-      var prod = db.products.find(function(x){ return x.bc===m.bc; });
-      if(prod){ prod.stock = prod.stock - oldQty + m.qty; }
+    var prodRet = db.products.find(function(x){ return x.bc===m.bc; });
+    if(m.dest==='stoc'){
+      if(prodRet){ prodRet.stock = prodRet.stock - oldQty + m.qty; }
     }
-    syncGSRetEdit(m);
+    syncGSRetEdit(m, prodRet);
 
   } else if(_editType==='prod'){
     var p = db.products[_editIdx];
@@ -3590,7 +3605,16 @@ function deleteEdit(){
     var m = db.movements[_editIdx];
     if(m.dest==='stoc'){
       var prod = db.products.find(function(x){ return x.bc===m.bc; });
-      if(prod){ prod.stock = Math.max(0, prod.stock - m.qty); }
+      if(prod){
+        prod.stock = Math.max(0, prod.stock - m.qty);
+        // Sincronizeaza stocul actualizat in GSheets
+        fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'updateStoc',
+            barcode:prod.bc,name:prod.name,cat:prod.cat||'',
+            stock:prod.stock,buy:prod.buy,sell:prod.sell,
+            codPiesa:prod.codPiesa||'',um:prod.um||'BUC'})
+        }).catch(function(){});
+      }
     }
     db.movements.splice(_editIdx,1);
 
@@ -3606,13 +3630,21 @@ function deleteEdit(){
   toast('Înregistrare ștearsă','🗑️');
 }
 
-function syncGSRetEdit(m){
+function syncGSRetEdit(m, prod){
   var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator','Cod Piesa'];
   var row=[m.date,m.bc,m.name,m.partner||'',m.qty,m.val,m.qty*m.val,m.motiv||'',m.obs||'',m.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',m.op,m.cp||''];
   fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({sheet:'Retururi',type:'ret',headers:headers,row:row,
       barcode:m.bc,name:m.name,qty:m.qty,codPiesa:m.cp||'',editFlag:true})
   }).catch(function(){});
+  if(m.dest==='stoc' && prod){
+    fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'updateStoc',
+        barcode:prod.bc,name:prod.name,cat:prod.cat||'',
+        stock:prod.stock,buy:prod.buy,sell:prod.sell,
+        codPiesa:prod.codPiesa||'',um:prod.um||'BUC'})
+    }).catch(function(){});
+  }
 }
 
 function syncGSStocEdit(p){
