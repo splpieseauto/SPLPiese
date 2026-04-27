@@ -1309,9 +1309,9 @@ function toast(msg,ico,err){
   clearTimeout(_tt);
   _tt=setTimeout(function(){ t.classList.remove('on'); },3000);
 }
-function tod(){ return new Date().toLocaleDateString('ro-RO'); }
-function fmtD(d){ return d?d.replace(/\./g,"/"):""; }
-function ftm(ts){ return new Date(ts).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'}); }
+function tod(){ var n=new Date(); var d=String(n.getDate()).padStart(2,'0'); var m=String(n.getMonth()+1).padStart(2,'0'); var y=n.getFullYear(); return d+'/'+m+'/'+y; }
+function fmtD(d){ if(!d) return ''; return d.replace(/\./g,'/'); }
+function ftm(ts){ var n=ts?new Date(ts):new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
 function fron(n){ return Number(n||0).toLocaleString('ro-RO',{minimumFractionDigits:2,maximumFractionDigits:2})+' RON'; }
 function expDate(per){
   var l=parseInt(per); var d=new Date(); d.setMonth(d.getMonth()+l);
@@ -2469,7 +2469,7 @@ function renderDash(){
     var dc=m.t==='ret'?(m.fisa||'—'):(m.doc||'—');
     return '<div class="hr"><div class="hi '+qc+'">'+ico+'</div>'+
       '<div class="hd"><div class="hn">'+m.name+'</div>'+
-      '<div class="hm">'+fmtD(m.date)+' '+m.op+'</div></div>'+
+      '<div class="hm">'+fmtD(m.date)+(m.ts?' '+ftm(m.ts):'')+' · '+m.op+'</div></div>'+
       '<div class="hrt"><div class="hq '+qc+'">'+qt+'</div></div></div>';
   }).join('');
   var items=[
@@ -2522,7 +2522,7 @@ function renderIst(tf){
     var amt=m.t==='ret'?'↩️ '+m.qty+' buc':(m.t==='in'?'+':'-')+m.qty+' buc';
     return '<div class="hr"><div class="hi '+qc+'">'+ico+'</div>'+
       '<div class="hd"><div class="hn">'+m.name+'</div>'+
-      '<div class="hm">'+fmtD(m.date)+' '+m.op+'</div></div>'+
+      '<div class="hm">'+fmtD(m.date)+(m.ts?' '+ftm(m.ts):'')+' · '+m.op+'</div></div>'+
       '<div class="hrt"><div class="hq '+qc+'">'+amt+'</div></div></div>';
   }).join('');
 }
