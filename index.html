@@ -614,56 +614,43 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 
       <!-- Pozitii oferta -->
       <div style="background:rgba(39,174,96,.05);border:1px solid rgba(39,174,96,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px">
-        <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">➕ Adaugă Piesă în Ofertă</div>
-
-        <div class="fr" style="grid-template-columns:1fr 1fr 1.5fr">
-          <div class="fg"><label>Cod Piesă</label>
+        <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">➕ Adaugă Piesă</div>
+        <div style="display:grid;grid-template-columns:1.2fr 2fr 0.6fr 0.7fr 0.8fr auto;gap:7px;align-items:flex-end">
+          <div class="fg">
+            <label>Cod Produs</label>
             <div style="position:relative">
-              <input class="bc" type="text" id="of-add-cod" autocomplete="off"
-                placeholder="Cod / SKU..."
-                oninput="ofLookupEx(this.value)">
+              <input type="text" id="of-add-cod" placeholder="Cod / SKU" autocomplete="off"
+                oninput="ofSearchProd(this.value)"
+                style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
               <div id="of-search-res" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--c1);border:1px solid var(--brd);border-radius:6px;margin-top:2px;max-height:160px;overflow-y:auto;z-index:200"></div>
             </div>
           </div>
-          <div class="fg"><label>Producător</label>
-            <input type="text" id="of-add-prod" placeholder="ex: Bosch, Mann, SKF..."></div>
-          <div class="fg"><label>Denumire Piesă</label>
-            <input type="text" id="of-add-nm" placeholder="Auto-completat sau manual"></div>
-        </div>
-
-        <div class="pfb" id="of-pf" style="display:none;margin-top:6px">
-          <span style="font-size:20px">📦</span>
-          <div style="flex:1">
-            <div class="pfn" id="of-pfn">—</div>
-            <div class="pfm" id="of-pfm">—</div>
-          </div>
-          <div style="text-align:right;margin-right:10px">
-            <div class="pfs" id="of-pf-sell" style="color:var(--grn)">—</div>
-            <div class="pfl">preț vânzare</div>
-          </div>
-          <div style="text-align:right">
-            <div class="pfs" id="of-pf-stock">—</div>
-            <div class="pfl">stoc actual</div>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:0.7fr 0.5fr 1fr auto;gap:8px;align-items:flex-end;margin-top:8px">
-          <div class="fg"><label>Cantitate</label>
-            <input type="number" id="of-add-qty" value="1" min="0.01" step="0.01" style="text-align:center"></div>
+          <div class="fg"><label>Denumire Produs</label>
+            <input type="text" id="of-add-nm" placeholder="Denumire piesă / serviciu"
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
           <div class="fg"><label>UM</label>
-            <select id="of-add-um">
+            <select id="of-add-um" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
               <option value="buc">buc</option>
               <option value="l">l</option>
               <option value="set">set</option>
             </select>
           </div>
-          <div class="fg"><label>Preț Unit. (RON) <span style="color:var(--grn);font-size:9px">auto</span></label>
+          <div class="fg"><label>Cantitate</label>
+            <input type="number" id="of-add-qty" value="1" min="0.01" step="0.01"
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%;text-align:center"></div>
+          <div class="fg"><label>Preț (RON)</label>
             <input type="number" id="of-add-prt" min="0" step="0.01" placeholder="0.00"
-              style="text-align:right;border-color:rgba(39,174,96,.4);background:rgba(39,174,96,.04)"></div>
-          <button class="btn ba" onclick="addOfertaLinie()" style="padding:9px 16px;white-space:nowrap">+ Adaugă</button>
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%;text-align:right"></div>
+          <button class="btn bg" style="padding:9px 14px;white-space:nowrap" onclick="addOfertaLinie()">+ Adaugă</button>
         </div>
       </div>
-      <div id="of-linii"><div id="of-empty" style="padding:20px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:24px;display:block;margin-bottom:7px;opacity:.35">📋</span>Nicio piesă — adăugați din câmpul de mai sus</div></div>
+
+      <!-- Tabel pozitii -->
+      <div style="border:1px solid var(--brd);border-radius:7px;overflow:hidden;margin-bottom:12px">
+        <div style="background:var(--c2);padding:8px 11px;font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:grid;grid-template-columns:24px 0.9fr 2fr 0.5fr 0.6fr 0.9fr 0.8fr 32px;gap:6px;align-items:center">
+          <span>#</span><span>Cod</span><span>Denumire</span><span>UM</span><span style="text-align:center">Cant.</span><span style="text-align:right">Preț Unit.</span><span style="text-align:right">Valoare</span><span></span>
+        </div>
+        <div id="of-linii"><div id="of-empty" style="padding:20px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:24px;display:block;margin-bottom:7px;opacity:.35">📋</span>Nicio piesă — adăugați din câmpul de mai sus</div></div>
       </div>
 
       <!-- Total -->
@@ -1192,10 +1179,7 @@ function toast(msg,ico,err){
   clearTimeout(_tt);
   _tt=setTimeout(function(){ t.classList.remove('on'); },3000);
 }
-function tod(){
-  var d=new Date();
-  return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear();
-}
+function tod(){ return new Date().toLocaleDateString('ro-RO'); }
 function ftm(ts){ return new Date(ts).toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit'}); }
 function fron(n){ return Number(n||0).toLocaleString('ro-RO',{minimumFractionDigits:2,maximumFractionDigits:2})+' RON'; }
 function expDate(per){
@@ -1229,7 +1213,7 @@ function loadAll(){
   fetch(GS_URL_PERM+'?action=getData',{redirect:'follow'})
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if(data.ok && (data.products||[]).length>0){
+      if(data.ok && (data.products||[]).length>=db.products.length){
         db.products=data.products||[]; db.movements=data.movements||[];
         try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){}
         renderDash(); renderStoc(); renderIst(''); renderOfertaList(); renderRetList();
@@ -1482,46 +1466,26 @@ function stopCam(type){
 // ═══════════════════════════════════
 var CAM_K='spl3_cam';
 function checkCam(){
+  // Check if camera is available at all
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     updateCamUI('denied'); return;
   }
-  // Verifica mai intai localStorage — evita intrebarea la fiecare reload
-  var saved=localStorage.getItem(CAM_K);
-  if(saved==='granted'){
-    updateCamUI('granted');
-    // Verifica in fundal daca permisiunea mai e valida
-    if(navigator.permissions){
-      navigator.permissions.query({name:'camera'}).then(function(r){
-        if(r.state==='denied'){ localStorage.removeItem(CAM_K); updateCamUI('denied'); }
-        r.onchange=function(){
-          if(r.state==='denied'){ localStorage.removeItem(CAM_K); updateCamUI('denied'); }
-          else if(r.state==='granted'){ localStorage.setItem(CAM_K,'granted'); updateCamUI('granted'); }
-        };
-      }).catch(function(){});
-    }
-    return;
-  }
-  if(saved==='denied'){ updateCamUI('denied'); return; }
-  // Nicio informatie salvata — interogheaza permissisons API
   if(navigator.permissions){
     navigator.permissions.query({name:'camera'}).then(function(r){
-      if(r.state==='granted'){
-        localStorage.setItem(CAM_K,'granted');
-        updateCamUI('granted');
-      } else if(r.state==='denied'){
-        localStorage.setItem(CAM_K,'denied');
-        updateCamUI('denied');
-      } else {
+      if(r.state==='granted'){ updateCamUI('granted'); }
+      else if(r.state==='denied'){ updateCamUI('denied'); }
+      else {
+        // 'prompt' state — show modal to ask user
         $('m-cam').classList.remove('off');
       }
-      r.onchange=function(){
-        if(r.state==='granted'){ localStorage.setItem(CAM_K,'granted'); updateCamUI('granted'); }
-        else if(r.state==='denied'){ localStorage.removeItem(CAM_K); updateCamUI('denied'); }
-      };
+      // Watch for changes (user grants/revokes in browser settings)
+      r.onchange=function(){ checkCam(); };
     }).catch(function(){
+      // permissions API not supported — show modal
       $('m-cam').classList.remove('off');
     });
   } else {
+    // No permissions API — show modal
     $('m-cam').classList.remove('off');
   }
 }
@@ -1531,7 +1495,6 @@ function reqCam(){
   }
   navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
     stream.getTracks().forEach(function(t){ t.stop(); });
-    localStorage.setItem(CAM_K,'granted');
     updateCamUI('granted');
     $('m-cam').classList.add('off');
     toast('Cameră activată! Puteți scana coduri de bare ✅','📷');
@@ -1544,8 +1507,8 @@ function reqCam(){
     toast(msg,'❌',true);
   });
 }
-function skipCam(){ localStorage.setItem(CAM_K,'skipped'); $('m-cam').classList.add('off'); toast('Continuați fără cameră. Activați oricând din Setări.','ℹ️'); }
-function resetCam(){ localStorage.removeItem(CAM_K); checkCam(); toast('Permisiunea camerei a fost reverificată.','📷'); }
+function skipCam(){ $('m-cam').classList.add('off'); toast('Continuați fără cameră. Activați oricând din Setări.','ℹ️'); }
+function resetCam(){ checkCam(); toast('Permisiunea camerei a fost reverificată.','📷'); }
 function updateCamUI(state){
   var d=$('cam-dot'),l=$('cam-lbl'),b=$('cam-status');
   if(d){ d.className='msd'+(state==='granted'?' ok':state==='denied'?' no':''); }
@@ -1727,7 +1690,7 @@ function calcSell(){
 function subMov(type){
   // Only handles 'in' — 'out' is handled by subMovCart()
   var bc=gv(type+'-bc').trim(), nm=gv(type+'-nm').trim();
-  var qty=parseFloat(gv(type+'-qty')), prt=parseFloat(gv(type+'-prt'));
+  var qty=parseInt(gv(type+'-qty')), prt=parseFloat(gv(type+'-prt'));
   var op=gv(type+'-op').trim()||cfg.defaultOp||'Operator';
   var par=gv('in-sup').trim();
   var doc=gv('in-doc').trim();
@@ -1745,7 +1708,7 @@ function subMov(type){
   if(cat) prod.cat=cat; if(!prod.name) prod.name=nm;
   var mov={t:'in',date:tod(),bc:bc,name:nm,partner:par,doc:doc,qty:qty,price:prt,op:op,cat:cat,ts:Date.now()};
   db.movements.unshift(mov);
-  saveDB(); syncGS(mov,prod); syncGSProduct(prod);
+  saveDB(); syncGS(mov,prod);
   clearF('in');
   toast('Intrare: +'+qty+' × '+nm,'📥');
 }
@@ -1833,12 +1796,10 @@ function subMovCart(){
   // Commit all movements
   saleCart.forEach(function(item){
     var prod = db.products.find(function(x){ return x.bc===item.bc; });
-    if(!prod) return;
     prod.stock -= item.qty;
     var mov = {t:'out', date:tod(), bc:item.bc, name:item.nm, partner:par, doc:doc, qty:item.qty, price:item.prt, op:op, cat:'', ts:Date.now()};
     db.movements.unshift(mov);
     syncGS(mov, prod);
-    syncGSProduct(prod);
   });
   saveDB();
 
@@ -1963,7 +1924,6 @@ function subRet(){
   db.movements.unshift(mov);
   saveDB();
   syncGSRet(mov);
-  if(prod) syncGSProduct(prod);
   clearRet();
   renderRetList();
 }
@@ -2041,42 +2001,16 @@ function ofSelectProd(bc){
   sv('of-add-qty',1);
   sv('of-add-prt',p.sell||p.buy||0);
   $('of-search-res').style.display='none';
-  // Actualizeaza banner-ul produs
-  ofShowBanner(p);
   $('of-add-qty').focus();
-  // Seteaza automat producatorul din categoria produsului (daca e completat)
-  var prodCfg=gv('of-add-prod');
-  if(!prodCfg) sv('of-add-prod', p.brand||'');
-}
-
-// Lookup cu banner vizual (ca la Iesire)
-function ofLookupEx(val){
-  ofSearchProd(val); // pastreaza dropdown-ul de cautare
-  if(!val||val.length<3){ var pf=$('of-pf'); if(pf) pf.style.display='none'; return; }
-  var p=db.products.find(function(x){ return x.bc===val.trim(); });
-  if(p){ ofShowBanner(p); } else { var pf=$('of-pf'); if(pf) pf.style.display='none'; }
-}
-
-function ofShowBanner(p){
-  var pf=$('of-pf'); if(!pf) return;
-  pf.style.display='flex';
-  var pfn=$('of-pfn'); if(pfn) pfn.textContent=p.name;
-  var pfm=$('of-pfm'); if(pfm) pfm.textContent=(p.cat||'—')+' · '+(p.um||'BUC');
-  var pfs=$('of-pf-stock'); if(pfs){ pfs.textContent=p.stock+' buc'; pfs.style.color=p.stock<=cfg.minStock?'var(--red)':'var(--grn)'; }
-  var pfsell=$('of-pf-sell'); if(pfsell) pfsell.textContent=fron(p.sell||p.buy||0);
-  // Auto-completare pret
-  if(!gv('of-add-prt')||parseFloat(gv('of-add-prt'))===0) sv('of-add-prt',p.sell||p.buy||0);
-  if(!gv('of-add-nm')) sv('of-add-nm',p.name);
 }
 
 function addOfertaLinie(){
   var cod=gv('of-add-cod').trim();
-  var prod=gv('of-add-prod').trim();
   var nm=gv('of-add-nm').trim();
   var um=gv('of-add-um')||'buc';
   var qty=parseFloat(gv('of-add-qty'))||1;
   var prt=parseFloat(gv('of-add-prt'))||0;
-  if(!nm) return toast('Introduceți denumirea piesei!','⚠️',true);
+  if(!nm) return toast('Introduceți denumirea produsului!','⚠️',true);
   // Limit to 20 positions
   var existing=$('of-linii').querySelectorAll('[id^="ol"]');
   if(existing.length>=20) return toast('Maximum 20 de poziții pe ofertă!','⚠️',true);
@@ -2087,12 +2021,10 @@ function addOfertaLinie(){
   el.id=id;
   var inp='background:var(--c2);border:1px solid var(--brd);border-radius:5px;color:var(--txt);font-family:Barlow,sans-serif;font-size:12px;padding:6px 8px;outline:none;width:100%';
   el.dataset.cod=cod||'';
-  el.dataset.prod=prod||'';
-  el.style.cssText='display:grid;grid-template-columns:22px 0.7fr 0.8fr 1.8fr 0.45fr 0.6fr 0.85fr 0.75fr 30px;gap:5px;padding:7px 11px;border-top:1px solid rgba(36,41,63,.5);align-items:center';
+  el.style.cssText='display:grid;grid-template-columns:24px 0.9fr 2fr 0.5fr 0.6fr 0.9fr 0.8fr 32px;gap:6px;padding:7px 11px;border-top:1px solid rgba(36,41,63,.5);align-items:center';
   el.innerHTML=
     '<span class="of-nr-linie" style="font-size:10px;color:var(--t2);font-weight:700;text-align:center">'+nr+'</span>'+
     '<span style="font-size:10px;color:var(--t3);font-family:\'Barlow Condensed\',sans-serif;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(cod||'')+'">'+( cod||'<span style=\'color:var(--brd)\'>—</span>')+'</span>'+
-    '<input type="text" value="'+(prod||'')+'" placeholder="Producător" style="'+inp+'" oninput="this.closest(\'[id^=ol]\').dataset.prod=this.value">'+
     '<input type="text" value="'+(nm||'')+'" placeholder="Denumire" style="'+inp+'" oninput="calcOferta()">'+
     '<select style="'+inp+'"><option value="buc"'+(um==='buc'?' selected':'')+'>buc</option><option value="l"'+(um==='l'?' selected':'')+'>l</option><option value="set"'+(um==='set'?' selected':'')+'>set</option></select>'+
     '<input type="number" value="'+(qty||1)+'" min="0.01" step="0.01" oninput="calcOferta()" style="'+inp+';text-align:center">'+
@@ -2101,9 +2033,8 @@ function addOfertaLinie(){
     '<button onclick="document.getElementById(\''+id+'\').remove();renumOfertaLinii();calcOferta()" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.25);border-radius:5px;color:#e74c3c;cursor:pointer;font-size:12px;padding:5px;width:100%">\u00d7</button>';
   $('of-linii').appendChild(el);
   // clear add form
-  sv('of-add-cod',''); sv('of-add-prod',''); sv('of-add-nm',''); sv('of-add-qty',1); sv('of-add-prt','');
+  sv('of-add-cod',''); sv('of-add-nm',''); sv('of-add-qty',1); sv('of-add-prt','');
   $('of-search-res').style.display='none';
-  var ofpf=$('of-pf'); if(ofpf) ofpf.style.display='none';
   calcOferta();
   $('of-add-cod').focus();
 }
@@ -2153,15 +2084,13 @@ function getOfertaLinii(){
   for(var i=0;i<linii.length;i++){
     var inputs=linii[i].querySelectorAll('input');
     var sel=linii[i].querySelector('select');
-    if(inputs.length<4) continue;
-    // inputs[0]=producator, inputs[1]=denumire, inputs[2]=qty, inputs[3]=prt
+    if(inputs.length<3) continue;
     rows.push({
-      cod:  linii[i].dataset.cod||'',
-      prod: inputs[0].value||linii[i].dataset.prod||'',
-      nm:   inputs[1].value||'',
-      um:   sel?sel.value:'buc',
-      qty:  parseFloat(inputs[2].value)||0,
-      prt:  parseFloat(inputs[3].value)||0
+      cod:linii[i].dataset.cod||'',
+      nm:inputs[0].value||'',
+      um:sel?sel.value:'buc',
+      qty:parseFloat(inputs[1].value)||0,
+      prt:parseFloat(inputs[2].value)||0
     });
   }
   return rows;
@@ -2216,11 +2145,9 @@ function genPDFOferta(){
   var rows='';
   linii.forEach(function(r,i){
     var val=r.qty*r.prt;
-    // Producatorul apare sub denumire, Codul pisei NU se afiseaza
-    var prodLine=r.prod?'<br><span style="font-size:10px;color:#888;font-style:italic">'+r.prod+'</span>':'';
     rows+='<tr>'+
       '<td style="text-align:center">'+(i+1)+'</td>'+
-      '<td>'+r.nm+prodLine+'</td>'+
+      '<td>'+r.nm+'</td>'+
       '<td style="text-align:center">'+r.um+'</td>'+
       '<td style="text-align:center">'+r.qty.toFixed(2)+'</td>'+
       '<td style="text-align:right">'+r.prt.toFixed(2)+' RON</td>'+
@@ -2283,11 +2210,9 @@ function reprintOferta(idx){
   var rows='';
   o.linii.forEach(function(r,i){
     var val=(r.qty||0)*(r.prt||0);
-    // Producatorul apare sub denumire, Codul pisei NU se afiseaza
-    var prodLine=r.prod?'<br><span style="font-size:10px;color:#888;font-style:italic">'+r.prod+'</span>':'';
     rows+='<tr>'+
       '<td style="text-align:center">'+(i+1)+'</td>'+
-      '<td>'+(r.nm||'')+prodLine+'</td>'+
+      '<td>'+(r.nm||'')+'</td>'+
       '<td style="text-align:center">'+(r.um||'buc')+'</td>'+
       '<td style="text-align:center">'+((r.qty||0).toFixed?r.qty.toFixed(2):r.qty)+'</td>'+
       '<td style="text-align:right">'+((r.prt||0).toFixed?r.prt.toFixed(2):r.prt)+' RON</td>'+
@@ -2386,32 +2311,11 @@ function renderDash(){
     var qc=m.t==='in'?'in':m.t==='out'?'out':'ret';
     var qt=m.t==='in'?'+'+m.qty+' buc':m.t==='out'?'−'+m.qty+' buc':'↩️ '+m.qty+' buc';
     var dc=m.t==='ret'?(m.fisa||'—'):(m.doc||'—');
-    var partner=m.partner||'—';
-    var bc=m.bc||'';
-    // Data scurta dd/mm/yyyy din timestamp
-    var shortDt=m.ts?function(){
-      var d=new Date(m.ts);
-      return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
-    }():(m.date||'').replace(/\./g,'/');
-    var timeStr=m.ts?ftm(m.ts):'';
-    return '<div class="hr">'+
-      '<div class="hi '+qc+'">'+ico+'</div>'+
-      '<div class="hd">'+
-        '<div class="hn">'+m.name+'</div>'+
-        '<div class="hm" style="font-size:10px;margin-top:1px">'+
-          '<span style="color:var(--t3);font-weight:700">'+bc+'</span>'+
-          (bc?' · ':'')+partner+
-        '</div>'+
-        '<div class="hm" style="font-size:10px;color:var(--t2)">'+
-          (dc!=='—'?'📄 '+dc+' · ':'')+m.op+
-        '</div>'+
-      '</div>'+
-      '<div class="hrt">'+
-        '<div class="hq '+qc+'">'+qt+'</div>'+
-        '<div class="ht" style="font-weight:600;color:var(--t3)">'+shortDt+'</div>'+
-        '<div class="ht">'+timeStr+'</div>'+
-      '</div>'+
-    '</div>';
+    return '<div class="hr"><div class="hi '+qc+'">'+ico+'</div>'+
+      '<div class="hd"><div class="hn">'+m.name+'</div>'+
+      '<div class="hm">'+(m.partner||'—')+' · '+dc+' · '+m.op+'</div></div>'+
+      '<div class="hrt"><div class="hq '+qc+'">'+qt+'</div>'+
+      '<div class="ht">'+m.date+' '+ftm(m.ts)+'</div></div></div>';
   }).join('');
   var items=[
     {i:'📍',l:'Adresă',   v:cfg.address||'Chișoda, Timiș'},
@@ -2860,96 +2764,30 @@ function updateSyncUI(state){
 }
 function syncGS(mov,prod){
   var isIn=mov.t==='in';
-  var buyPret=prod?prod.buy:0;
-  var sellPret=prod?(prod.sell||0):0;
-  // Daca sell e 0 dar avem pret de achizitie, calculeaza cu markup
-  if(!sellPret&&buyPret>0){ var mk=(cfg&&cfg.markup?cfg.markup:25)/100+1; sellPret=Math.round(buyPret*mk*100)/100; }
-  var stocNou=prod?prod.stock:0;
-  var um=prod?prod.um||'BUC':'BUC';
-  var headers=isIn
-    ?['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator']
-    :['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator'];
-  var row=isIn
-    ?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op]
-    :[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,buyPret,(mov.price-buyPret)*mov.qty,mov.op];
-
-  var payload={
-    action:'addMovement',
-    sheet:isIn?'Intrari':'Iesiri',
-    type:mov.t,
-    headers:headers,
-    row:row,
-    barcode:mov.bc,
-    name:mov.name,
-    cat:mov.cat||'',
-    um:um,
-    qty:mov.qty,
-    pret:mov.price,
-    pretV:isIn?0:mov.price,
-    stocNou:stocNou,
-    pretAch:buyPret,
-    pretVanz:sellPret
-  };
-
-  // Incearca GET cu payload (putem citi raspunsul)
-  var enc=encodeURIComponent(JSON.stringify(payload));
-  fetch(GS_URL_PERM+'?payload='+enc,{method:'GET',redirect:'follow'})
-    .then(function(r){ return r.json(); })
-    .then(function(d){ updateSyncUI(d.ok?true:false); })
-    .catch(function(){
-      // Fallback no-cors POST
-      fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(payload)
-      }).then(function(){ updateSyncUI(true); }).catch(function(){ updateSyncUI(false); });
-    });
-}
-
-// Trimite produsul actualizat (stoc + preturi) catre GAS
-function syncGSProduct(prod){
-  if(!prod||!prod.bc) return;
-  var payload={
-    action:'updateProduct',
-    barcode:prod.bc,
-    name:prod.name,
-    cat:prod.cat||'',
-    um:prod.um||'BUC',
-    stock:prod.stock,
-    pretAch:prod.buy,
-    pretVanz:prod.sell
-  };
-  var enc=encodeURIComponent(JSON.stringify(payload));
-  fetch(GS_URL_PERM+'?payload='+enc,{method:'GET',redirect:'follow'})
-    .catch(function(){
-      fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(payload)
-      }).catch(function(){});
-    });
+  var headers=isIn?['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator']:
+    ['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator'];
+  var row=isIn?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op]:
+    [mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,prod.buy,(mov.price-prod.buy)*mov.qty,mov.op];
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sheet:isIn?'Intrari':'Iesiri',type:mov.t,headers:headers,row:row,
+      barcode:mov.bc,name:mov.name,cat:mov.cat||'',qty:mov.qty,pret:mov.price,pretV:isIn?0:mov.price})
+  }).then(function(){ updateSyncUI(true); }).catch(function(){});
 }
 function syncGSRet(r){
   var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator'];
   var row=[r.date,r.bc,r.name,r.partner||'',r.qty,r.val,r.qty*r.val,r.motiv||'',r.obs||'',r.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',r.op];
-  var payload={action:'addMovement',sheet:'Retururi',type:'ret',headers:headers,row:row,barcode:r.bc,name:r.name,qty:r.qty};
-  var enc=encodeURIComponent(JSON.stringify(payload));
-  fetch(GS_URL_PERM+'?payload='+enc,{method:'GET',redirect:'follow'})
-    .then(function(res){ return res.json(); })
-    .then(function(d){ updateSyncUI(d.ok?true:false); })
-    .catch(function(){
-      fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(payload)
-      }).then(function(){ updateSyncUI(true); }).catch(function(){ updateSyncUI(false); });
-    });
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sheet:'Retururi',type:'ret',headers:headers,row:row,barcode:r.bc,name:r.name,qty:r.qty})
+  }).then(function(){ updateSyncUI(true); }).catch(function(){});
 }
 function syncGSOferta(o){
   // Trimite fiecare linie a ofertei ca rând separat în foaia Oferte
   if(!o||!o.linii||!o.linii.length) return;
-  var headers=['Nr Oferta','Data','Client','VIN','Model','An','Cod Produs','Producator','Denumire','UM','Cantitate','Pret Unit','Valoare Linie','Total Oferta'];
+  var headers=['Nr Oferta','Data','Client','VIN','Model','An','Cod Produs','Denumire','UM','Cantitate','Pret Unit','Valoare Linie','Total Oferta'];
   o.linii.forEach(function(r){
     var val=(r.qty||0)*(r.prt||0);
     var row=[o.nr,o.date,o.client||'',o.vin||'',o.model||'',o.an||'',
-      r.cod||'',r.prod||'',r.nm||'',r.um||'buc',r.qty||0,r.prt||0,val,o.total||0];
+      r.cod||'',r.nm||'',r.um||'buc',r.qty||0,r.prt||0,val,o.total||0];
     fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({sheet:'Oferte',type:'oferta',headers:headers,row:row,
         nrOf:o.nr,client:o.client||''})
@@ -3111,7 +2949,7 @@ checkCam();
 // Register inline Service Worker for PWA installability
 if('serviceWorker' in navigator){
   var swCode=[
-    "const CACHE='spl-piese-v3';",
+    "const CACHE='spl-piese-v1';",
     "const ASSETS=['./', './index.html'];",
     "self.addEventListener('install',e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).catch(()=>{})); self.skipWaiting(); });",
     "self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))); self.clients.claim(); });",
