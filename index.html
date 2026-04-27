@@ -986,6 +986,34 @@ function doPost(e){
     var ss=SpreadsheetApp.getActiveSpreadsheet();
     var d=JSON.parse(e.postData.contents);
 
+    // Sterge randurile cu data specificata din Intrari, Iesiri, Retururi
+    if(d.action==='deleteAzi'){
+      var dateStr=String(d.date||'');
+      var sheetsToClean=['Intrari','Iesiri','Retururi'];
+      for(var si=0;si<sheetsToClean.length;si++){
+        var sClean=ss.getSheetByName(sheetsToClean[si]);
+        if(!sClean||sClean.getLastRow()<2) continue;
+        var nRows=sClean.getLastRow()-1;
+        var col1=sClean.getRange(2,1,nRows,1).getValues();
+        // Sterge de jos in sus pentru a nu decala indexii
+        for(var ri=nRows-1;ri>=0;ri--){
+          var cellVal=col1[ri][0];
+          var cellDate='';
+          if(cellVal instanceof Date){
+            var dd=String(cellVal.getDate()).padStart(2,'0');
+            var mm=String(cellVal.getMonth()+1).padStart(2,'0');
+            var yy=cellVal.getFullYear();
+            cellDate=dd+'/'+mm+'/'+yy;
+          } else {
+            cellDate=String(cellVal||'').replace(/\./g,'/');
+          }
+          if(cellDate===dateStr) sClean.deleteRow(ri+2);
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({ok:true}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Salveaza cheie-valoare (cfg / oferte) in foaia _Config
     if(d.action==='saveKV'){
       var sc=ss.getSheetByName('_Config')||ss.insertSheet('_Config');
@@ -1037,21 +1065,39 @@ function doPost(e){
       sh=ss.insertSheet(d.sheet);
       sh.appendRow(d.headers);
       sh.getRange(1,1,1,d.headers.length)
-        .setFontWeight('bold')
-        .setBackground('#c0392b')
-        .setFontColor('#ffffff');
+        .setFontWeight('bold').setBackground('#c0392b').setFontColor('#ffffff');
     } else if(d.headers && d.headers.length>0){
-      // Adauga coloane header noi daca foaia exista deja (ex: Cod Piesa)
-      var lastCol=sh.getLastColumn();
-      if(lastCol < d.headers.length){
-        for(var hi=lastCol; hi<d.headers.length; hi++){
-          var hCell=sh.getRange(1,hi+1);
-          hCell.setValue(d.headers[hi]);
+      // Sincronizeaza headerele: citeste primul rand si adauga coloanele lipsa
+      var existingCols = sh.getLastColumn();
+      var existingHeaders = existingCols>0 ? sh.getRange(1,1,1,existingCols).getValues()[0] : [];
+      for(var hi=0; hi<d.headers.length; hi++){
+        var hName = d.headers[hi];
+        var found = false;
+        for(var hj=0; hj<existingHeaders.length; hj++){
+          if(String(existingHeaders[hj]).trim()===hName){ found=true; break; }
+        }
+        if(!found){
+          // Coloana lipseste — o adaugam la sfarsit
+          var newCol = sh.getLastColumn()+1;
+          var hCell = sh.getRange(1,newCol);
+          hCell.setValue(hName);
           hCell.setFontWeight('bold').setBackground('#c0392b').setFontColor('#ffffff');
+          existingHeaders.push(hName);
         }
       }
     }
-    sh.appendRow(d.row);
+    // Construieste randul in ordinea corecta a coloanelor din foaie
+    var shHeaders = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0];
+    var orderedRow = [];
+    for(var ci=0; ci<shHeaders.length; ci++){
+      var colName = String(shHeaders[ci]).trim();
+      var colIdx = -1;
+      for(var di=0; di<d.headers.length; di++){
+        if(d.headers[di]===colName){ colIdx=di; break; }
+      }
+      orderedRow.push(colIdx>=0 && colIdx<d.row.length ? d.row[colIdx] : '');
+    }
+    sh.appendRow(orderedRow);
     if(d.type!=='oferta') updStoc(ss,d);
     return ContentService.createTextOutput(JSON.stringify({ok:true}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -1276,6 +1322,14 @@ function fmtDate(v){
     <div class="sb">
       <div class="ibox">Setările sunt protejate cu parolă. Sesiunea se blochează automat după <b>30 minute</b> de inactivitate.</div>
       <button class="btn bgh" style="width:100%;margin-top:8px" onclick="lockNow()">🔒 Blochează Setările Acum</button>
+    </div>
+  </div>
+
+  <div class="ss">
+    <div class="sh">🔄 Resetare Zi Curentă</div>
+    <div class="sb">
+      <div class="ibox">Șterge toate mișcările de <b>azi</b> (intrări, ieșiri, retururi) din aplicație și din Google Sheets. Stocul se recalculează automat.</div>
+      <button class="btn" style="width:100%;background:rgba(230,126,34,.1);color:var(--acc2);border:1px solid rgba(230,126,34,.3);margin-top:8px" onclick="resetAzi()">🔄 Resetează Ziua Curentă</button>
     </div>
   </div>
 
@@ -3692,6 +3746,64 @@ function syncGSStocEdit(p){
       stock:p.stock,buy:p.buy,sell:p.sell,
       codPiesa:p.codPiesa||'',um:p.um||'BUC'})
   }).catch(function(){});
+}
+
+function resetAzi(){
+  var t = tod();
+  var movsAzi = db.movements.filter(function(m){ return m.date===t || (m.ts && (function(){ var d=new Date(m.ts); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }())===t); });
+  if(!movsAzi.length){ toast('Nu există mișcări înregistrate azi.','ℹ️'); return; }
+  var nrIn  = movsAzi.filter(function(m){ return m.t==='in'; }).length;
+  var nrOut = movsAzi.filter(function(m){ return m.t==='out'; }).length;
+  var nrRet = movsAzi.filter(function(m){ return m.t==='ret'; }).length;
+  if(!confirm('Resetați ziua curentă ('+t+')?\n\nSe vor șterge:\n• '+nrIn+' intrări\n• '+nrOut+' ieșiri\n• '+nrRet+' retururi\n\nStocul se recalculează automat.')) return;
+
+  // Recalculeaza stocul: anuleaza efectul fiecarei miscari de azi
+  movsAzi.forEach(function(m){
+    var prod = db.products.find(function(x){ return x.bc===m.bc; });
+    if(!prod) return;
+    if(m.t==='in')  prod.stock = Math.max(0, prod.stock - m.qty);
+    if(m.t==='out') prod.stock = prod.stock + m.qty;
+    if(m.t==='ret' && m.dest==='stoc') prod.stock = Math.max(0, prod.stock - m.qty);
+  });
+
+  // Sterge miscarile de azi din memorie
+  db.movements = db.movements.filter(function(m){
+    var mDate = m.date || '';
+    if(mDate.replace(/\./g,'/')===t) return false;
+    if(m.ts){ var d=new Date(m.ts); var ld=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); if(ld===t) return false; }
+    return true;
+  });
+
+  // Sterge vanzarile de azi din lista vanzari
+  vanzari = vanzari.filter(function(v){
+    var vDate = (v.date||'').replace(/\./g,'/');
+    if(vDate===t) return false;
+    if(v.ts){ var d=new Date(v.ts); var ld=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); if(ld===t) return false; }
+    return true;
+  });
+  saveKV('vanzari', JSON.stringify(vanzari));
+
+  // Sincronizeaza stocul actualizat in GSheets pentru fiecare produs afectat
+  var bcAzi = {};
+  movsAzi.forEach(function(m){ bcAzi[m.bc]=true; });
+  Object.keys(bcAzi).forEach(function(bc){
+    var prod = db.products.find(function(x){ return x.bc===bc; });
+    if(prod){
+      fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'updateStoc',barcode:prod.bc,name:prod.name,cat:prod.cat||'',
+          stock:prod.stock,buy:prod.buy,sell:prod.sell,codPiesa:prod.codPiesa||'',um:prod.um||'BUC'})
+      }).catch(function(){});
+    }
+  });
+
+  // Trimite comanda de stergere randuri de azi catre GAS
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'deleteAzi',date:t})
+  }).catch(function(){});
+
+  saveDB();
+  renderDash(); renderStoc(); renderIst(''); renderRetList(); renderVanzariList();
+  toast('Ziua '+t+' a fost resetată. Stoc recalculat.','🔄');
 }
 
 function resetData(){
