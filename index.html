@@ -2904,11 +2904,56 @@ function updateSyncUI(state){
   $('sdt').className='sdt on';
   $('slbl').textContent=state===true?'Sincronizat':'Conectat';
 }
+// ═══════════════════════════════════
+// SYNC CORE — POST cu text/plain (evită preflight CORS) + retry queue
+// ═══════════════════════════════════
+var _syncQueue=[];
+var _syncBusy=false;
+
+function _postToGS(payload){
+  return fetch(GS_URL_PERM,{
+    method:'POST',
+    redirect:'follow',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify(payload)
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(d){
+    if(d&&d.ok){ updateSyncUI(true); return true; }
+    throw new Error(d&&d.error?d.error:'GAS returned ok:false');
+  });
+}
+
+function _flushQueue(){
+  if(_syncBusy||!_syncQueue.length) return;
+  _syncBusy=true;
+  var item=_syncQueue[0];
+  _postToGS(item.payload)
+    .then(function(){
+      _syncQueue.shift();
+      _syncBusy=false;
+      _flushQueue();
+    })
+    .catch(function(err){
+      console.warn('Sync eșuat, retry în 8s:', err);
+      updateSyncUI(false);
+      _syncBusy=false;
+      setTimeout(_flushQueue,8000);
+    });
+}
+
+function _enqueueSync(payload){
+  _syncQueue.push({payload:payload,ts:Date.now()});
+  _flushQueue();
+}
+
 function syncGS(mov,prod){
   var isIn=mov.t==='in';
   var buyPret=mov.buyPrice!==undefined?mov.buyPrice:(prod?prod.buy:0);
   var sellPret=prod?(prod.sell||0):0;
-  // Daca sell e 0 dar avem pret de achizitie, calculeaza cu markup
   if(!sellPret&&buyPret>0){ var mk=(cfg&&cfg.markup?cfg.markup:25)/100+1; sellPret=Math.round(buyPret*mk*100)/100; }
   var stocNou=prod?prod.stock:0;
   var um=prod?prod.um||'BUC':'BUC';
@@ -2918,8 +2963,7 @@ function syncGS(mov,prod){
   var row=isIn
     ?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op,sellPret]
     :[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,buyPret,(mov.price-buyPret)*mov.qty,mov.op];
-
-  var payload={
+  _enqueueSync({
     action:'addMovement',
     sheet:isIn?'Intrari':'Iesiri',
     type:mov.t,
@@ -2935,26 +2979,13 @@ function syncGS(mov,prod){
     stocNou:stocNou,
     pretAch:buyPret,
     pretVanz:sellPret
-  };
-
-  // Incearca GET cu payload (putem citi raspunsul)
-  var enc=encodeURIComponent(JSON.stringify(payload));
-  fetch(GS_URL_PERM+'?payload='+enc,{method:'GET',redirect:'follow'})
-    .then(function(r){ return r.json(); })
-    .then(function(d){ updateSyncUI(d.ok?true:false); })
-    .catch(function(){
-      // Fallback no-cors POST
-      fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(payload)
-      }).then(function(){ updateSyncUI(true); }).catch(function(){ updateSyncUI(false); });
-    });
+  });
 }
 
 // Trimite produsul actualizat (stoc + preturi) catre GAS
 function syncGSProduct(prod){
   if(!prod||!prod.bc) return;
-  var payload={
+  _enqueueSync({
     action:'updateProduct',
     barcode:prod.bc,
     name:prod.name,
@@ -2963,53 +2994,41 @@ function syncGSProduct(prod){
     stock:prod.stock,
     pretAch:prod.buy,
     pretVanz:prod.sell
-  };
-  var enc=encodeURIComponent(JSON.stringify(payload));
-  fetch(GS_URL_PERM+'?payload='+enc,{method:'GET',redirect:'follow'})
-    .catch(function(){
-      fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(payload)
-      }).catch(function(){});
-    });
+  });
 }
+
 function syncGSRet(r){
   var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator'];
   var row=[r.date,r.bc,r.name,r.partner||'',r.qty,r.val,r.qty*r.val,r.motiv||'',r.obs||'',r.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',r.op];
-  var payload={action:'addMovement',sheet:'Retururi',type:'ret',headers:headers,row:row,barcode:r.bc,name:r.name,qty:r.qty,dest:r.dest||'stoc'};
-  var enc=encodeURIComponent(JSON.stringify(payload));
-  fetch(GS_URL_PERM+'?payload='+enc,{method:'GET',redirect:'follow'})
-    .then(function(res){ return res.json(); })
-    .then(function(d){ updateSyncUI(d.ok?true:false); })
-    .catch(function(){
-      fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(payload)
-      }).then(function(){ updateSyncUI(true); }).catch(function(){ updateSyncUI(false); });
-    });
+  _enqueueSync({action:'addMovement',sheet:'Retururi',type:'ret',headers:headers,row:row,barcode:r.bc,name:r.name,qty:r.qty,dest:r.dest||'stoc'});
 }
+
 function syncGSOferta(o){
-  // Trimite fiecare linie a ofertei ca rând separat în foaia Oferte
   if(!o||!o.linii||!o.linii.length) return;
   var headers=['Nr Oferta','Data','Client','VIN','Model','An','Cod Produs','Producator','Denumire','UM','Cantitate','Pret Unit','Valoare Linie','Total Oferta'];
   o.linii.forEach(function(r){
     var val=(r.qty||0)*(r.prt||0);
     var row=[o.nr,o.date,o.client||'',o.vin||'',o.model||'',o.an||'',
       r.cod||'',r.prod||'',r.nm||'',r.um||'buc',r.qty||0,r.prt||0,val,o.total||0];
-    fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({sheet:'Oferte',type:'oferta',headers:headers,row:row,
-        nrOf:o.nr,client:o.client||''})
-    }).then(function(){ updateSyncUI(true); }).catch(function(){});
+    _enqueueSync({action:'addMovement',sheet:'Oferte',type:'oferta',headers:headers,row:row,nrOf:o.nr,client:o.client||''});
   });
 }
+
 function testSync(){
+  toast('Se testează conexiunea...','🔄');
   fetch(GS_URL_PERM+'?action=ping',{redirect:'follow'})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.ok){ updateSyncUI(true); toast('Conexiune Google Sheets OK ✅','🔗'); }
-      else { updateSyncUI(false); toast('Eroare conexiune. Verificați URL-ul.','❌',true); }
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
     })
-    .catch(function(){ updateSyncUI(false); toast('Eroare conexiune. Verificați URL-ul.','❌',true); });
+    .then(function(d){
+      if(d&&d.ok){ updateSyncUI(true); toast('Conexiune Google Sheets OK ✅','🔗'); }
+      else { updateSyncUI(false); toast('GAS răspunde dar returnează eroare: '+(d&&d.error?d.error:'unknown'),'❌',true); }
+    })
+    .catch(function(err){
+      updateSyncUI(false);
+      toast('Eroare conexiune: '+err.message,'❌',true);
+    });
 }
 
 // ═══════════════════════════════════
