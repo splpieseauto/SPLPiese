@@ -681,7 +681,6 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <button class="btn ba" style="flex:1;font-size:13px" onclick="genPDFOferta()">📄 Generează PDF</button>
       </div>
     </div>
-  </div>
 
   <!-- Lista oferte salvate -->
   <div class="card">
@@ -888,6 +887,9 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <thead><tr>
           <th>Denumire Piesă</th>
           <th style="text-align:center">Stoc</th>
+          <th style="text-align:right">P.Ach.</th>
+          <th style="text-align:right">P.Vânz.</th>
+          <th style="text-align:right">Valoare</th>
         </tr></thead>
         <tbody id="stoc-body"></tbody>
       </table>
@@ -907,6 +909,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <option value="">Toate</option>
         <option value="in">Intrări</option>
         <option value="out">Ieșiri</option>
+        <option value="ret">Retururi</option>
       </select>
     </div>
     <div id="ist-list"></div>
@@ -1020,11 +1023,22 @@ function updStoc(ss,d){
   var qty=parseInt(d.qty)||0;
   if(ri>0){
     var cur=parseInt(s.getRange(ri,4).getValue())||0;
-    s.getRange(ri,4).setValue(d.type==='in'?cur+qty:Math.max(0,cur-qty));
-    if(d.type==='in'&&d.pret) s.getRange(ri,5).setValue(d.pret);
+    var newStoc=cur;
+    if(d.type==='in') newStoc=cur+qty;
+    else if(d.type==='out') newStoc=Math.max(0,cur-qty);
+    else if(d.type==='ret') newStoc=d.dest==='stoc'?cur+qty:Math.max(0,cur-qty);
+    else if(d.type==='update') newStoc=d.stock!==undefined?d.stock:cur;
+    s.getRange(ri,4).setValue(newStoc);
+    if(d.type==='in'&&d.pretAch) s.getRange(ri,5).setValue(d.pretAch);
+    if(d.type==='in'&&d.pretVanz) s.getRange(ri,6).setValue(d.pretVanz);
     if(d.type==='out'&&d.pretV) s.getRange(ri,6).setValue(d.pretV);
+    if(d.type==='update'){ if(d.pretAch) s.getRange(ri,5).setValue(d.pretAch); if(d.pretVanz) s.getRange(ri,6).setValue(d.pretVanz); }
   }else if(d.type==='in'){
-    s.appendRow([bc,d.name||'',d.cat||'',qty,d.pret||0,0]);
+    s.appendRow([bc,d.name||'',d.cat||'',qty,d.pretAch||d.pret||0,d.pretVanz||0]);
+  }else if(d.type==='ret'&&d.dest==='stoc'){
+    s.appendRow([bc,d.name||'','',qty,0,0]);
+  }else if(d.type==='update'){
+    s.appendRow([bc,d.name||'',d.cat||'',d.stock||0,d.pretAch||0,d.pretVanz||0]);
   }
 }
 
@@ -1052,13 +1066,13 @@ function doGet(e){
 
       var sIn = ss.getSheetByName('Intrari');
       if(sIn && sIn.getLastRow() > 1){
-        var ind = sIn.getRange(2,1,sIn.getLastRow()-1,10).getValues();
+        var ind = sIn.getRange(2,1,sIn.getLastRow()-1,11).getValues();
         for(var i=0;i<ind.length;i++){
           var r=ind[i]; if(!r[0]) continue;
           movements.push({t:'in',date:fmtDate(r[0]),bc:String(r[1]||''),
             name:String(r[2]||''),partner:String(r[3]||''),doc:String(r[4]||''),
             qty:Number(r[5])||0,price:Number(r[6])||0,cat:String(r[8]||''),
-            op:String(r[9]||''),ts:r[0] instanceof Date?r[0].getTime():0});
+            op:String(r[9]||''),sellPrice:Number(r[10])||0,ts:r[0] instanceof Date?r[0].getTime():0});
         }
       }
 
@@ -1094,6 +1108,28 @@ function doGet(e){
 
     }catch(err){
       result = {ok:false, e:err.message};
+    }
+  }else if(action === 'addMovement' || action === 'updateProduct'){
+    try{
+      var payloadStr = e && e.parameter && e.parameter.payload ? e.parameter.payload : null;
+      if(!payloadStr) throw new Error('No payload');
+      var d = JSON.parse(payloadStr);
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      if(d.action === 'addMovement'){
+        var sh = ss.getSheetByName(d.sheet);
+        if(!sh){
+          sh = ss.insertSheet(d.sheet);
+          sh.appendRow(d.headers);
+          sh.getRange(1,1,1,d.headers.length).setFontWeight('bold').setBackground('#c0392b').setFontColor('#ffffff');
+        }
+        sh.appendRow(d.row);
+        if(d.type !== 'oferta') updStoc(ss, d);
+      } else if(d.action === 'updateProduct'){
+        updStoc(ss, {type:'update', barcode:d.barcode, name:d.name, cat:d.cat||'', pretAch:d.pretAch, pretVanz:d.pretVanz, stock:d.stock});
+      }
+      result = {ok:true};
+    }catch(err2){
+      result = {ok:false, e:err2.message};
     }
   }else{
     result = {ok:false, e:'unknown action'};
@@ -1222,7 +1258,7 @@ function loadAll(){
   applySettings();
   try{
     var dbRaw=localStorage.getItem(DB_K);
-    if(dbRaw){ var parsed=JSON.parse(dbRaw); db.products=parsed.products||[]; db.movements=parsed.movements||[]; }
+    if(dbRaw){ var parsed=JSON.parse(dbRaw); db.products=parsed.products||[]; db.movements=(parsed.movements||[]).filter(function(m){ return ['in','out','ret'].indexOf(m.t)!==-1; }); }
   }catch(e){}
   renderDash(); renderStoc(); renderIst(''); renderOfertaList(); renderRetList();
   showSyncLoading(false);
@@ -1835,7 +1871,7 @@ function subMovCart(){
     var prod = db.products.find(function(x){ return x.bc===item.bc; });
     if(!prod) return;
     prod.stock -= item.qty;
-    var mov = {t:'out', date:tod(), bc:item.bc, name:item.nm, partner:par, doc:doc, qty:item.qty, price:item.prt, op:op, cat:'', ts:Date.now()};
+    var mov = {t:'out', date:tod(), bc:item.bc, name:item.nm, partner:par, doc:doc, qty:item.qty, price:item.prt, buyPrice:prod.buy||0, op:op, cat:'', ts:Date.now()};
     db.movements.unshift(mov);
     syncGS(mov, prod);
     syncGSProduct(prod);
@@ -2371,7 +2407,8 @@ function renderDash(){
   var t=tod(), tm=db.movements.filter(function(m){ return m.date===t; });
   var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
   var profit=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){
-    var p=db.products.find(function(x){ return x.bc===m.bc; }); return s+(m.price-(p?p.buy:0))*m.qty; },0);
+    var buyP=m.buyPrice!==undefined?m.buyPrice:(function(){ var p=db.products.find(function(x){ return x.bc===m.bc; }); return p?p.buy:0; })();
+    return s+(m.price-buyP)*m.qty; },0);
   var sv2=db.products.reduce(function(s,p){ return s+p.stock*p.sell; },0);
   var low=db.products.filter(function(p){ return p.stock<=cfg.minStock; }).length;
   if($('k-stoc')) $('k-stoc').textContent=fron(sv2);
@@ -2442,9 +2479,13 @@ function renderStoc(filter){
     var bc=p.stock<=0?'blo':p.stock<=min?'bwn':'bok';
     var bt=p.stock<=0?'Epuizat':p.stock<=min?'Scăzut':'OK';
     var stClr=p.stock<=0?'var(--red)':p.stock<=min?'var(--acc2)':'var(--grn)';
+    var val=p.stock*(p.sell||0);
     return '<tr>'+
       '<td style="font-weight:600">'+p.name+'<br><span class="mono" style="font-size:10px;color:var(--t2)">'+p.bc+'</span></td>'+
       '<td style="text-align:center"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:800;color:'+stClr+'">'+p.stock+'</span><br><span class="bdg '+bc+'" style="font-size:8px">'+bt+'</span></td>'+
+      '<td style="text-align:right;font-size:11px;color:var(--t3)">'+fron(p.buy||0)+'</td>'+
+      '<td style="text-align:right;font-size:11px;color:var(--acc2)">'+fron(p.sell||0)+'</td>'+
+      '<td style="text-align:right;font-size:11px;font-weight:700;color:var(--grn)">'+fron(val)+'</td>'+
       '</tr>';
   }).join('');
   var stotEl=$('stoc-tot'); if(stotEl) stotEl.textContent=fron(total);
@@ -2455,16 +2496,21 @@ function filtStoc(q){ renderStoc(q); }
 // ISTORIC
 // ═══════════════════════════════════
 function renderIst(tf){
-  var movs=tf?db.movements.filter(function(m){ return m.t===tf; }):db.movements;
+  var validTypes=['in','out','ret'];
+  var base=db.movements.filter(function(m){ return validTypes.indexOf(m.t)!==-1; });
+  var movs=tf?base.filter(function(m){ return m.t===tf; }):base;
   if(!movs.length){ $('ist-list').innerHTML='<div class="empty"><span>📋</span>Nicio înregistrare</div>'; return; }
   $('ist-list').innerHTML=movs.map(function(m){
     var ico=m.t==='in'?'📥':m.t==='out'?'📤':'↩️';
     var qc=m.t==='in'?'in':m.t==='out'?'out':'ret';
     var amt=m.t==='ret'?'↩️ '+m.qty+' buc':(m.t==='in'?'+':'-')+m.qty+' buc';
+    var valMov=m.qty*(m.price||0);
+    var valStr=valMov>0?fron(valMov):'';
     return '<div class="hr"><div class="hi '+qc+'">'+ico+'</div>'+
-      '<div class="hd"><div class="hn">'+m.name+'</div>'+
-      '<div class="hm">'+m.date+' · '+m.op+'</div></div>'+
-      '<div class="hrt"><div class="hq '+qc+'">'+amt+'</div></div></div>';
+      '<div class="hd"><div class="hn">'+m.name+'<span class="mono" style="font-size:10px;color:var(--t2);margin-left:6px">'+m.bc+'</span></div>'+
+      '<div class="hm">'+(m.partner?m.partner+' · ':'')+m.date+' · '+m.op+(m.doc?' · '+m.doc:'')+'</div></div>'+
+      '<div class="hrt"><div class="hq '+qc+'">'+amt+'</div>'+(valStr?'<div class="ht">'+valStr+'</div>':'')+
+      '</div></div>';
   }).join('');
 }
 function filtIst(v){ renderIst(v); }
@@ -2860,17 +2906,17 @@ function updateSyncUI(state){
 }
 function syncGS(mov,prod){
   var isIn=mov.t==='in';
-  var buyPret=prod?prod.buy:0;
+  var buyPret=mov.buyPrice!==undefined?mov.buyPrice:(prod?prod.buy:0);
   var sellPret=prod?(prod.sell||0):0;
   // Daca sell e 0 dar avem pret de achizitie, calculeaza cu markup
   if(!sellPret&&buyPret>0){ var mk=(cfg&&cfg.markup?cfg.markup:25)/100+1; sellPret=Math.round(buyPret*mk*100)/100; }
   var stocNou=prod?prod.stock:0;
   var um=prod?prod.um||'BUC':'BUC';
   var headers=isIn
-    ?['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator']
+    ?['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator','Pret Vanz']
     :['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator'];
   var row=isIn
-    ?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op]
+    ?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op,sellPret]
     :[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,buyPret,(mov.price-buyPret)*mov.qty,mov.op];
 
   var payload={
@@ -2930,7 +2976,7 @@ function syncGSProduct(prod){
 function syncGSRet(r){
   var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator'];
   var row=[r.date,r.bc,r.name,r.partner||'',r.qty,r.val,r.qty*r.val,r.motiv||'',r.obs||'',r.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',r.op];
-  var payload={action:'addMovement',sheet:'Retururi',type:'ret',headers:headers,row:row,barcode:r.bc,name:r.name,qty:r.qty};
+  var payload={action:'addMovement',sheet:'Retururi',type:'ret',headers:headers,row:row,barcode:r.bc,name:r.name,qty:r.qty,dest:r.dest||'stoc'};
   var enc=encodeURIComponent(JSON.stringify(payload));
   fetch(GS_URL_PERM+'?payload='+enc,{method:'GET',redirect:'follow'})
     .then(function(res){ return res.json(); })
