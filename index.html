@@ -1007,6 +1007,29 @@ function doPost(e){
         .setMimeType(ContentService.MimeType.JSON);
     }
 
+    // Actualizare directa Stoc Curent (din editare inregistrari)
+    if(d.action==='updateStoc'){
+      var sS=ss.getSheetByName('Stoc Curent')||ss.insertSheet('Stoc Curent');
+      var bc=String(d.barcode), lrS=sS.getLastRow(), riS=-1;
+      if(lrS>1){
+        var ccS=sS.getRange(2,1,lrS-1,1).getValues();
+        for(var i=0;i<ccS.length;i++){if(String(ccS[i][0])===bc){riS=i+2;break;}}
+      }
+      if(riS>0){
+        sS.getRange(riS,1).setValue(bc);
+        sS.getRange(riS,2).setValue(d.name||'');
+        sS.getRange(riS,3).setValue(d.cat||'');
+        sS.getRange(riS,4).setValue(Number(d.stock)||0);
+        sS.getRange(riS,5).setValue(Number(d.buy)||0);
+        sS.getRange(riS,6).setValue(Number(d.sell)||0);
+        sS.getRange(riS,7).setValue(d.codPiesa||'');
+      } else {
+        sS.appendRow([bc,d.name||'',d.cat||'',Number(d.stock)||0,Number(d.buy)||0,Number(d.sell)||0,d.codPiesa||'']);
+      }
+      return ContentService.createTextOutput(JSON.stringify({ok:true}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Inregistrare miscare (intrare / iesire / retur / oferta)
     var sh=ss.getSheetByName(d.sheet);
     if(!sh){
@@ -1016,6 +1039,16 @@ function doPost(e){
         .setFontWeight('bold')
         .setBackground('#c0392b')
         .setFontColor('#ffffff');
+    } else if(d.headers && d.headers.length>0){
+      // Adauga coloane header noi daca foaia exista deja (ex: Cod Piesa)
+      var lastCol=sh.getLastColumn();
+      if(lastCol < d.headers.length){
+        for(var hi=lastCol; hi<d.headers.length; hi++){
+          var hCell=sh.getRange(1,hi+1);
+          hCell.setValue(d.headers[hi]);
+          hCell.setFontWeight('bold').setBackground('#c0392b').setFontColor('#ffffff');
+        }
+      }
     }
     sh.appendRow(d.row);
     if(d.type!=='oferta') updStoc(ss,d);
@@ -1032,6 +1065,11 @@ function updStoc(ss,d){
   if(s.getLastRow()===0){
     s.appendRow(['Cod','Denumire','Cat','Stoc','P.Ach','P.Vanz','Cod Piesa']);
     s.getRange(1,1,1,7).setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');
+  } else if(s.getLastColumn()<7){
+    // Foaia exista dar nu are inca coloana Cod Piesa — o adaugam la header
+    var hcp=s.getRange(1,7);
+    hcp.setValue('Cod Piesa');
+    hcp.setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');
   }
   var bc=String(d.barcode),lr=s.getLastRow(),ri=-1;
   if(lr>1){
@@ -1061,7 +1099,7 @@ function doGet(e){
   }else if(action === 'getData'){
     try{
       var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var products=[], movements=[], cfgData={}, oferte=[];
+      var products=[], movements=[], cfgData={}, oferte=[], vanzari=[];
 
       // Stoc Curent
       var sStoc = ss.getSheetByName('Stoc Curent');
@@ -1104,16 +1142,16 @@ function doGet(e){
       // Retururi
       var sRet = ss.getSheetByName('Retururi');
       if(sRet && sRet.getLastRow() > 1){
-        var retd = sRet.getRange(2,1,sRet.getLastRow()-1,13).getValues();
+        var retd = sRet.getRange(2,1,sRet.getLastRow()-1,12).getValues();
         for(var i=0;i<retd.length;i++){
           var r=retd[i]; if(!r[0]) continue;
+          // Col: Data|CodBara|Denumire|Partner|Cant|Val/buc|ValTot|Motiv|Obs|Dest|Operator|CodPiesa
           movements.push({t:'ret',date:fmtDate(r[0]),
-            tip:String(r[1]||'')==='Retur Client'?'client':'furnizor',
-            bc:String(r[2]||''),name:String(r[3]||''),partner:String(r[4]||''),
-            docOrig:String(r[5]||''),qty:Number(r[6])||0,val:Number(r[7])||0,
-            motiv:String(r[8]||''),fisa:String(r[9]||''),obs:String(r[10]||''),
-            restoc:String(r[11]||'').toLowerCase()==='da'?'da':'nu',
-            op:String(r[12]||''),cp:String(r[13]||''),ts:r[0] instanceof Date?r[0].getTime():0});
+            bc:String(r[1]||''),name:String(r[2]||''),partner:String(r[3]||''),
+            qty:Number(r[4])||0,val:Number(r[5])||0,
+            motiv:String(r[7]||''),obs:String(r[8]||''),
+            dest:String(r[9]||'')==='Reintrare stoc'?'stoc':'distribuitor',
+            op:String(r[10]||''),cp:String(r[11]||''),ts:r[0] instanceof Date?r[0].getTime():0});
         }
       }
 
@@ -1176,6 +1214,46 @@ function fmtDate(v){
     <div class="sb">
       <div class="ibox" id="cam-status">Se verifică starea permisiunii...</div>
       <button class="btn bgh" style="width:100%;margin-top:8px" onclick="resetCam()">🔄 Resolicită Permisiune Cameră</button>
+    </div>
+  </div>
+
+
+  <div class="ss">
+    <div class="sh">✏️ Editare Înregistrări</div>
+    <div class="sb">
+      <div class="hint" style="margin-bottom:10px">Caută o înregistrare după cod de bară sau denumire, selecteaz-o și corecteaz-o. Modificarea se salvează automat în Google Sheets.</div>
+
+      <!-- Filtre -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <select id="edit-type" onchange="renderEditList()" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:7px 10px;flex:1;min-width:100px">
+          <option value="in">📥 Intrări</option>
+          <option value="out">📤 Ieșiri</option>
+          <option value="ret">↩️ Retururi</option>
+          <option value="prod">📦 Stoc Curent</option>
+        </select>
+        <input type="text" id="edit-srch" placeholder="🔍 Caută cod/denumire..." oninput="renderEditList()"
+          style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:7px 10px;flex:2;min-width:140px">
+      </div>
+
+      <!-- Lista inregistrari -->
+      <div id="edit-list" style="max-height:280px;overflow-y:auto;border:1px solid var(--brd);border-radius:7px;margin-bottom:10px">
+        <div style="padding:18px;text-align:center;color:var(--t2);font-size:12px">Selectați tipul și căutați o înregistrare</div>
+      </div>
+
+      <!-- Formular editare -->
+      <div id="edit-form" style="display:none;background:rgba(52,152,219,.06);border:1px solid rgba(52,152,219,.3);border-radius:8px;padding:12px">
+        <div style="font-size:9px;font-weight:700;color:var(--blu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">✏️ Editează Înregistrarea</div>
+        <div id="edit-form-fields"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn bgh" style="flex:1" onclick="cancelEdit()">✕ Anulează</button>
+          <button class="btn" style="flex:1;background:rgba(231,76,60,.12);color:var(--red);border:1px solid rgba(231,76,60,.3);font-weight:700;border-radius:8px;padding:10px;cursor:pointer" onclick="deleteEdit()">🗑️ Șterge</button>
+          <div id="edit-print-btns" style="display:none;flex:2;display:flex;gap:6px">
+            <button class="btn" style="flex:1;background:rgba(39,174,96,.12);color:var(--grn);border:1px solid rgba(39,174,96,.3);font-weight:700;border-radius:8px;padding:10px;cursor:pointer" onclick="printEditBon()">🖨️ Bon</button>
+            <button class="btn" style="flex:1;background:rgba(41,128,185,.12);color:var(--blu);border:1px solid rgba(41,128,185,.3);font-weight:700;border-radius:8px;padding:10px;cursor:pointer" onclick="printEditFactura()">🧾 Factură</button>
+          </div>
+          <button class="btn" id="edit-save-btn" style="flex:2;background:var(--blu);color:#fff;font-weight:700;border:none;border-radius:8px;padding:10px;cursor:pointer" onclick="saveEdit()">✓ Salvează</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1307,6 +1385,7 @@ function saveCfg(){
   saveKV('cfg',JSON.stringify(cfg));
   updateSyncUI();
 }
+// Initializeaza lista de editare cand se deschid setarile
 function applySettings(){
   sv('s-shop',cfg.shopName||'SPL Piese Auto');
   sv('s-op',cfg.defaultOp||'Camelia Dan');
@@ -3102,6 +3181,450 @@ function showSyncLoading(on){
 // ═══════════════════════════════════
 // RESET
 // ═══════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// EDITARE ÎNREGISTRĂRI (din Setări)
+// ═══════════════════════════════════════════════════════════════
+var _editIdx = -1;
+var _editType = '';
+
+function renderEditList(){
+  var type = gv('edit-type');
+  var srch = gv('edit-srch').toLowerCase().trim();
+  var list = $('edit-list');
+  var items = [];
+
+  if(type==='in' || type==='out' || type==='ret'){
+    var mvType = type==='ret'?'ret':type;
+    items = db.movements.filter(function(m){
+      if(m.t !== mvType) return false;
+      if(!srch) return true;
+      return (m.bc||'').toLowerCase().indexOf(srch)>=0 ||
+             (m.name||'').toLowerCase().indexOf(srch)>=0 ||
+             (m.partner||'').toLowerCase().indexOf(srch)>=0;
+    });
+  } else if(type==='prod'){
+    items = db.products.filter(function(p){
+      if(!srch) return true;
+      return (p.bc||'').toLowerCase().indexOf(srch)>=0 ||
+             (p.name||'').toLowerCase().indexOf(srch)>=0;
+    });
+  }
+
+  if(!items.length){
+    list.innerHTML='<div style="padding:18px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:22px;display:block;margin-bottom:6px;opacity:.4">\uD83D\uDD0D</span>Nicio \xeenregistrare g\u0103sit\u0103</div>';
+    return;
+  }
+
+  var ico = type==='in'?'\uD83D\uDCE5':type==='out'?'\uD83D\uDCE4':type==='ret'?'\u21A9\uFE0F':'\uD83D\uDCE6';
+  list.innerHTML = items.slice(0,50).map(function(item){
+    var realIdx = type==='prod' ? db.products.indexOf(item) : db.movements.indexOf(item);
+    var sub = type==='prod'
+      ? 'Stoc: '+item.stock+' buc \xB7 P.Ach: '+fron(item.buy)+' \xB7 P.Vanz: '+fron(item.sell)
+      : type==='ret'
+        ? fmtD(item.date)+' \xB7 '+(item.partner||'\u2014')+' \xB7 '+item.qty+' buc \xB7 '+(item.motiv||'\u2014')
+        : fmtD(item.date)+' \xB7 '+(item.partner||'\u2014')+' \xB7 '+item.qty+' buc \xB7 '+fron(item.qty*item.price);
+    var div = document.createElement('div');
+    div.setAttribute('data-eidx', realIdx);
+    div.setAttribute('data-etype', type);
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background .15s';
+    div.addEventListener('mouseover', function(){ this.style.background='rgba(52,152,219,.08)'; });
+    div.addEventListener('mouseout',  function(){ this.style.background=''; });
+    div.addEventListener('click',     function(){ openEditForm(this.getAttribute('data-etype'), parseInt(this.getAttribute('data-eidx'))); });
+    div.innerHTML = '<span style="font-size:16px">'+ico+'</span>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:12px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+item.name+'</div>'+
+        '<div style="font-size:10px;color:var(--t2)">'+sub+'</div>'+
+      '</div>'+
+      '<span style="font-size:10px;color:var(--blu);font-weight:700;white-space:nowrap">\u270F\uFE0F Edit</span>';
+    return div.outerHTML;
+  }).join('');
+
+  // Reattach events after innerHTML set
+  list.querySelectorAll('[data-eidx]').forEach(function(el){
+    el.addEventListener('mouseover', function(){ this.style.background='rgba(52,152,219,.08)'; });
+    el.addEventListener('mouseout',  function(){ this.style.background=''; });
+    el.addEventListener('click',     function(){ openEditForm(this.getAttribute('data-etype'), parseInt(this.getAttribute('data-eidx'))); });
+  });
+}
+
+function openEditForm(type, idx){
+  _editIdx = idx;
+  _editType = type;
+  var form = $('edit-form');
+  var fields = $('edit-form-fields');
+  var inp = 'width:100%;background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;box-sizing:border-box';
+
+  if(type==='in'){
+    var m = db.movements[idx];
+    fields.innerHTML =
+      '<div class="fr"><div class="fg"><label>Cod Bară</label><input id="ef-bc" style="'+inp+'" value="'+(m.bc||'')+'"></div>'+
+      '<div class="fg"><label>Cod Piesă</label><input id="ef-cp" style="'+inp+'" value="'+(m.cp||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Denumire</label><input id="ef-nm" style="'+inp+'" value="'+(m.name||'')+'"></div>'+
+      '<div class="fg"><label>Furnizor</label><input id="ef-par" style="'+inp+'" value="'+(m.partner||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Nr. Factură</label><input id="ef-doc" style="'+inp+'" value="'+(m.doc||'')+'"></div>'+
+      '<div class="fg"><label>Cantitate</label><input type="number" id="ef-qty" style="'+inp+'" value="'+(m.qty||1)+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Preț Achiziție (RON)</label><input type="number" id="ef-prt" style="'+inp+'" value="'+(m.price||0)+'" step="0.01"></div>'+
+      '<div class="fg"><label>Categorie</label><input id="ef-cat" style="'+inp+'" value="'+(m.cat||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Operator</label><input id="ef-op" style="'+inp+'" value="'+(m.op||'')+'"></div>'+
+      '<div class="fg"><label>Data (zz.ll.aaaa)</label><input id="ef-dt" style="'+inp+'" value="'+(m.date||'')+'"></div></div>';
+  } else if(type==='out'){
+    var m = db.movements[idx];
+    fields.innerHTML =
+      '<div class="fr"><div class="fg"><label>Cod Bară</label><input id="ef-bc" style="'+inp+'" value="'+(m.bc||'')+'"></div>'+
+      '<div class="fg"><label>Cod Piesă</label><input id="ef-cp" style="'+inp+'" value="'+(m.cp||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Denumire</label><input id="ef-nm" style="'+inp+'" value="'+(m.name||'')+'"></div>'+
+      '<div class="fg"><label>Client</label><input id="ef-par" style="'+inp+'" value="'+(m.partner||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Cantitate</label><input type="number" id="ef-qty" style="'+inp+'" value="'+(m.qty||1)+'"></div>'+
+      '<div class="fg"><label>Preț Vânzare (RON)</label><input type="number" id="ef-prt" style="'+inp+'" value="'+(m.price||0)+'" step="0.01"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Operator</label><input id="ef-op" style="'+inp+'" value="'+(m.op||'')+'"></div>'+
+      '<div class="fg"><label>Data (zz.ll.aaaa)</label><input id="ef-dt" style="'+inp+'" value="'+(m.date||'')+'"></div></div>';
+  } else if(type==='ret'){
+    var m = db.movements[idx];
+    fields.innerHTML =
+      '<div class="fr"><div class="fg"><label>Cod Bară</label><input id="ef-bc" style="'+inp+'" value="'+(m.bc||'')+'"></div>'+
+      '<div class="fg"><label>Cod Piesă</label><input id="ef-cp" style="'+inp+'" value="'+(m.cp||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Denumire</label><input id="ef-nm" style="'+inp+'" value="'+(m.name||'')+'"></div>'+
+      '<div class="fg"><label>Client / Furnizor</label><input id="ef-par" style="'+inp+'" value="'+(m.partner||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Cantitate</label><input type="number" id="ef-qty" style="'+inp+'" value="'+(m.qty||1)+'"></div>'+
+      '<div class="fg"><label>Valoare/buc (RON)</label><input type="number" id="ef-val" style="'+inp+'" value="'+(m.val||0)+'" step="0.01"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Motiv</label><input id="ef-mot" style="'+inp+'" value="'+(m.motiv||'')+'"></div>'+
+      '<div class="fg"><label>Observații</label><input id="ef-obs" style="'+inp+'" value="'+(m.obs||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Operator</label><input id="ef-op" style="'+inp+'" value="'+(m.op||'')+'"></div>'+
+      '<div class="fg"><label>Data (zz.ll.aaaa)</label><input id="ef-dt" style="'+inp+'" value="'+(m.date||'')+'"></div></div>';
+  } else if(type==='prod'){
+    var p = db.products[idx];
+    fields.innerHTML =
+      '<div class="fr"><div class="fg"><label>Cod Bară</label><input id="ef-bc" style="'+inp+'" value="'+(p.bc||'')+'"></div>'+
+      '<div class="fg"><label>Cod Piesă</label><input id="ef-cp" style="'+inp+'" value="'+(p.codPiesa||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Denumire</label><input id="ef-nm" style="'+inp+'" value="'+(p.name||'')+'"></div>'+
+      '<div class="fg"><label>Categorie</label><input id="ef-cat" style="'+inp+'" value="'+(p.cat||'')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Stoc (buc)</label><input type="number" id="ef-stoc" style="'+inp+'" value="'+(p.stock||0)+'"></div>'+
+      '<div class="fg"><label>UM</label><input id="ef-um" style="'+inp+'" value="'+(p.um||'BUC')+'"></div></div>'+
+      '<div class="fr"><div class="fg"><label>Preț Achiziție (RON)</label><input type="number" id="ef-buy" style="'+inp+'" value="'+(p.buy||0)+'" step="0.01"></div>'+
+      '<div class="fg"><label>Preț Vânzare (RON)</label><input type="number" id="ef-sell" style="'+inp+'" value="'+(p.sell||0)+'" step="0.01"></div></div>';
+  }
+
+  // Arata/ascunde butoanele de reprint in functie de tip
+  var printBtns = $('edit-print-btns');
+  var saveBtnW  = $('edit-save-btn');
+  if(printBtns && saveBtnW){
+    if(type==='out'){
+      printBtns.style.display='flex';
+      saveBtnW.style.flex='2';
+    } else {
+      printBtns.style.display='none';
+      saveBtnW.style.flex='2';
+    }
+  }
+  form.style.display='block';
+  form.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function cancelEdit(){
+  _editIdx=-1; _editType='';
+  $('edit-form').style.display='none';
+}
+
+function saveEdit(){
+  if(_editIdx<0) return;
+
+  if(_editType==='in' || _editType==='out'){
+    var m = db.movements[_editIdx];
+    var oldQty = m.qty;
+    var oldPrt = m.price;
+
+    m.bc   = gv('ef-bc').trim();
+    m.cp   = gv('ef-cp').trim();
+    m.name = gv('ef-nm').trim();
+    m.partner = gv('ef-par')?gv('ef-par').trim():m.partner||'';
+    m.doc  = gv('ef-doc')?gv('ef-doc').trim():m.doc||'';
+    m.qty  = parseFloat(gv('ef-qty'))||m.qty;
+    m.price= parseFloat(gv('ef-prt'))||m.price;
+    m.cat  = gv('ef-cat')?gv('ef-cat').trim():m.cat||'';
+    m.op   = gv('ef-op').trim();
+    m.date = gv('ef-dt').trim();
+
+    // Recalculeaza stocul produsului daca s-a schimbat cantitatea
+    if(m.qty !== oldQty || m.price !== oldPrt){
+      var prod = db.products.find(function(x){ return x.bc===m.bc; });
+      if(prod && _editType==='in'){
+        prod.stock = prod.stock - oldQty + m.qty;
+        if(m.price) prod.buy = m.price;
+      } else if(prod && _editType==='out'){
+        prod.stock = prod.stock + oldQty - m.qty;
+      }
+    }
+
+    // Sincronizare GSheets — trimite miscare actualizata
+    syncGSEdit(m);
+
+  } else if(_editType==='ret'){
+    var m = db.movements[_editIdx];
+    var oldQty = m.qty;
+    var oldVal = m.val;
+    m.bc      = gv('ef-bc').trim();
+    m.cp      = gv('ef-cp').trim();
+    m.name    = gv('ef-nm').trim();
+    m.partner = gv('ef-par').trim();
+    m.qty     = parseFloat(gv('ef-qty'))||m.qty;
+    m.val     = parseFloat(gv('ef-val'))||m.val;
+    m.motiv   = gv('ef-mot').trim();
+    m.obs     = gv('ef-obs').trim();
+    m.op      = gv('ef-op').trim();
+    m.date    = gv('ef-dt').trim();
+    // Recalcul stoc daca e reintrare si s-a schimbat cantitatea
+    if(m.dest==='stoc' && (m.qty!==oldQty)){
+      var prod = db.products.find(function(x){ return x.bc===m.bc; });
+      if(prod){ prod.stock = prod.stock - oldQty + m.qty; }
+    }
+    syncGSRetEdit(m);
+
+  } else if(_editType==='prod'){
+    var p = db.products[_editIdx];
+    p.bc       = gv('ef-bc').trim();
+    p.codPiesa = gv('ef-cp').trim();
+    p.name     = gv('ef-nm').trim();
+    p.cat      = gv('ef-cat').trim();
+    p.stock    = parseFloat(gv('ef-stoc'))||0;
+    p.um       = gv('ef-um').trim()||'BUC';
+    p.buy      = parseFloat(gv('ef-buy'))||0;
+    p.sell     = parseFloat(gv('ef-sell'))||0;
+
+    // Sincronizare GSheets — actualizeaza Stoc Curent
+    syncGSStocEdit(p);
+  }
+
+  saveDB();
+  renderDash(); renderStoc(); renderIst(''); renderVanzariList();
+  renderEditList();
+  $('edit-form').style.display='none';
+  _editIdx=-1; _editType='';
+  toast('Înregistrare actualizată ✔️','✅');
+}
+
+function syncGSEdit(m){
+  // Trimite la GAS o miscare editata — GAS o va scrie ca rand nou cu flag edit
+  var isIn = m.t==='in';
+  var headers = isIn
+    ? ['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator','Cod Piesa']
+    : ['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator','Cod Piesa'];
+  var prod = db.products.find(function(x){ return x.bc===m.bc; });
+  var row = isIn
+    ? [m.date,m.bc,m.name,m.partner||'',m.doc||'',m.qty,m.price,m.qty*m.price,m.cat||'',m.op,m.cp||'']
+    : [m.date,m.bc,m.name,m.partner||'',m.doc||'',m.qty,m.price,m.qty*m.price,prod?prod.buy:0,(m.price-(prod?prod.buy:0))*m.qty,m.op,m.cp||''];
+  var sellPret = isIn ? (prod?prod.sell:0) : m.price;
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sheet:isIn?'Intrari':'Iesiri',type:m.t,headers:headers,row:row,
+      barcode:m.bc,name:m.name,cat:m.cat||'',qty:m.qty,pret:m.price,
+      pretV:isIn?0:m.price,sellPret:sellPret,codPiesa:m.cp||'',
+      editFlag:true,editNote:'[CORECTAT]'})
+  }).catch(function(){});
+}
+
+
+function printEditBon(){
+  if(_editIdx<0 || _editType!=='out') return;
+  var m  = db.movements[_editIdx];
+  var prod = db.products.find(function(x){ return x.bc===m.bc; });
+  var shop = cfg.shopName||'SPL Piese Auto';
+  var val  = (m.qty||0)*(m.price||0);
+  var row  =
+    '<tr>'+
+    '<td style="text-align:center">1</td>'+
+    '<td>'+m.name+(m.cp?'<br><span style="font-size:10px;color:#888">Cod: '+m.cp+'</span>':'')+'</td>'+
+    '<td style="text-align:center">'+(prod?prod.um||'BUC':'BUC')+'</td>'+
+    '<td style="text-align:center">'+((m.qty||0).toFixed(2))+'</td>'+
+    '<td style="text-align:right">'+((m.price||0).toFixed(2))+' RON</td>'+
+    '<td style="text-align:right;font-weight:700">'+val.toFixed(2)+' RON</td>'+
+    '</tr>';
+  openPrint('<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8"><title>Bon Vânzare</title>'+
+    '<style>body{font-family:Arial,sans-serif;max-width:750px;margin:30px auto;padding:20px;color:#222}'+
+    'h2{text-align:center;background:#e8f8f0;border:2px solid #27ae60;border-radius:7px;padding:10px;font-size:16px;margin:0 0 16px}'+
+    'table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px}'+
+    'thead tr{background:#27ae60;color:#fff}thead th{padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px}'+
+    'tbody td{padding:8px 10px;border-bottom:1px solid #eee}'+
+    '.total-box{display:flex;justify-content:flex-end;margin-bottom:14px}'+
+    '.total-inner{border:2px solid #27ae60;border-radius:7px;padding:11px 18px;text-align:right}'+
+    '.total-inner .lbl{font-size:12px;color:#888;margin-bottom:3px}.total-inner .val{font-size:22px;font-weight:900;color:#27ae60}'+
+    '.semnat{display:flex;gap:20px;margin-top:24px}.semnat div{flex:1;border-top:1px solid #bbb;padding-top:8px;text-align:center;font-size:12px;color:#666}'+
+    '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:14px;border-top:1px solid #eee;padding-top:8px}'+
+    '@media print{button{display:none}}</style></head><body>'+
+    docHdr('#27ae60')+
+    '<h2>🛒 BON VÂNZARE — '+m.date+'</h2>'+
+    (m.partner?'<div style="background:#f0f8ff;border:1px solid #2980b9;border-radius:7px;padding:10px 14px;margin-bottom:14px;font-size:13px"><b>Client:</b> '+m.partner+'</div>':'')+
+    '<table><thead><tr>'+
+      '<th style="width:36px">#</th><th>Produs</th>'+
+      '<th style="text-align:center;width:60px">UM</th>'+
+      '<th style="text-align:center;width:70px">Cant.</th>'+
+      '<th style="text-align:right;width:100px">Preț Unit.</th>'+
+      '<th style="text-align:right;width:100px">Valoare</th>'+
+    '</tr></thead><tbody>'+row+'</tbody></table>'+
+    '<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL VÂNZARE</div><div class="val">'+val.toFixed(2)+' RON</div></div></div>'+
+    '<div class="semnat">'+
+      '<div><b>Operator: '+m.op+'</b><br><br>_______________</div>'+
+      '<div>Semnătură Client<br><br>_______________</div>'+
+    '</div>'+
+    '<div class="footer">'+shop+' · CUI: '+(cfg.cui||'')+' · '+(cfg.address||'')+' · '+(cfg.phone||'')+' · '+(cfg.email||'')+'</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">🖨️ Printează Bonul</button>'+
+    '</body></html>');
+  toast('Bon vânzare generat','📄');
+}
+
+function printEditFactura(){
+  if(_editIdx<0 || _editType!=='out') return;
+  var m    = db.movements[_editIdx];
+  var prod = db.products.find(function(x){ return x.bc===m.bc; });
+  var shop = cfg.shopName||'SPL Piese Auto';
+  var cui  = cfg.cui||'44870892';
+  var reg  = cfg.regCom||'J20/1003624352';
+  var adr  = cfg.address||'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221';
+  var phone= cfg.phone||'0766551313';
+  var email= cfg.email||'vanzari@pieseautotm.ro';
+  var web  = cfg.website||'www.pieseautotm.ro';
+  var nr   = 'SPL '+(cfg.invoiceNr||1);
+  var tvaPct = 0;
+  var val  = (m.qty||0)*(m.price||0);
+  var tva  = Math.round(val*tvaPct)/100;
+  var total= val+tva;
+  var um   = prod?prod.um||'BUC':'BUC';
+
+  var logoFac='';
+  // Incearca sa ia logo din printFactura daca exista
+  try{ var tmp=document.createElement('div'); tmp.innerHTML=''; }catch(e){}
+
+  var row =
+    '<tr>'+
+    '<td>1</td>'+
+    '<td>'+m.name+(m.cp?'<br><small style="color:#888">Cod: '+m.cp+'</small>':'')+'</td>'+
+    '<td style="text-align:center">'+um+'</td>'+
+    '<td style="text-align:right">'+((m.qty||0).toFixed(2))+'</td>'+
+    '<td style="text-align:right">'+((m.price||0).toFixed(2))+'</td>'+
+    '<td style="text-align:right;font-weight:600">'+val.toFixed(2)+'</td>'+
+    '</tr>';
+
+  openPrint('<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8"><title>Factură '+nr+'</title>'+
+    '<style>body{font-family:Arial,sans-serif;max-width:780px;margin:20px auto;padding:20px;color:#222;font-size:13px}'+
+    '.hdr-tbl{width:100%;border-collapse:collapse;margin-bottom:16px}.hdr-tbl td{vertical-align:top;padding:0}'+
+    '.firm-box{background:#fdf2f0;border:2px solid #c0392b;border-radius:8px;padding:12px 16px}'+
+    '.firm-nm{font-size:20px;font-weight:900;color:#c0392b}'+
+    '.firm-det{font-size:11px;color:#555;line-height:1.8;margin-top:4px}'+
+    '.fac-box{background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:12px 16px;text-align:right}'+
+    '.fac-nm{font-size:26px;font-weight:900;color:#c0392b;letter-spacing:1px}'+
+    '.fac-nr{font-size:14px;font-weight:700;color:#333;margin-top:4px}'+
+    '.fac-dt{font-size:11px;color:#666;margin-top:2px}'+
+    '.client-box{background:#f0f7ff;border:1px solid #2980b9;border-radius:7px;padding:10px 14px;margin-bottom:14px}'+
+    '.client-box h4{font-size:11px;color:#2980b9;text-transform:uppercase;letter-spacing:.5px;margin:0 0 5px;font-weight:700}'+
+    '.client-box p{margin:0;font-size:13px;font-weight:600}'+
+    'table.prod{width:100%;border-collapse:collapse;margin-bottom:14px}'+
+    'table.prod th{background:#c0392b;color:#fff;padding:8px 10px;font-size:11px;text-align:left;font-weight:700}'+
+    'table.prod td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}'+
+    '.total-box{display:flex;justify-content:flex-end;margin-bottom:14px}'+
+    '.total-inner{border:2px solid #c0392b;border-radius:8px;padding:12px 18px;min-width:250px}'+
+    '.total-row{display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px}'+
+    '.total-final{display:flex;justify-content:space-between;font-size:17px;font-weight:900;color:#c0392b;border-top:2px solid #c0392b;padding-top:8px;margin-top:6px}'+
+    '.semnat{display:flex;gap:30px;margin-top:24px}'+
+    '.semnat div{flex:1;border-top:2px solid #c0392b;padding-top:10px;text-align:center;font-size:11px;color:#666}'+
+    '.semnat div b{display:block;font-size:13px;color:#333;margin-bottom:4px}'+
+    '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:16px;border-top:1px solid #eee;padding-top:8px}'+
+    '@media print{button{display:none}}</style></head><body>'+
+    '<table class="hdr-tbl"><tr>'+
+      '<td style="width:55%"><div class="firm-box">'+
+        '<div class="firm-nm">'+shop+'</div>'+
+        '<div class="firm-det">CUI: <b>'+cui+'</b> &nbsp;|&nbsp; Reg. Com.: <b>'+reg+'</b><br>'+
+          '📍 '+adr+'<br>📞 '+phone+' &nbsp;|&nbsp; ✉️ '+email+'<br>🌐 '+web+'</div>'+
+      '</div></td>'+
+      '<td style="width:8px"></td>'+
+      '<td><div class="fac-box">'+
+        '<div class="fac-nm">FACTURĂ FISCALĂ</div>'+
+        '<div class="fac-nr">Nr. '+nr+'</div>'+
+        '<div class="fac-dt">Data: <b>'+m.date+'</b></div>'+
+      '</div></td>'+
+    '</tr></table>'+
+    '<div class="client-box">'+
+      '<h4>Cumpărător / Client</h4>'+
+      '<p>'+(m.partner||'—')+'</p>'+
+    '</div>'+
+    '<table class="prod"><thead><tr>'+
+      '<th style="width:30px">#</th>'+
+      '<th>Denumire Produs / Serviciu</th>'+
+      '<th style="text-align:center;width:50px">UM</th>'+
+      '<th style="text-align:right;width:70px">Cant.</th>'+
+      '<th style="text-align:right;width:90px">Preț Unit.</th>'+
+      '<th style="text-align:right;width:90px">Valoare</th>'+
+    '</tr></thead><tbody>'+row+'</tbody></table>'+
+    '<div class="total-box"><div class="total-inner">'+
+      '<div class="total-row"><span>Subtotal:</span><span>'+val.toFixed(2)+' RON</span></div>'+
+      '<div class="total-row"><span>TVA ('+tvaPct+'%):</span><span>'+tva.toFixed(2)+' RON</span></div>'+
+      '<div class="total-final"><span>TOTAL</span><span>'+total.toFixed(2)+' RON</span></div>'+
+    '</div></div>'+
+    '<div class="semnat">'+
+      '<div><b>Furnizor</b><br><br>'+shop+'<br>_______________</div>'+
+      '<div><b>Cumpărător</b><br><br>'+(m.partner||'—')+'<br>_______________</div>'+
+      '<div><b>Operator</b><br><br>'+m.op+'<br>_______________</div>'+
+    '</div>'+
+    '<div class="footer">'+shop+' · CUI: '+cui+' · '+adr+' · '+phone+' · '+email+' · '+web+'</div>'+
+    '<br><button onclick="window.print()" style="padding:10px 24px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨️ Printează Factura</button>'+
+    '</body></html>');
+  toast('Factură generată','📄');
+}
+
+function deleteEdit(){
+  if(_editIdx<0) return;
+  var tip = _editType==='in'?'Intrare':_editType==='out'?'Ieșire':_editType==='ret'?'Retur':'Produs';
+  if(!confirm('Ștergeți această înregistrare (' + tip + ')? Acțiunea nu poate fi anulată!')) return;
+
+  if(_editType==='in'){
+    var m = db.movements[_editIdx];
+    var prod = db.products.find(function(x){ return x.bc===m.bc; });
+    if(prod){ prod.stock = Math.max(0, prod.stock - m.qty); }
+    db.movements.splice(_editIdx,1);
+
+  } else if(_editType==='out'){
+    var m = db.movements[_editIdx];
+    var prod = db.products.find(function(x){ return x.bc===m.bc; });
+    if(prod){ prod.stock = prod.stock + m.qty; }
+    db.movements.splice(_editIdx,1);
+
+  } else if(_editType==='ret'){
+    var m = db.movements[_editIdx];
+    if(m.dest==='stoc'){
+      var prod = db.products.find(function(x){ return x.bc===m.bc; });
+      if(prod){ prod.stock = Math.max(0, prod.stock - m.qty); }
+    }
+    db.movements.splice(_editIdx,1);
+
+  } else if(_editType==='prod'){
+    db.products.splice(_editIdx,1);
+  }
+
+  saveDB();
+  renderDash(); renderStoc(); renderIst(''); renderRetList(); renderVanzariList();
+  renderEditList();
+  $('edit-form').style.display='none';
+  _editIdx=-1; _editType='';
+  toast('Înregistrare ștearsă','🗑️');
+}
+
+function syncGSRetEdit(m){
+  var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator','Cod Piesa'];
+  var row=[m.date,m.bc,m.name,m.partner||'',m.qty,m.val,m.qty*m.val,m.motiv||'',m.obs||'',m.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',m.op,m.cp||''];
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sheet:'Retururi',type:'ret',headers:headers,row:row,
+      barcode:m.bc,name:m.name,qty:m.qty,codPiesa:m.cp||'',editFlag:true})
+  }).catch(function(){});
+}
+
+function syncGSStocEdit(p){
+  // Trimite la GAS actualizarea stocului curent
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'updateStoc',
+      barcode:p.bc,name:p.name,cat:p.cat||'',
+      stock:p.stock,buy:p.buy,sell:p.sell,
+      codPiesa:p.codPiesa||'',um:p.um||'BUC'})
+  }).catch(function(){});
+}
+
 function resetData(){
   if(!confirm('Ștergeți TOATE datele (produse + mișcări)? Această acțiune este ireversibilă!')) return;
   db={products:[],movements:[]};
