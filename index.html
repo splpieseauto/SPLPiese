@@ -1009,9 +1009,10 @@ function updStoc(ss,d){
     var cur=parseInt(s.getRange(ri,4).getValue())||0;
     s.getRange(ri,4).setValue(d.type==='in'?cur+qty:Math.max(0,cur-qty));
     if(d.type==='in'&&d.pret) s.getRange(ri,5).setValue(d.pret);
+    if(d.type==='in'&&d.sellPret) s.getRange(ri,6).setValue(d.sellPret);
     if(d.type==='out'&&d.pretV) s.getRange(ri,6).setValue(d.pretV);
   }else if(d.type==='in'){
-    s.appendRow([bc,d.name||'',d.cat||'',qty,d.pret||0,0]);
+    s.appendRow([bc,d.name||'',d.cat||'',qty,d.pret||0,d.sellPret||0]);
   }
 }
 
@@ -1190,7 +1191,7 @@ function expDate(per){
 // ═══════════════════════════════════
 // DATABASE
 // ═══════════════════════════════════
-var DB_K='spl3_db', CFG_K='spl3_cfg';
+var CFG_K='spl3_cfg';
 var db={products:[],movements:[]};
 var GS_URL_PERM='https://script.google.com/macros/s/AKfycbwLjPf3fkeYgcuUP-lkPwKjoXWD-qztPr2TNiHq7vAFHZPwUW1xhA42PVJJq2bd4ItQ/exec';
 var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
@@ -1204,36 +1205,31 @@ function loadAll(){
   try{ var cfgRaw=localStorage.getItem(CFG_K); if(cfgRaw) cfg=Object.assign(cfg,JSON.parse(cfgRaw)); }catch(e){}
   cfg.gsUrl=GS_URL_PERM;
   applySettings();
-  try{
-    var dbRaw=localStorage.getItem(DB_K);
-    if(dbRaw){ var parsed=JSON.parse(dbRaw); db.products=parsed.products||[]; db.movements=parsed.movements||[]; }
-  }catch(e){}
+  db={products:[],movements:[]};
+  showSyncLoading(true);
   renderDash(); renderStoc(); renderIst(''); renderOfertaList(); renderRetList();
-  showSyncLoading(false);
   fetch(GS_URL_PERM+'?action=getData',{redirect:'follow'})
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if(data.ok && (data.products||[]).length>=db.products.length){
+      showSyncLoading(false);
+      if(data.ok){
         db.products=data.products||[]; db.movements=data.movements||[];
-        try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){}
         renderDash(); renderStoc(); renderIst(''); renderOfertaList(); renderRetList();
         updateSyncUI(true);
         toast('Sincronizat ✔️ — '+db.products.length+' produse, '+db.movements.length+' mișcări','✅');
       } else {
-        updateSyncUI(true);
-        if(db.products.length>0) toast('Date locale afișate. Sheets conectat ✔️','✅');
-        else toast('Conectat la Google Sheets ✔️ — începeți să înregistrați piese!','✅');
+        updateSyncUI(false);
+        toast('Eroare citire Google Sheets. Verificați conexiunea.','\u26a0️',true);
       }
     })
     .catch(function(){
+      showSyncLoading(false);
       updateSyncUI(false);
-      if(db.products.length>0) toast('Offline — date locale afișate ('+db.products.length+' produse)','⚠️');
-      else toast('Nu s-a putut conecta la Google Sheets. Verificați conexiunea.','⚠️',true);
+      toast('Nu s-a putut conecta la Google Sheets. Verificați conexiunea.','\u26a0️',true);
     });
 }
 
 function saveDB(){
-  try{ localStorage.setItem(DB_K,JSON.stringify(db)); }catch(e){}
   renderDash(); renderStoc();
 }
 function saveCfg(){
@@ -2767,10 +2763,13 @@ function syncGS(mov,prod){
   var headers=isIn?['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator']:
     ['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator'];
   var row=isIn?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op]:
-    [mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,prod.buy,(mov.price-prod.buy)*mov.qty,mov.op];
+    [mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,prod?prod.buy:0,(mov.price-(prod?prod.buy:0))*mov.qty,mov.op];
+  // sellPret = pretul de vanzare, trimis la intrari pentru a fi salvat in coloana P.Vanz din Stoc Curent
+  var sellPret = isIn ? (prod?prod.sell:0) : mov.price;
   fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({sheet:isIn?'Intrari':'Iesiri',type:mov.t,headers:headers,row:row,
-      barcode:mov.bc,name:mov.name,cat:mov.cat||'',qty:mov.qty,pret:mov.price,pretV:isIn?0:mov.price})
+      barcode:mov.bc,name:mov.name,cat:mov.cat||'',qty:mov.qty,pret:mov.price,
+      pretV:isIn?0:mov.price,sellPret:sellPret})
   }).then(function(){ updateSyncUI(true); }).catch(function(){});
 }
 function syncGSRet(r){
@@ -2902,9 +2901,8 @@ function syncFromSheets(){
     .then(function(data){
       showSyncLoading(false);
       if(data.ok){
-        db.products = data.products||[];
-        db.movements = data.movements||[];
-        saveDB();
+        var gsProd=data.products||[], gsMov=data.movements||[];
+        db.products=data.products||[]; db.movements=data.movements||[];
         renderDash(); renderStoc(); renderIst(''); renderOfertaList(); renderRetList();
         updateSyncUI(true);
         toast('Sincronizat ✔️ — '+db.products.length+' produse, '+db.movements.length+' mișcări','✅');
@@ -2934,7 +2932,6 @@ function showSyncLoading(on){
 // ═══════════════════════════════════
 function resetData(){
   if(!confirm('Ștergeți TOATE datele (produse + mișcări)? Această acțiune este ireversibilă!')) return;
-  try{ localStorage.removeItem(DB_K); }catch(e){}
   db={products:[],movements:[]};
   renderDash(); renderStoc(); renderIst(''); renderOfertaList(); renderRetList();
   toast('Toate datele au fost șterse. Baza de date este goală.','🗑️');
