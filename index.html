@@ -2487,11 +2487,11 @@ function renderDash(){
   var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
   var retStocAzi=tm.filter(function(m){ return m.t==='ret'&&m.dest==='stoc'; }).reduce(function(s,m){ return s+m.qty*(m.val||0); },0);
   sales=Math.max(0, sales-retStocAzi);
-  // Profit azi: suma (pret_vanzare - pret_achizitie) x cantitate doar din iesirile de azi
-  var profit = tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){
-    var buyPrc = (m.buy != null && m.buy > 0) ? m.buy : 0;
-    return s + (m.price - buyPrc) * m.qty;
-  }, 0);
+  // Profit azi: +25% din vanzari, -25% din retururi in stoc
+  var mk = (cfg.markup||25) / 100;
+  var profitOut = tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s + m.qty*m.price*mk; }, 0);
+  var profitRet = tm.filter(function(m){ return m.t==='ret' && m.dest==='stoc'; }).reduce(function(s,m){ return s + m.qty*(m.val||0)*mk; }, 0);
+  var profit = profitOut - profitRet;
   var sv2=db.products.reduce(function(s,p){ return s+p.stock*p.sell; },0);
   var low=db.products.filter(function(p){ return p.stock<=cfg.minStock; }).length;
   if($('k-stoc')) $('k-stoc').textContent=fron(sv2);
