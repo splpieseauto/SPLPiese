@@ -1190,8 +1190,9 @@ function doGet(e){
 
 function fmtDate(v){
   if(!v) return '';
-  if(v instanceof Date) return Utilities.formatDate(v,Session.getScriptTimeZone(),'dd.MM.yyyy');
-  return String(v);
+  if(v instanceof Date) return Utilities.formatDate(v,Session.getScriptTimeZone(),'dd/MM/yyyy');
+  // Normalizeaza si string-urile cu punct la slash
+  return String(v).replace(/\./g,'/');
 }</textarea>
       <button class="btn bgh" style="width:100%;margin-top:8px" onclick="copyCod()">📋 Copiază Codul</button>
     </div>
@@ -1318,7 +1319,7 @@ function toast(msg,ico,err){
   _tt=setTimeout(function(){ t.classList.remove('on'); },3000);
 }
 function tod(){ var n=new Date(); var d=String(n.getDate()).padStart(2,'0'); var m=String(n.getMonth()+1).padStart(2,'0'); var y=n.getFullYear(); return d+'/'+m+'/'+y; }
-function fmtD(d){ if(!d) return ''; return d.replace(/\./g,'/'); }
+function fmtD(d){ if(!d) return ''; return d.replace(/\./g,'/'); } // normalizeaza puncte->slash
 function ftm(ts){ var n=ts?new Date(ts):new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
 function fron(n){ return Number(n||0).toLocaleString('ro-RO',{minimumFractionDigits:2,maximumFractionDigits:2})+' RON'; }
 function expDate(per){
@@ -1354,7 +1355,12 @@ function loadAll(){
     .then(function(data){
       showSyncLoading(false);
       if(data.ok){
-        db.products=data.products||[]; db.movements=data.movements||[];
+        db.products=data.products||[];
+        // Normalizeaza toate datele la format DD/MM/YYYY (compatibil cu tod())
+        db.movements=(data.movements||[]).map(function(m){
+          if(m.date) m.date=m.date.replace(/\./g,'/');
+          return m;
+        });
         // Aplica setarile si ofertele din GSheets
         if(data.cfg && Object.keys(data.cfg).length>0){
           cfg=Object.assign(cfg,data.cfg);
@@ -3173,7 +3179,12 @@ function syncFromSheets(){
       showSyncLoading(false);
       if(data.ok){
         var gsProd=data.products||[], gsMov=data.movements||[];
-        db.products=data.products||[]; db.movements=data.movements||[];
+        db.products=data.products||[];
+        // Normalizeaza toate datele la format DD/MM/YYYY (compatibil cu tod())
+        db.movements=(data.movements||[]).map(function(m){
+          if(m.date) m.date=m.date.replace(/\./g,'/');
+          return m;
+        });
         renderDash(); renderStoc(); renderIst(''); renderOfertaList(); renderRetList();
         updateSyncUI(true);
         toast('Sincronizat ✔️ — '+db.products.length+' produse, '+db.movements.length+' mișcări','✅');
