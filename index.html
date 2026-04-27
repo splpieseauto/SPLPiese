@@ -2475,11 +2475,28 @@ function renderOfertaList(){
 // DASHBOARD
 // ═══════════════════════════════════
 function renderDash(){
-  var t=tod(), tm=db.movements.filter(function(m){ return m.date===t; });
+  var t=tod();
+  // Compara dupa data locala: intai m.date (string), apoi ts (timestamp local ca fallback)
+  function isToday(m){
+    if(m.date && m.date.replace(/\./g,'/')===t) return true;
+    if(m.ts){ var d=new Date(m.ts); var dd=String(d.getDate()).padStart(2,'0'); var mm=String(d.getMonth()+1).padStart(2,'0'); var yy=d.getFullYear(); if(dd+'/'+mm+'/'+yy===t) return true; }
+    return false;
+  }
+  var tm=db.movements.filter(isToday);
+  // Vanzari azi: iesiri minus retururi-in-stoc din ziua curenta
   var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
+  var retStocAzi=tm.filter(function(m){ return m.t==='ret'&&m.dest==='stoc'; }).reduce(function(s,m){ return s+m.qty*(m.val||0); },0);
+  sales=Math.max(0, sales-retStocAzi);
+  // Profit azi: profit iesiri minus valoarea retururilor-in-stoc (costul recuperat)
   var profit=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){
     var buyPrc = (m.buy!=null && m.buy>0) ? m.buy : (function(){ var p=db.products.find(function(x){ return x.bc===m.bc; }); return p?p.buy:0; })();
     return s+(m.price-buyPrc)*m.qty; },0);
+  var retProfitAzi=tm.filter(function(m){ return m.t==='ret'&&m.dest==='stoc'; }).reduce(function(s,m){
+    var buyPrc = (m.buy!=null && m.buy>0) ? m.buy : (function(){ var p=db.products.find(function(x){ return x.bc===m.bc; }); return p?p.buy:0; })();
+    // profitul pierdut = (pret vanzare original - pret achizitie) * cantitate returnata
+    // folosim val (pretul piesei la retur) ca aproximare a pretului de vanzare
+    return s+(( m.val||0)-buyPrc)*m.qty; },0);
+  profit=profit-retProfitAzi;
   var sv2=db.products.reduce(function(s,p){ return s+p.stock*p.sell; },0);
   var low=db.products.filter(function(p){ return p.stock<=cfg.minStock; }).length;
   if($('k-stoc')) $('k-stoc').textContent=fron(sv2);
@@ -3147,9 +3164,10 @@ function exportExcel(){
 
   // Raport Zilnic
   var t2=tod();
-  var tIn=db.movements.filter(function(m){ return m.t==='in'&&m.date===t2; });
-  var tOut=db.movements.filter(function(m){ return m.t==='out'&&m.date===t2; });
-  var tRet=db.movements.filter(function(m){ return m.t==='ret'&&m.date===t2; });
+  function isTodayXls(m){ if(m.date&&m.date.replace(/\./g,'/')===t2) return true; if(m.ts){var d=new Date(m.ts);var dd=String(d.getDate()).padStart(2,'0');var mm=String(d.getMonth()+1).padStart(2,'0');var yy=d.getFullYear();if(dd+'/'+mm+'/'+yy===t2) return true;} return false; }
+  var tIn=db.movements.filter(function(m){ return m.t==='in'&&isTodayXls(m); });
+  var tOut=db.movements.filter(function(m){ return m.t==='out'&&isTodayXls(m); });
+  var tRet=db.movements.filter(function(m){ return m.t==='ret'&&isTodayXls(m); });
   var tP=tOut.reduce(function(s,m){ var p=db.products.find(function(x){ return x.bc===m.bc; }); return s+(m.price-(p?p.buy:0))*m.qty; },0);
   var rap=[[shop+' — RAPORT ZILNIC — '+t2],[],['INDICATOR','VALOARE'],
     ['📦 Valoare Totală Stoc (RON)',ts],
