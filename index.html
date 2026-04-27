@@ -2492,10 +2492,13 @@ function renderDash(){
     var buyPrc = (m.buy!=null && m.buy>0) ? m.buy : (function(){ var p=db.products.find(function(x){ return x.bc===m.bc; }); return p?p.buy:0; })();
     return s+(m.price-buyPrc)*m.qty; },0);
   var retProfitAzi=tm.filter(function(m){ return m.t==='ret'&&m.dest==='stoc'; }).reduce(function(s,m){
-    var buyPrc = (m.buy!=null && m.buy>0) ? m.buy : (function(){ var p=db.products.find(function(x){ return x.bc===m.bc; }); return p?p.buy:0; })();
-    // profitul pierdut = (pret vanzare original - pret achizitie) * cantitate returnata
-    // folosim val (pretul piesei la retur) ca aproximare a pretului de vanzare
-    return s+(( m.val||0)-buyPrc)*m.qty; },0);
+    // Profitul pierdut = (pret vanzare - pret achizitie) * cantitate
+    // m.val = valoarea piesei la retur (pretul de achizitie/referinta)
+    // cautam pretul de vanzare din produsul din stoc
+    var p=db.products.find(function(x){ return x.bc===m.bc; });
+    var sellPrc = p ? (p.sell||0) : (m.val||0);
+    var buyPrc  = p ? (p.buy||0)  : 0;
+    return s+(sellPrc-buyPrc)*m.qty; },0);
   profit=profit-retProfitAzi;
   var sv2=db.products.reduce(function(s,p){ return s+p.stock*p.sell; },0);
   var low=db.products.filter(function(p){ return p.stock<=cfg.minStock; }).length;
