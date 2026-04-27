@@ -1023,8 +1023,9 @@ function doPost(e){
         sS.getRange(riS,5).setValue(Number(d.buy)||0);
         sS.getRange(riS,6).setValue(Number(d.sell)||0);
         sS.getRange(riS,7).setValue(d.codPiesa||'');
+        if(d.um) sS.getRange(riS,8).setValue(d.um);
       } else {
-        sS.appendRow([bc,d.name||'',d.cat||'',Number(d.stock)||0,Number(d.buy)||0,Number(d.sell)||0,d.codPiesa||'']);
+        sS.appendRow([bc,d.name||'',d.cat||'',Number(d.stock)||0,Number(d.buy)||0,Number(d.sell)||0,d.codPiesa||'',d.um||'BUC']);
       }
       return ContentService.createTextOutput(JSON.stringify({ok:true}))
         .setMimeType(ContentService.MimeType.JSON);
@@ -1063,13 +1064,16 @@ function doPost(e){
 function updStoc(ss,d){
   var s=ss.getSheetByName('Stoc Curent')||ss.insertSheet('Stoc Curent');
   if(s.getLastRow()===0){
-    s.appendRow(['Cod','Denumire','Cat','Stoc','P.Ach','P.Vanz','Cod Piesa']);
-    s.getRange(1,1,1,7).setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');
-  } else if(s.getLastColumn()<7){
-    // Foaia exista dar nu are inca coloana Cod Piesa — o adaugam la header
-    var hcp=s.getRange(1,7);
-    hcp.setValue('Cod Piesa');
-    hcp.setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');
+    s.appendRow(['Cod','Denumire','Cat','Stoc','P.Ach','P.Vanz','Cod Piesa','UM']);
+    s.getRange(1,1,1,8).setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');
+  } else if(s.getLastColumn()<8){
+    // Adauga coloane lipsa (Cod Piesa si/sau UM)
+    if(s.getLastColumn()<7){
+      var hcp=s.getRange(1,7); hcp.setValue('Cod Piesa');
+      hcp.setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');
+    }
+    var hum=s.getRange(1,8); hum.setValue('UM');
+    hum.setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');
   }
   var bc=String(d.barcode),lr=s.getLastRow(),ri=-1;
   if(lr>1){
@@ -1091,9 +1095,10 @@ function updStoc(ss,d){
     if((d.type==='ret')&&d.sellPret) s.getRange(ri,6).setValue(d.sellPret);
     if((d.type==='out')&&d.pretV)   s.getRange(ri,6).setValue(d.pretV);
     if(d.codPiesa) s.getRange(ri,7).setValue(d.codPiesa);
+    if(d.um)       s.getRange(ri,8).setValue(d.um);
   }else if(d.type==='in'||d.type==='ret'){
     // Creeaza rand nou in stoc si la retur daca produsul nu exista
-    s.appendRow([bc,d.name||'',d.cat||'',qty,d.pret||0,d.sellPret||0,d.codPiesa||'']);
+    s.appendRow([bc,d.name||'',d.cat||'',qty,d.pret||0,d.sellPret||0,d.codPiesa||'',d.um||'BUC']);
   }
 }
 
@@ -1112,12 +1117,12 @@ function doGet(e){
       // Stoc Curent
       var sStoc = ss.getSheetByName('Stoc Curent');
       if(sStoc && sStoc.getLastRow() > 1){
-        var sd = sStoc.getRange(2,1,sStoc.getLastRow()-1,7).getValues();
+        var sd = sStoc.getRange(2,1,sStoc.getLastRow()-1,8).getValues();
         for(var i=0;i<sd.length;i++){
           var r=sd[i]; if(!r[0]) continue;
           products.push({bc:String(r[0]),name:String(r[1]||''),cat:String(r[2]||''),
             stock:Number(r[3])||0,buy:Number(r[4])||0,sell:Number(r[5])||0,
-            codPiesa:String(r[6]||''),um:'BUC'});
+            codPiesa:String(r[6]||''),um:String(r[7]||'BUC')||'BUC'});
         }
       }
 
@@ -1142,7 +1147,7 @@ function doGet(e){
           var r=outd[i]; if(!r[0]) continue;
           movements.push({t:'out',date:fmtDate(r[0]),bc:String(r[1]||''),
             name:String(r[2]||''),partner:String(r[3]||''),doc:String(r[4]||''),
-            qty:Number(r[5])||0,price:Number(r[6])||0,cat:'',
+            qty:Number(r[5])||0,price:Number(r[6])||0,buy:Number(r[8])||0,cat:'',
             op:String(r[10]||''),cp:String(r[11]||''),ts:r[0] instanceof Date?r[0].getTime():0});
         }
       }
@@ -1953,7 +1958,7 @@ function subMovCart(){
   saleCart.forEach(function(item){
     var prod = db.products.find(function(x){ return x.bc===item.bc; });
     prod.stock -= item.qty;
-    var mov = {t:'out', date:tod(), bc:item.bc, name:item.nm, partner:par, doc:doc, qty:item.qty, price:item.prt, op:op, cat:'', cp:item.cp||'', ts:Date.now()};
+    var mov = {t:'out', date:tod(), bc:item.bc, name:item.nm, partner:par, doc:doc, qty:item.qty, price:item.prt, buy:prod?prod.buy:0, op:op, cat:'', cp:item.cp||'', ts:Date.now()};
     db.movements.unshift(mov);
     syncGS(mov, prod);
   });
@@ -2473,7 +2478,8 @@ function renderDash(){
   var t=tod(), tm=db.movements.filter(function(m){ return m.date===t; });
   var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
   var profit=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){
-    var p=db.products.find(function(x){ return x.bc===m.bc; }); return s+(m.price-(p?p.buy:0))*m.qty; },0);
+    var buyPrc = (m.buy!=null && m.buy>0) ? m.buy : (function(){ var p=db.products.find(function(x){ return x.bc===m.bc; }); return p?p.buy:0; })();
+    return s+(m.price-buyPrc)*m.qty; },0);
   var sv2=db.products.reduce(function(s,p){ return s+p.stock*p.sell; },0);
   var low=db.products.filter(function(p){ return p.stock<=cfg.minStock; }).length;
   if($('k-stoc')) $('k-stoc').textContent=fron(sv2);
@@ -3038,10 +3044,11 @@ function syncGS(mov,prod){
     [mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,prod?prod.buy:0,(mov.price-(prod?prod.buy:0))*mov.qty,mov.op,mov.cp||''];
   // sellPret = pretul de vanzare, trimis la intrari pentru a fi salvat in coloana P.Vanz din Stoc Curent
   var sellPret = isIn ? (prod?prod.sell:0) : mov.price;
+  var umVal = (function(){ var p=db.products.find(function(x){return x.bc===mov.bc;}); return p?p.um||'BUC':'BUC'; })();
   fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({sheet:isIn?'Intrari':'Iesiri',type:mov.t,headers:headers,row:row,
       barcode:mov.bc,name:mov.name,cat:mov.cat||'',qty:mov.qty,pret:mov.price,
-      pretV:isIn?0:mov.price,sellPret:sellPret,codPiesa:mov.cp||''})
+      pretV:isIn?0:mov.price,sellPret:sellPret,codPiesa:mov.cp||'',um:umVal})
   }).then(function(){ updateSyncUI(true); }).catch(function(){});
 }
 function syncGSRet(r, prod){
@@ -3050,10 +3057,11 @@ function syncGSRet(r, prod){
   // type='ret_stoc' => updStoc adauga la stoc; type='ret_dist' => updStoc nu modifica stocul
   var retType = r.dest==='stoc' ? 'ret' : 'ret_dist';
   var sellPret = prod ? prod.sell : 0;
+  var umRet = (function(){ var p=db.products.find(function(x){return x.bc===r.bc;}); return p?p.um||'BUC':'BUC'; })();
   fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({sheet:'Retururi',type:retType,headers:headers,row:row,
       barcode:r.bc,name:r.name,cat:'',qty:r.qty,
-      pret:r.val,sellPret:sellPret,codPiesa:r.cp||''})
+      pret:r.val,sellPret:sellPret,codPiesa:r.cp||'',um:umRet})
   }).then(function(){ updateSyncUI(true); }).catch(function(){});
 }
 function syncGSOferta(o){
