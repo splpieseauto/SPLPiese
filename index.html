@@ -623,35 +623,35 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
 
       <!-- Pozitii oferta -->
-      <div style="background:rgba(39,174,96,.05);border:1px solid rgba(39,174,96,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px">
-        <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">➕ Adaugă Piesă</div>
-        <div style="display:grid;grid-template-columns:1.2fr 2fr 0.6fr 0.7fr 0.8fr auto;gap:7px;align-items:flex-end">
-          <div class="fg">
-            <label>Cod Piesă</label>
-            <div style="position:relative">
-              <input type="text" id="of-add-cod" placeholder="Cod / SKU" autocomplete="off"
-                oninput="ofSearchProd(this.value)"
-                style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
-              <div id="of-search-res" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--c1);border:1px solid var(--brd);border-radius:6px;margin-top:2px;max-height:160px;overflow-y:auto;z-index:200"></div>
-            </div>
+      <div style="background:rgba(39,174,96,.05);border:1px solid rgba(39,174,96,.2);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">➕ Adaugă Piesă</div>
+        <div class="fr" style="margin-bottom:8px">
+          <div class="fg"><label>Cod Piesă</label>
+            <input type="text" id="of-add-cod" placeholder="Cod / SKU" autocomplete="off"
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;color:var(--txt);font-size:14px;padding:10px 12px;outline:none;width:100%">
           </div>
-          <div class="fg"><label>Denumire Produs</label>
-            <input type="text" id="of-add-nm" placeholder="Denumire piesă / serviciu"
-              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%"></div>
+          <div class="fg"><label>Denumire Produs / Serviciu</label>
+            <input type="text" id="of-add-nm" placeholder="ex: Filtru ulei, Bujii, Manșetă..."
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;color:var(--txt);font-size:14px;padding:10px 12px;outline:none;width:100%">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:0.8fr 1fr 1fr auto;gap:8px;align-items:flex-end">
           <div class="fg"><label>UM</label>
-            <select id="of-add-um" style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%">
+            <select id="of-add-um" style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;color:var(--txt);font-size:14px;padding:10px 12px;outline:none;width:100%">
               <option value="buc">buc</option>
               <option value="l">l</option>
               <option value="set">set</option>
+              <option value="m">m</option>
+              <option value="kg">kg</option>
             </select>
           </div>
           <div class="fg"><label>Cantitate</label>
             <input type="number" id="of-add-qty" value="1" min="0.01" step="0.01"
-              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%;text-align:center"></div>
-          <div class="fg"><label>Preț (RON)</label>
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;color:var(--txt);font-size:14px;padding:10px 12px;outline:none;width:100%;text-align:center"></div>
+          <div class="fg"><label>Preț Unitar (RON)</label>
             <input type="number" id="of-add-prt" min="0" step="0.01" placeholder="0.00"
-              style="background:var(--c2);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:12px;padding:8px 10px;outline:none;width:100%;text-align:right"></div>
-          <button class="btn bg" style="padding:9px 14px;white-space:nowrap" onclick="addOfertaLinie()">+ Adaugă</button>
+              style="background:var(--c2);border:1px solid var(--brd);border-radius:7px;color:var(--txt);font-size:14px;padding:10px 12px;outline:none;width:100%;text-align:right"></div>
+          <button class="btn bg" style="padding:11px 18px;white-space:nowrap;font-size:13px" onclick="addOfertaLinie()">+ Adaugă</button>
         </div>
       </div>
 
@@ -956,6 +956,37 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
   </div>
 
   <div class="ss">
+    <div class="sh">📄 Documente — Mesaje &amp; Footer Personalizat</div>
+    <div class="sb">
+
+      <!-- BON VANZARE -->
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grn);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--brd)">🛒 Bon de Vânzare</div>
+      <div class="fr">
+        <div class="fg"><label>Mesaj pe Bon</label><input type="text" id="s-bon-msg" placeholder="ex: Vă mulțumim! Reveniți cu plăcere!" onchange="saveCfg()"></div>
+        <div class="fg"><label>Footer Bon</label><input type="text" id="s-bon-footer" placeholder="ex: Produse de calitate · Garanție asigurată" onchange="saveCfg()"></div>
+      </div>
+
+      <!-- FACTURA -->
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--blu);margin:10px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--brd)">🧾 Factură</div>
+      <div class="fr">
+        <div class="fg"><label>Scadență implicită (zile)</label><input type="number" id="s-scad-implicit" placeholder="30" min="0" max="365" onchange="saveCfg()"><div class="hint">Număr de zile adăugate automat la data emiterii</div></div>
+        <div class="fg"><label>Observații implicite Factură</label><input type="text" id="s-fac-msg" placeholder="ex: Mulțumim pentru colaborare!" onchange="saveCfg()"></div>
+      </div>
+      <div class="fr fr1">
+        <div class="fg"><label>Footer Factură</label><input type="text" id="s-fac-footer" placeholder="ex: Factura este valabilă fără semnătură olografă conform legislației în vigoare." onchange="saveCfg()"></div>
+      </div>
+
+      <!-- OFERTA -->
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--acc2);margin:10px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--brd)">📋 Ofertă</div>
+      <div class="fr">
+        <div class="fg"><label>Mesaj pe Ofertă</label><input type="text" id="s-oferta-msg" placeholder="ex: Prețurile sunt orientative și pot varia." onchange="saveCfg()"></div>
+        <div class="fg"><label>Footer Ofertă</label><input type="text" id="s-oferta-footer" placeholder="ex: Ofertă valabilă 30 de zile de la data emiterii." onchange="saveCfg()"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ss">
     <div class="sh">🔗 Google Sheets — Sincronizare în Timp Real</div>
     <div class="sb">
       <div class="steps-wrap">
@@ -1010,6 +1041,30 @@ function doPost(e){
           if(cellDate===dateStr) sClean.deleteRow(ri+2);
         }
       }
+      return ContentService.createTextOutput(JSON.stringify({ok:true}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Salveaza rezumatul zilnic (Vanzari + Profit) in foaia Rezumat Zilnic
+    if(d.action==='rezumatZilnic'){
+      var sRez=ss.getSheetByName('Rezumat Zilnic')||ss.insertSheet('Rezumat Zilnic');
+      if(sRez.getLastRow()===0){
+        sRez.appendRow(['Data','Vanzari (RON)','Profit (RON)','Nr. Vanzari']);
+        sRez.getRange(1,1,1,4).setFontWeight('bold').setBackground('#c0392b').setFontColor('#fff');
+      }
+      var lr2=sRez.getLastRow(), found2=false;
+      if(lr2>1){
+        var dd2=sRez.getRange(2,1,lr2-1,1).getValues();
+        for(var i=0;i<dd2.length;i++){
+          if(String(dd2[i][0])===String(d.date)){
+            sRez.getRange(i+2,2).setValue(d.vanzari);
+            sRez.getRange(i+2,3).setValue(d.profit);
+            sRez.getRange(i+2,4).setValue(d.nrVanzari);
+            found2=true; break;
+          }
+        }
+      }
+      if(!found2) sRez.appendRow([d.date,d.vanzari,d.profit,d.nrVanzari]);
       return ContentService.createTextOutput(JSON.stringify({ok:true}))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -1175,42 +1230,42 @@ function doGet(e){
       // Intrari
       var sIn = ss.getSheetByName('Intrari');
       if(sIn && sIn.getLastRow() > 1){
-        var ind = sIn.getRange(2,1,sIn.getLastRow()-1,11).getValues();
+        var ind = sIn.getRange(2,1,sIn.getLastRow()-1,12).getValues();
         for(var i=0;i<ind.length;i++){
           var r=ind[i]; if(!r[0]) continue;
           movements.push({t:'in',date:fmtDate(r[0]),bc:String(r[1]||''),
             name:String(r[2]||''),partner:String(r[3]||''),doc:String(r[4]||''),
             qty:Number(r[5])||0,price:Number(r[6])||0,cat:String(r[8]||''),
-            op:String(r[9]||''),cp:String(r[10]||''),ts:r[0] instanceof Date?r[0].getTime():0});
+            op:String(r[9]||''),cp:String(r[10]||''),ts:Number(r[11])||0});
         }
       }
 
       // Iesiri
       var sOut = ss.getSheetByName('Iesiri');
       if(sOut && sOut.getLastRow() > 1){
-        var outd = sOut.getRange(2,1,sOut.getLastRow()-1,12).getValues();
+        var outd = sOut.getRange(2,1,sOut.getLastRow()-1,13).getValues();
         for(var i=0;i<outd.length;i++){
           var r=outd[i]; if(!r[0]) continue;
           movements.push({t:'out',date:fmtDate(r[0]),bc:String(r[1]||''),
             name:String(r[2]||''),partner:String(r[3]||''),doc:String(r[4]||''),
             qty:Number(r[5])||0,price:Number(r[6])||0,buy:Number(r[8])||0,cat:'',
-            op:String(r[10]||''),cp:String(r[11]||''),ts:r[0] instanceof Date?r[0].getTime():0});
+            op:String(r[10]||''),cp:String(r[11]||''),ts:Number(r[12])||0});
         }
       }
 
       // Retururi
       var sRet = ss.getSheetByName('Retururi');
       if(sRet && sRet.getLastRow() > 1){
-        var retd = sRet.getRange(2,1,sRet.getLastRow()-1,12).getValues();
+        var retd = sRet.getRange(2,1,sRet.getLastRow()-1,13).getValues();
         for(var i=0;i<retd.length;i++){
           var r=retd[i]; if(!r[0]) continue;
-          // Col: Data|CodBara|Denumire|Partner|Cant|Val/buc|ValTot|Motiv|Obs|Dest|Operator|CodPiesa
+          // Col: Data|CodBara|Denumire|Partner|Cant|Val/buc|ValTot|Motiv|Obs|Dest|Operator|CodPiesa|Timestamp
           movements.push({t:'ret',date:fmtDate(r[0]),
             bc:String(r[1]||''),name:String(r[2]||''),partner:String(r[3]||''),
             qty:Number(r[4])||0,val:Number(r[5])||0,
             motiv:String(r[7]||''),obs:String(r[8]||''),
             dest:String(r[9]||'')==='Reintrare stoc'?'stoc':'distribuitor',
-            op:String(r[10]||''),cp:String(r[11]||''),ts:r[0] instanceof Date?r[0].getTime():0});
+            op:String(r[10]||''),cp:String(r[11]||''),ts:Number(r[12])||0});
         }
       }
 
@@ -1379,7 +1434,7 @@ function toast(msg,ico,err){
 }
 function tod(){ var n=new Date(); var d=String(n.getDate()).padStart(2,'0'); var m=String(n.getMonth()+1).padStart(2,'0'); var y=n.getFullYear(); return d+'/'+m+'/'+y; }
 function fmtD(d){ if(!d) return ''; return d.replace(/\./g,'/'); } // normalizeaza puncte->slash
-function ftm(ts){ var n=ts?new Date(ts):new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
+function ftm(ts){ var n=ts?new Date(ts):new Date(); var h=n.getHours(),mi=n.getMinutes(),ap=h>=12?'PM':'AM'; h=h%12||12; return h+':'+String(mi).padStart(2,'0')+' '+ap; }
 function fron(n){ return Number(n||0).toLocaleString('ro-RO',{minimumFractionDigits:2,maximumFractionDigits:2})+' RON'; }
 function expDate(per){
   var l=parseInt(per); var d=new Date(); d.setMonth(d.getMonth()+l);
@@ -1396,6 +1451,54 @@ function saveKV(key,val){
     body:JSON.stringify({action:'saveKV',key:key,value:val})
   }).catch(function(){});
 }
+var _vanzSaveTimer=null;
+function saveVanzari(){
+  if(_vanzSaveTimer) clearTimeout(_vanzSaveTimer);
+  _vanzSaveTimer=setTimeout(function(){
+    _vanzSaveTimer=null;
+    saveKV('vanzari',JSON.stringify(vanzari));
+  },400);
+}
+// Salveaza in _Config doar ofertele de azi (foaia Oferte din GSheets ramane permanenta)
+var _oferteSaveTimer=null;
+function saveOferteAzi(){
+  if(_oferteSaveTimer) clearTimeout(_oferteSaveTimer);
+  _oferteSaveTimer=setTimeout(function(){
+    _oferteSaveTimer=null;
+    var t=tod();
+    var aziOferte=oferte.filter(function(o){
+      if(o.date && o.date.replace(/\./g,'/')===t) return true;
+      if(o.ts){ var d=new Date(o.ts); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()===t; }
+      return false;
+    });
+    saveKV('oferte',JSON.stringify(aziOferte));
+  },400);
+}
+// Calculeaza totalurile unei zile date si le trimite in foaia Rezumat Zilnic din GSheets
+function calcZiTotals(dateStr){
+  function isDate(m){
+    if(m.date && m.date.replace(/\./g,'/')===dateStr) return true;
+    if(m.ts){ var d=new Date(m.ts); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()===dateStr; }
+    return false;
+  }
+  var tm=db.movements.filter(isDate);
+  var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
+  var retStoc=tm.filter(function(m){ return m.t==='ret'&&m.dest==='stoc'; }).reduce(function(s,m){ return s+m.qty*(m.val||0); },0);
+  sales=Math.max(0,sales-retStoc);
+  var mk=(cfg.markup||25)/100;
+  var profitOut=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price*mk; },0);
+  var profitRet=tm.filter(function(m){ return m.t==='ret'&&m.dest==='stoc'; }).reduce(function(s,m){ return s+m.qty*(m.val||0)*mk; },0);
+  var nrVanz=tm.filter(function(m){ return m.t==='out'; }).length;
+  return {sales:Math.round(sales*100)/100, profit:Math.round(Math.max(0,profitOut-profitRet)*100)/100, nrVanz:nrVanz};
+}
+function saveRezumatZilnic(dateStr){
+  var t=calcZiTotals(dateStr);
+  if(t.sales===0 && t.profit===0) return; // zi fara vanzari — nu se salveaza
+  fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'rezumatZilnic',date:dateStr,vanzari:t.sales,profit:t.profit,nrVanzari:t.nrVanz})
+  }).catch(function(){});
+}
+
 var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
   address:'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221',
   phone:'0766551313',email:'vanzari@pieseautotm.ro',
@@ -1455,6 +1558,14 @@ function saveCfg(){
   cfg.invoiceNr=parseInt(gv('s-invnr'))||cfg.invoiceNr||1;
   cfg.ofertaNr=parseInt(gv('s-ofnr'))||cfg.ofertaNr||1;
   cfg.markup=parseInt(gv('s-markup'))||25;
+  // Documente — mesaje si footer
+  cfg.bonMsg=gv('s-bon-msg');
+  cfg.bonFooter=gv('s-bon-footer');
+  cfg.scadImplicit=parseInt(gv('s-scad-implicit'))||30;
+  cfg.facMsg=gv('s-fac-msg');
+  cfg.facFooter=gv('s-fac-footer');
+  cfg.ofertaMsg=gv('s-oferta-msg');
+  cfg.ofertaFooter=gv('s-oferta-footer');
   saveKV('cfg',JSON.stringify(cfg));
   updateSyncUI();
 }
@@ -1474,6 +1585,14 @@ function applySettings(){
   sv('s-ofnr',cfg.ofertaNr||1);
   sv('s-markup',cfg.markup||25);
   sv('s-gs',GS_URL_PERM);
+  // Documente — mesaje si footer
+  sv('s-bon-msg',cfg.bonMsg||'');
+  sv('s-bon-footer',cfg.bonFooter||'');
+  sv('s-scad-implicit',cfg.scadImplicit||30);
+  sv('s-fac-msg',cfg.facMsg||'');
+  sv('s-fac-footer',cfg.facFooter||'');
+  sv('s-oferta-msg',cfg.ofertaMsg||'');
+  sv('s-oferta-footer',cfg.ofertaFooter||'');
   updateSyncUI();
 }
 // seed() removed – aplicația pornește goală, fără date demo
@@ -2027,7 +2146,7 @@ function subMovCart(){
     linii:saleCart.map(function(i){ return {bc:i.bc,nm:i.nm,cp:i.cp||'',qty:i.qty,prt:i.prt,um:i.um}; }),
     isFac:isFac,ts:Date.now()};
   vanzari.unshift(vanzObj);
-  saveKV('vanzari',JSON.stringify(vanzari));
+  saveVanzari();
   renderVanzariList();
 
   if(isFac){
@@ -2038,7 +2157,7 @@ function subMovCart(){
     var facNr='SPL '+(cfg.invoiceNr||124);
     vanzObj.facNr=facNr;
     vanzari[0]=vanzObj;
-    saveKV('vanzari',JSON.stringify(vanzari));
+    saveVanzari();
     renderVanzariList();
     cfg.invoiceNr=(cfg.invoiceNr||1)+1;
     saveKV('cfg',JSON.stringify(cfg));
@@ -2348,10 +2467,9 @@ function salveazaOferta(){
   sv('s-ofnr',cfg.ofertaNr);
   var ofObj2={nr:nrOf,date:dt,client:client||vin,vin:vin,model:model,an:an,total:total,linii:linii,ts:Date.now()};
   oferte.unshift(ofObj2);
-  saveKV('oferte',JSON.stringify(oferte));
-  syncGSOferta(ofObj2);
+  saveOferteAzi();
   renderOfertaList();
-  toast('Ofertă '+nrOf+' salvată + trimisă în Google Sheets!','💾');
+  toast('Ofertă '+nrOf+' salvată!','💾');
 }
 
 function genPDFOferta(){
@@ -2374,8 +2492,7 @@ function genPDFOferta(){
   // Save to oferte list (cu linii complete incl. cod produs)
   var ofObj={nr:nrOf,date:dt,client:client||vin,vin:vin,model:model,an:an,total:total,linii:linii,ts:Date.now()};
   oferte.unshift(ofObj);
-  saveKV('oferte',JSON.stringify(oferte));
-  syncGSOferta(ofObj);
+  saveOferteAzi();
   renderOfertaList();
 
   var rows='';
@@ -2429,12 +2546,12 @@ function genPDFOferta(){
       '<th style="text-align:right;width:100px">Valoare</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL OFERTĂ</div><div class="val">'+total.toFixed(2)+' RON</div></div></div>'+
-    '<div class="valabil">* Oferta este valabilă 7 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.</div>'+
+    '<div class="valabil">'+(cfg.ofertaMsg||'* Oferta este valabilă 7 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.')+'</div>'+
     '<div class="semnat">'+
     '<div><b>Emis de</b><br><br>'+shop+'<br>_______________</div>'+
     '<div>Semnătură Client<br><br>_______________</div>'+
     '</div>'+
-    '<div class="footer">'+shop+' · CUI: '+(cfg.cui||'44870892')+' · '+(cfg.address||'')+' · '+(cfg.phone||'')+' · '+(cfg.email||'')+' · '+(cfg.website||'')+'</div>'+
+    '<div class="footer">'+(cfg.ofertaFooter||(shop+' · CUI: '+(cfg.cui||'')+' · '+(cfg.address||'')+' · '+(cfg.phone||'')+' · '+(cfg.email||'')+' · '+(cfg.website||'')))+'</div>'+
     '<br><button onclick="window.print()" style="padding:10px 24px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨️ Printează Oferta</button>'+
     '</body></html>');
   toast('Ofertă generată! Nr. '+nrOf,'📄');
@@ -2492,28 +2609,42 @@ function reprintOferta(idx){
       '<th style="text-align:right;width:100px">Valoare</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL OFERTĂ</div><div class="val">'+o.total.toFixed(2)+' RON</div></div></div>'+
-    '<div class="valabil">* Oferta este valabilă 7 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.</div>'+
+    '<div class="valabil">'+(cfg.ofertaMsg||'* Oferta este valabilă 7 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.')+'</div>'+
     '<div class="semnat">'+
     '<div><b>Emis de</b><br><br>'+shop+'<br>_______________</div>'+
     '<div>Semnătură Client<br><br>_______________</div>'+
     '</div>'+
-    '<div class="footer">'+shop+' · CUI: '+(cfg.cui||'44870892')+' · '+(cfg.address||'')+' · '+(cfg.phone||'')+' · '+(cfg.email||'')+' · '+(cfg.website||'')+'</div>'+
+    '<div class="footer">'+(cfg.ofertaFooter||(shop+' · CUI: '+(cfg.cui||'')+' · '+(cfg.address||'')+' · '+(cfg.phone||'')+' · '+(cfg.email||'')+' · '+(cfg.website||'')))+'</div>'+
     '<br><button onclick="window.print()" style="padding:10px 24px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨️ Printează Oferta</button>'+
     '</body></html>');
   toast('Reprint ofertă '+o.nr,'📄');
 }
 
 function renderOfertaList(){
-  var cnt=$('of-cnt'); if(cnt) cnt.textContent=oferte.length+' total';
+  var t=tod();
+  // Afiseaza doar ofertele de astazi — ziua urmatoare lista e goala automat
+  var azi=[];
+  for(var i=0;i<oferte.length;i++){
+    var o=oferte[i];
+    var match=false;
+    if(o.date && o.date.replace(/\./g,'/')===t) match=true;
+    if(!match && o.ts){
+      var d=new Date(o.ts);
+      if(String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()===t) match=true;
+    }
+    if(match) azi.push({o:o,i:i});
+  }
+  var cnt=$('of-cnt'); if(cnt) cnt.textContent=azi.length+' azi';
   var list=$('of-list'); if(!list) return;
-  if(!oferte.length){ list.innerHTML='<div class="empty"><span>📋</span>Nicio ofertă emisă</div>'; return; }
-  list.innerHTML=oferte.map(function(o,idx){
+  if(!azi.length){ list.innerHTML='<div class="empty"><span>📋</span>Nicio ofertă emisă azi</div>'; return; }
+  list.innerHTML=azi.map(function(entry){
+    var o=entry.o, idx=entry.i;
     var nrPiese=o.linii?o.linii.length:0;
     return '<div class="hr" style="align-items:flex-start;padding:11px 13px">'+
       '<div class="hi out" style="margin-top:2px">📋</div>'+
       '<div class="hd">'+
         '<div class="hn">'+o.nr+' — '+(o.client||'—')+'</div>'+
-        '<div class="hm">'+(o.model?o.model+' ':'')+(o.an?'('+o.an+') ':'')+o.date+'</div>'+
+        '<div class="hm">'+(o.model?o.model+' ':'')+(o.an?'('+o.an+') ':'')+o.date+(o.ts?' '+ftm(o.ts):'')+'</div>'+
         (nrPiese?'<div class="hm" style="margin-top:3px;color:var(--t3)">'+nrPiese+' pies'+(nrPiese===1?'ă':'e')+' · '+o.total.toFixed(2)+' RON</div>':'')+
       '</div>'+
       '<div class="hrt" style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">'+
@@ -2622,17 +2753,32 @@ function renderIst(tf){
 function filtIst(v){ renderIst(v); }
 
 function renderVanzariList(){
-  var cnt=$('vanz-cnt'); if(cnt) cnt.textContent=vanzari.length+' total';
+  var t=tod();
+  // Afiseaza doar vanzarile de astazi — ziua urmatoare lista e goala automat
+  var azi=[];
+  for(var i=0;i<vanzari.length;i++){
+    var v=vanzari[i];
+    var match=false;
+    if(v.date && v.date.replace(/\./g,'/')===t) match=true;
+    if(!match && v.ts){
+      var d=new Date(v.ts);
+      if(String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()===t) match=true;
+    }
+    if(match) azi.push({v:v,i:i});
+  }
+  var cnt=$('vanz-cnt');
+  if(cnt) cnt.textContent=azi.length+' azi';
   var list=$('vanz-list'); if(!list) return;
-  if(!vanzari.length){ list.innerHTML='<div class="empty"><span>🛒</span>Nicio vânzare salvată</div>'; return; }
-  list.innerHTML=vanzari.map(function(v,idx){
+  if(!azi.length){ list.innerHTML='<div class="empty"><span>🛒</span>Nicio vânzare înregistrată azi</div>'; return; }
+  list.innerHTML=azi.map(function(o){
+    var v=o.v, idx=o.i;
     var nrPiese=v.linii?v.linii.length:0;
     var facBadge=v.facNr?'<span style="font-size:9px;background:rgba(41,128,185,.12);border:1px solid rgba(41,128,185,.3);border-radius:10px;padding:1px 7px;color:#2980b9;font-weight:700">🧾 '+v.facNr+'</span>':'';
     return '<div class="hr" style="align-items:flex-start;padding:11px 13px">'+
       '<div class="hi out" style="margin-top:2px">🛒</div>'+
       '<div class="hd">'+
         '<div class="hn">'+v.nr+(v.client?' — '+v.client:'')+'</div>'+
-        '<div class="hm">'+fmtD(v.date)+' '+v.op+'</div>'+
+        '<div class="hm">'+fmtD(v.date)+(v.ts?' '+ftm(v.ts):'')+' · '+v.op+'</div>'+
         (nrPiese?'<div class="hm" style="margin-top:3px;color:var(--t3)">'+nrPiese+' produs'+(nrPiese===1?'':'e')+' · '+v.total.toFixed(2)+' RON '+facBadge+'</div>':'')+
       '</div>'+
       '<div class="hrt" style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">'+
@@ -2657,6 +2803,8 @@ function reprintVanzare(idx){
 
 function reprintBonVanz(v){
   var shop=cfg.shopName||'SPL Piese Auto';
+  var bonMsg=cfg.bonMsg||'';
+  var bonFooter=cfg.bonFooter||(shop+' · CUI: '+(cfg.cui||'')+' · '+(cfg.address||'')+' · '+(cfg.phone||'')+' · '+(cfg.email||''));
   var rows='';
   v.linii.forEach(function(r,i){
     var val=(r.qty||0)*(r.prt||0);
@@ -2679,6 +2827,7 @@ function reprintBonVanz(v){
     '.total-inner{border:2px solid #27ae60;border-radius:7px;padding:11px 18px;text-align:right}'+
     '.total-inner .lbl{font-size:12px;color:#888;margin-bottom:3px}.total-inner .val{font-size:22px;font-weight:900;color:#27ae60}'+
     '.semnat{display:flex;gap:20px;margin-top:24px}.semnat div{flex:1;border-top:1px solid #bbb;padding-top:8px;text-align:center;font-size:12px;color:#666}'+
+    '.msg-bon{text-align:center;font-size:13px;font-weight:600;color:#27ae60;margin:10px 0 4px;padding:8px;background:#e8f8f0;border-radius:6px}'+
     '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:14px;border-top:1px solid #eee;padding-top:8px}'+
     '@media print{button{display:none}}</style></head><body>'+
     docHdr('#27ae60')+
@@ -2687,7 +2836,8 @@ function reprintBonVanz(v){
     '<table><thead><tr><th style="width:36px">#</th><th>Produs</th><th style="text-align:center;width:60px">UM</th><th style="text-align:center;width:70px">Cant.</th><th style="text-align:right;width:100px">Preț Unit.</th><th style="text-align:right;width:100px">Valoare</th></tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL VÂNZARE</div><div class="val">'+v.total.toFixed(2)+' RON</div></div></div>'+
     '<div class="semnat"><div><b>Operator: '+v.op+'</b><br>_______________</div><div>Semnătură Client<br>_______________</div></div>'+
-    '<div class="footer">'+shop+' · CUI: '+(cfg.cui||'44870892')+' · '+(cfg.address||'')+' · '+(cfg.phone||'')+' · '+(cfg.email||'')+'</div>'+
+    (bonMsg?'<div class="msg-bon">'+bonMsg+'</div>':'')+
+    '<div class="footer">'+bonFooter+'</div>'+
     '<br><button onclick="window.print()" style="padding:10px 24px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">🖨️ Printează Bonul</button>'+
     '</body></html>');
   toast('Reprint bon '+v.nr,'📄');
@@ -2723,7 +2873,8 @@ function prepActe(){
   var nr=cfg.invoiceNr||124;
   sv('fac-nr','SPL '+nr);
   if(!gv('fac-dt')) sv('fac-dt',tod());
-  if(!gv('fac-scad')){ var sc=new Date(); sc.setDate(sc.getDate()+30); sv('fac-scad',sc.toLocaleDateString('ro-RO')); }
+  if(!gv('fac-scad')){ var sc=new Date(); sc.setDate(sc.getDate()+(cfg.scadImplicit||30)); sv('fac-scad',sc.toLocaleDateString('ro-RO')); }
+  if(!gv('fac-obs') && cfg.facMsg) sv('fac-obs',cfg.facMsg);
   if(cfg.defaultOp&&!gv('fac-op')) sv('fac-op',cfg.defaultOp);
 }
 // preloadRetur removed — fisa de retur section deleted
@@ -3086,7 +3237,7 @@ function printFactura(){
     '<div><b>Cumpărător</b>'+cl+'<br><br>Semnătură și ștampilă<br><br>_______________</div>'+
     '</div>'+
 
-    '<div class="footer">'+shop+' · CUI: '+cui+' · '+adr+' · '+phone+' · @spl_piese · Factura a fost emisă electronic și este valabilă fără semnătură olografă conform legislației în vigoare.</div>'+
+    '<div class="footer">'+(cfg.facFooter||(shop+' · CUI: '+cui+' · '+adr+' · '+phone+' · @spl_piese · Factura a fost emisă electronic și este valabilă fără semnătură olografă conform legislației în vigoare.'))+'</div>'+
     '<br><button onclick="window.print()" style="padding:10px 24px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨️ Printează Factura</button>'+
     '</body></html>');
 }
@@ -3104,10 +3255,10 @@ function updateSyncUI(state){
 }
 function syncGS(mov,prod){
   var isIn=mov.t==='in';
-  var headers=isIn?['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator','Cod Piesa']:
-    ['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator','Cod Piesa'];
-  var row=isIn?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op,mov.cp||'']:
-    [mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,prod?prod.buy:0,(mov.price-(prod?prod.buy:0))*mov.qty,mov.op,mov.cp||''];
+  var headers=isIn?['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator','Cod Piesa','Timestamp']:
+    ['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator','Cod Piesa','Timestamp'];
+  var row=isIn?[mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,mov.cat||'',mov.op,mov.cp||'',mov.ts||Date.now()]:
+    [mov.date,mov.bc,mov.name,mov.partner||'',mov.doc||'',mov.qty,mov.price,mov.qty*mov.price,prod?prod.buy:0,(mov.price-(prod?prod.buy:0))*mov.qty,mov.op,mov.cp||'',mov.ts||Date.now()];
   // sellPret = pretul de vanzare, trimis la intrari pentru a fi salvat in coloana P.Vanz din Stoc Curent
   var sellPret = isIn ? (prod?prod.sell:0) : mov.price;
   var umVal = (function(){ var p=db.products.find(function(x){return x.bc===mov.bc;}); return p?p.um||'BUC':'BUC'; })();
@@ -3118,8 +3269,8 @@ function syncGS(mov,prod){
   }).then(function(){ updateSyncUI(true); }).catch(function(){});
 }
 function syncGSRet(r, prod){
-  var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator','Cod Piesa'];
-  var row=[r.date,r.bc,r.name,r.partner||'',r.qty,r.val,r.qty*r.val,r.motiv||'',r.obs||'',r.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',r.op,r.cp||''];
+  var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator','Cod Piesa','Timestamp'];
+  var row=[r.date,r.bc,r.name,r.partner||'',r.qty,r.val,r.qty*r.val,r.motiv||'',r.obs||'',r.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',r.op,r.cp||'',r.ts||Date.now()];
   // type='ret_stoc' => updStoc adauga la stoc; type='ret_dist' => updStoc nu modifica stocul
   var retType = r.dest==='stoc' ? 'ret' : 'ret_dist';
   var sellPret = prod ? prod.sell : 0;
@@ -3233,8 +3384,33 @@ function exportExcel(){
   ws5['!merges']=[{s:{r:0,c:0},e:{r:0,c:1}},{s:{r:rap.length-1,c:0},e:{r:rap.length-1,c:1}}];
   XLSX.utils.book_append_sheet(wb,ws5,'📊 Raport Zilnic');
 
+  // Oferte (cu cod piesa complet)
+  var ofd=[[shop+' — OFERTE — '+now],[],
+    ['Nr. Ofertă','Data','Client','VIN','Model','An','Cod Piesă','Denumire','UM','Cantitate','Preț Unit. (RON)','Valoare (RON)','Total Ofertă (RON)']];
+  oferte.forEach(function(o){
+    if(!o.linii||!o.linii.length){
+      ofd.push([o.nr,o.date,o.client||'',o.vin||'',o.model||'',o.an||'','','','','','','',o.total||0]);
+    } else {
+      o.linii.forEach(function(r,i){
+        var val=(r.qty||0)*(r.prt||0);
+        ofd.push([
+          i===0?o.nr:'', i===0?o.date:'',
+          i===0?(o.client||''):'', i===0?(o.vin||''):'',
+          i===0?(o.model||''):'', i===0?(o.an||''):'',
+          r.cod||'', r.nm||'', r.um||'buc',
+          r.qty||0, r.prt||0, val,
+          i===0?(o.total||0):''
+        ]);
+      });
+    }
+  });
+  var ws6=XLSX.utils.aoa_to_sheet(ofd);
+  ws6['!cols']=[{wch:12},{wch:12},{wch:20},{wch:20},{wch:16},{wch:6},{wch:16},{wch:32},{wch:6},{wch:9},{wch:14},{wch:14},{wch:16}];
+  ws6['!merges']=[{s:{r:0,c:0},e:{r:0,c:12}}];
+  XLSX.utils.book_append_sheet(wb,ws6,'📋 Oferte');
+
   XLSX.writeFile(wb,'SPL_Piese_Auto_'+t2.replace(/\//g,'-')+'.xlsx');
-  toast('Excel exportat cu succes! (5 foi)','⬇');
+  toast('Excel exportat cu succes! (6 foi)','⬇');
 }
 function copyCod(){
   var ta=$('gs-cod'); ta.select();
@@ -3513,12 +3689,12 @@ function syncGSEdit(m){
   // Trimite la GAS o miscare editata — GAS o va scrie ca rand nou cu flag edit
   var isIn = m.t==='in';
   var headers = isIn
-    ? ['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator','Cod Piesa']
-    : ['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator','Cod Piesa'];
+    ? ['Data','Cod Bara','Denumire','Furnizor','Nr. Factura','Cantitate','Pret Ach','Valoare','Categorie','Operator','Cod Piesa','Timestamp']
+    : ['Data','Cod Bara','Denumire','Client','Nr. Document','Cantitate','Pret Vanz','Valoare','Pret Ach','Profit','Operator','Cod Piesa','Timestamp'];
   var prod = db.products.find(function(x){ return x.bc===m.bc; });
   var row = isIn
-    ? [m.date,m.bc,m.name,m.partner||'',m.doc||'',m.qty,m.price,m.qty*m.price,m.cat||'',m.op,m.cp||'']
-    : [m.date,m.bc,m.name,m.partner||'',m.doc||'',m.qty,m.price,m.qty*m.price,prod?prod.buy:0,(m.price-(prod?prod.buy:0))*m.qty,m.op,m.cp||''];
+    ? [m.date,m.bc,m.name,m.partner||'',m.doc||'',m.qty,m.price,m.qty*m.price,m.cat||'',m.op,m.cp||'',m.ts||Date.now()]
+    : [m.date,m.bc,m.name,m.partner||'',m.doc||'',m.qty,m.price,m.qty*m.price,prod?prod.buy:0,(m.price-(prod?prod.buy:0))*m.qty,m.op,m.cp||'',m.ts||Date.now()];
   var sellPret = isIn ? (prod?prod.sell:0) : m.price;
   fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({sheet:isIn?'Intrari':'Iesiri',type:m.t,headers:headers,row:row,
@@ -3722,8 +3898,8 @@ function deleteEdit(){
 }
 
 function syncGSRetEdit(m, prod){
-  var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator','Cod Piesa'];
-  var row=[m.date,m.bc,m.name,m.partner||'',m.qty,m.val,m.qty*m.val,m.motiv||'',m.obs||'',m.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',m.op,m.cp||''];
+  var headers=['Data','Cod Bara','Denumire','Partner','Cantitate','Valoare/buc','Valoare Totala','Motiv','Observatii','Destinatie','Operator','Cod Piesa','Timestamp'];
+  var row=[m.date,m.bc,m.name,m.partner||'',m.qty,m.val,m.qty*m.val,m.motiv||'',m.obs||'',m.dest==='stoc'?'Reintrare stoc':'Retur distribuitor',m.op,m.cp||'',m.ts||Date.now()];
   fetch(GS_URL_PERM,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({sheet:'Retururi',type:'ret',headers:headers,row:row,
       barcode:m.bc,name:m.name,qty:m.qty,codPiesa:m.cp||'',editFlag:true})
@@ -3781,7 +3957,7 @@ function resetAzi(){
     if(v.ts){ var d=new Date(v.ts); var ld=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); if(ld===t) return false; }
     return true;
   });
-  saveKV('vanzari', JSON.stringify(vanzari));
+  saveVanzari();
 
   // Sincronizeaza stocul actualizat in GSheets pentru fiecare produs afectat
   var bcAzi = {};
@@ -3818,6 +3994,28 @@ function resetData(){
 // ═══════════════════════════════════
 loadAll();
 checkCam();
+
+// ───────────────────────────────────
+// Verificare automata schimbare zi
+// La miezul noptii reseteza Vanzari Azi si Profit Azi pe Board
+// ───────────────────────────────────
+(function(){
+  var _lastDay = tod();
+  setInterval(function(){
+    var now = tod();
+    if(now !== _lastDay){
+      // Salveaza rezumatul zilei care tocmai s-a incheiat in GSheets
+      saveRezumatZilnic(_lastDay);
+      _lastDay = now;
+      // Zi noua: reafiseaza dashboard (Vanzari Azi = 0, Profit Azi = 0)
+      renderDash();
+      // Reafiseaza lista vanzari (se goleste automat pt ziua noua)
+      renderVanzariList();
+      // Reafiseaza lista oferte (se goleste automat pt ziua noua)
+      renderOfertaList();
+    }
+  }, 60000); // verifica la fiecare minut
+})();
 
 // Register inline Service Worker for PWA installability
 if('serviceWorker' in navigator){
