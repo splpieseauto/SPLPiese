@@ -2394,12 +2394,12 @@ function addOfertaLinie(){
     '<input type="number" value="'+(qty||1)+'" min="0.01" step="0.01" style="'+inp+';text-align:center">'+
     '<input type="number" value="'+(prt||'')+'" min="0" step="0.01" placeholder="0.00" style="'+inp+';text-align:right">'+
     '<span class="of-val-linie" style="font-size:12px;font-weight:700;color:var(--grn);text-align:right;font-family:\'Barlow Condensed\',sans-serif">'+((qty||0)*(prt||0)).toFixed(2)+' RON</span>'+
-    '<button onclick="document.getElementById(\''+id+'\').remove();renumOfertaLinii();calcOferta()" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.25);border-radius:5px;color:#e74c3c;cursor:pointer;font-size:12px;padding:5px;width:100%">\u00d7</button>';
+    '<button onclick="document.getElementById(\''+id+'\').remove();renumOfertaLinii();_updateLinii()" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.25);border-radius:5px;color:#e74c3c;cursor:pointer;font-size:12px;padding:5px;width:100%">\u00d7</button>';
   $('of-linii').appendChild(el);
   // clear add form
   sv('of-add-cod',''); sv('of-add-prod',''); sv('of-add-nm',''); sv('of-add-qty',1); sv('of-add-prt','');
   $('of-search-res').style.display='none';
-  calcOferta();
+  _updateLinii();
   $('of-add-cod').focus();
 }
 
@@ -2415,14 +2415,28 @@ function renumOfertaLinii(){
   }
 }
 
+function _updateLinii(){
+  // Actualizeaza valorile per linie si nr pozitii — NU atinge flagul si NU actualizeaza totalul
+  var linii=$('of-linii').querySelectorAll('[id^="ol"]');
+  for(var i=0;i<linii.length;i++){
+    var inputs=linii[i].querySelectorAll('input');
+    if(inputs.length<4) continue;
+    var qty=parseFloat(inputs[2].value)||0;
+    var prt=parseFloat(inputs[3].value)||0;
+    var valEl=linii[i].querySelector('.of-val-linie');
+    if(valEl) valEl.textContent=(qty*prt).toFixed(2)+' RON';
+  }
+  var nrEl=$('of-nr-poz'); if(nrEl) nrEl.textContent=linii.length;
+}
+
 function calcOferta(){
+  // Apelat DOAR de butonul "Calculează Total"
   _ofertaTotalCalculat=true;
   var linii=$('of-linii').querySelectorAll('[id^="ol"]');
   var total=0;
   for(var i=0;i<linii.length;i++){
     var inputs=linii[i].querySelectorAll('input');
     if(inputs.length<4) continue;
-    // inputs: [0]=producator, [1]=nm, [2]=qty, [3]=prt
     var qty=parseFloat(inputs[2].value)||0;
     var prt=parseFloat(inputs[3].value)||0;
     var val=qty*prt; total+=val;
@@ -2568,7 +2582,7 @@ function genPDFOferta(){
       '<th style="text-align:right;width:90px">Valoare</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
     (total!==null?'<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL OFERTĂ</div><div class="val">'+total.toFixed(2)+' RON</div></div></div>':'')+
-    '<div class="valabil">'+(cfg.ofertaMsg||'* Oferta este valabilă 7 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.')+'</div>'+
+    '<div class="valabil">'+(cfg.ofertaMsg||'* Oferta este valabilă 2 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.')+'</div>'+
     '<div class="semnat">'+
     '<div><b>Emis de</b><br><br>'+shop+'<br>_______________</div>'+
     '<div>Semnătură Client<br><br>_______________</div>'+
@@ -2633,7 +2647,7 @@ function reprintOferta(idx){
       '<th style="text-align:right;width:90px">Valoare</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
     '<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL OFERTĂ</div><div class="val">'+o.total.toFixed(2)+' RON</div></div></div>'+
-    '<div class="valabil">'+(cfg.ofertaMsg||'* Oferta este valabilă 7 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.')+'</div>'+
+    '<div class="valabil">'+(cfg.ofertaMsg||'* Oferta este valabilă 2 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.')+'</div>'+
     '<div class="semnat">'+
     '<div><b>Emis de</b><br><br>'+shop+'<br>_______________</div>'+
     '<div>Semnătură Client<br><br>_______________</div>'+
