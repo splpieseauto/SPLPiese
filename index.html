@@ -2330,6 +2330,7 @@ function renderRetList(){
 // OFERTARE
 // ═══════════════════════════════════
 var ofertaLiniiCount=0;
+var _ofertaTotalCalculat=false; // true doar dupa apasarea butonului Calculeaza Total
 var oferte=[]; // incarcate din GSheets la sincronizare
 var vanzari=[]; // vanzarile salvate, incarcate din GSheets
 
@@ -2415,6 +2416,7 @@ function renumOfertaLinii(){
 }
 
 function calcOferta(){
+  _ofertaTotalCalculat=true;
   var linii=$('of-linii').querySelectorAll('[id^="ol"]');
   var total=0;
   for(var i=0;i<linii.length;i++){
@@ -2430,15 +2432,22 @@ function calcOferta(){
   var nrPoz=linii.length;
   var totEl=$('of-total'); if(totEl) totEl.textContent=total.toFixed(2)+' RON';
   var nrEl=$('of-nr-poz'); if(nrEl) nrEl.textContent=nrPoz;
+  // Marchează butonul ca apăsat
+  var btn=document.querySelector('#pg-ofertare .btn[onclick="calcOferta()"]');
+  if(btn){ btn.style.background='linear-gradient(135deg,#1a8a3a,#27ae60)'; btn.textContent='✅ Total Calculat'; }
 }
 
 function clearOferta(){
   if(!confirm('Goliți oferta curentă?')) return;
   $('of-linii').innerHTML='<div id="of-empty" style="padding:20px;text-align:center;color:var(--t2);font-size:12px"><span style="font-size:24px;display:block;margin-bottom:7px;opacity:.35">📋</span>Nicio piesă — adăugați din câmpul de mai sus</div>';
   ofertaLiniiCount=0;
+  _ofertaTotalCalculat=false;
   sv('of-vin',''); sv('of-client',''); sv('of-model',''); sv('of-an','');
   sv('of-add-cod',''); sv('of-add-prod',''); sv('of-add-nm',''); sv('of-add-qty',1); sv('of-add-prt','');
-  calcOferta();
+  var totEl=$('of-total'); if(totEl) totEl.textContent='0.00 RON';
+  var nrEl=$('of-nr-poz'); if(nrEl) nrEl.textContent='0';
+  var btn=document.querySelector('#pg-ofertare .btn[onclick="calcOferta()"]');
+  if(btn){ btn.style.background='linear-gradient(135deg,#1a5276,#2980b9)'; btn.textContent='🧮 Calculează Total'; }
 }
 
 function getOfertaLinii(){
@@ -2491,7 +2500,7 @@ function genPDFOferta(){
   if(!linii.length) return toast('Adăugați cel puțin o piesă pe ofertă!','⚠️',true);
   if(!client&&!vin) return toast('Introduceți VIN-ul/nr. înmatriculare sau numele clientului!','⚠️',true);
 
-  var total=linii.reduce(function(s,r){ return s+r.qty*r.prt; },0);
+  var total=_ofertaTotalCalculat ? linii.reduce(function(s,r){ return s+r.qty*r.prt; },0) : null;
   var shop=cfg.shopName||'SPL Piese Auto';
   var dt=tod();
   var nrOf='OF-'+(cfg.ofertaNr||1);
@@ -2500,7 +2509,8 @@ function genPDFOferta(){
   sv('s-ofnr',cfg.ofertaNr);
 
   // Save to oferte list (cu linii complete incl. cod produs)
-  var ofObj={nr:nrOf,date:dt,client:client||vin,vin:vin,model:model,an:an,total:total,linii:linii,ts:Date.now()};
+  var ofObjTotal=linii.reduce(function(s,r){ return s+r.qty*r.prt; },0);
+  var ofObj={nr:nrOf,date:dt,client:client||vin,vin:vin,model:model,an:an,total:ofObjTotal,linii:linii,ts:Date.now()};
   oferte.unshift(ofObj);
   saveOferteAzi();
   renderOfertaList();
@@ -2557,7 +2567,7 @@ function genPDFOferta(){
       '<th style="text-align:right;width:90px">Preț Unit.</th>'+
       '<th style="text-align:right;width:90px">Valoare</th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table>'+
-    '<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL OFERTĂ</div><div class="val">'+total.toFixed(2)+' RON</div></div></div>'+
+    (total!==null?'<div class="total-box"><div class="total-inner"><div class="lbl">TOTAL OFERTĂ</div><div class="val">'+total.toFixed(2)+' RON</div></div></div>':'')+
     '<div class="valabil">'+(cfg.ofertaMsg||'* Oferta este valabilă 7 zile de la data emiterii. Prețurile pot varia în funcție de disponibilitate.')+'</div>'+
     '<div class="semnat">'+
     '<div><b>Emis de</b><br><br>'+shop+'<br>_______________</div>'+
