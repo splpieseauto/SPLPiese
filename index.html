@@ -260,6 +260,63 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 .soc-ig{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff}
 .soc-tt{background:#1a1a1a;border:1px solid #333;color:#fff}
 
+/* ══ AUTH OVERLAY SPL ══ */
+#splAuthOv{display:none;position:fixed;inset:0;z-index:9900;background:var(--bg);
+  align-items:center;justify-content:center;padding:20px;}
+.spl-ao-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:600px;height:380px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(192,57,43,.14) 0%,transparent 70%);}
+.spl-ao-card{background:var(--c1);border:1px solid var(--brd);border-radius:18px;
+  padding:30px 22px 26px;width:100%;max-width:340px;text-align:center;position:relative;
+  box-shadow:0 28px 80px rgba(0,0,0,.65);}
+.spl-ao-card::before{content:'';position:absolute;top:0;left:10%;right:10%;height:2px;
+  border-radius:0 0 3px 3px;background:linear-gradient(90deg,transparent,var(--acc),transparent);}
+.spl-ao-logo{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;
+  letter-spacing:.04em;color:var(--acc);margin-bottom:4px;line-height:1;}
+.spl-ao-sub{font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--t2);margin-bottom:18px;}
+.spl-ao-hr{height:1px;background:linear-gradient(90deg,transparent,var(--brd),transparent);
+  margin-bottom:16px;}
+.spl-av{display:none;}
+.spl-av.on{display:block;animation:fu .2s ease;}
+.spl-lbl{display:block;font-size:9px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--t2);margin-bottom:5px;text-align:left;}
+.spl-inp{width:100%;background:var(--c2);border:1px solid var(--brd);border-radius:8px;
+  color:var(--txt);font-family:'Barlow',sans-serif;font-size:13px;padding:10px 12px;
+  outline:none;transition:border-color .2s;-webkit-appearance:none;
+  text-align:center;margin-bottom:10px;}
+.spl-inp:focus{border-color:var(--acc);}
+.spl-ao-btn{width:100%;padding:11px;border-radius:8px;border:none;
+  background:var(--acc);color:#fff;font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;margin-bottom:7px;}
+.spl-ao-btn:hover{background:#e74c3c;transform:translateY(-1px);}
+.spl-ao-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.spl-ao-sec{width:100%;padding:8px;border-radius:7px;background:transparent;
+  border:1px solid var(--brd);color:var(--t2);font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;font-weight:600;letter-spacing:.06em;cursor:pointer;
+  transition:all .2s;margin-top:4px;}
+.spl-ao-sec:hover{border-color:var(--acc);color:var(--txt);}
+.spl-ao-note{font-size:11px;color:var(--t2);line-height:1.6;margin-bottom:14px;}
+.spl-ao-note strong{color:var(--txt);}
+.spl-ao-big{font-size:38px;margin-bottom:9px;}
+.spl-ao-pt{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;
+  letter-spacing:.05em;color:var(--acc2);margin-bottom:7px;}
+.spl-ao-pm{font-size:11px;color:var(--t2);line-height:1.6;margin-bottom:13px;}
+.spl-ao-adm{display:inline-block;padding:4px 12px;border-radius:20px;
+  background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);
+  color:var(--acc);font-size:10px;font-weight:600;margin-bottom:13px;}
+.spl-ao-err{background:rgba(231,76,60,.09);border:1px solid rgba(231,76,60,.3);
+  border-radius:7px;padding:9px 12px;font-size:11px;color:var(--red);
+  margin-bottom:10px;display:none;text-align:left;}
+.spl-ao-spin{display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 0 20px;}
+.spl-spin{width:34px;height:34px;border:3px solid var(--brd);
+  border-top-color:var(--acc);border-radius:50%;animation:spin .72s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spl-ao-lock{font-size:9px;color:var(--t2);opacity:.6;margin-top:5px;
+  display:flex;align-items:center;justify-content:center;gap:4px;}
+.spl-poll-info{font-size:10px;color:var(--t2);margin-bottom:10px;line-height:1.5;}
+
 /* TOAST */
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);
   background:var(--c2);border:1px solid var(--brd);border-radius:9px;
@@ -271,7 +328,54 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
 </head>
 <body>
 
-<!-- INSTALL BANNER -->
+<!-- ══ AUTH OVERLAY SPL ══ -->
+<div id="splAuthOv">
+  <div class="spl-ao-glow"></div>
+  <div class="spl-ao-card">
+    <div class="spl-ao-logo">🔧 SPL Piese Auto</div>
+    <div class="spl-ao-sub">Acces restricționat · Chișoda, Timiș</div>
+    <div class="spl-ao-hr"></div>
+
+    <!-- Email + Nume -->
+    <div class="spl-av" id="splVEmail">
+      <div class="spl-ao-note">Introduceți <strong>emailul</strong> și <strong>numele</strong> pentru a solicita acces.<br>Cererea va fi aprobată manual de administrator.</div>
+      <label class="spl-lbl">Adresa email</label>
+      <input class="spl-inp" id="splInpEmail" type="email" placeholder="email@exemplu.ro" autocomplete="email" inputmode="email" onkeydown="if(event.key==='Enter') document.getElementById('splInpName').focus()">
+      <label class="spl-lbl">Numele complet</label>
+      <input class="spl-inp" id="splInpName" type="text" placeholder="Prenume Nume" autocomplete="name" onkeydown="if(event.key==='Enter') splRequest()">
+      <div class="spl-ao-err" id="splErrEmail"></div>
+      <button class="spl-ao-btn" onclick="splRequest()">📨 Solicită Acces</button>
+      <div class="spl-ao-lock">🔒 Aprobarea se face manual de administratorul SPL</div>
+    </div>
+
+    <!-- Spinner -->
+    <div class="spl-av" id="splVSpin">
+      <div class="spl-ao-spin">
+        <div class="spl-spin"></div>
+        <div style="font-size:11px;color:var(--t2)">Se verifică accesul...</div>
+      </div>
+    </div>
+
+    <!-- Pending -->
+    <div class="spl-av" id="splVPending">
+      <div class="spl-ao-big" style="animation:bl 2.2s infinite">⏳</div>
+      <div class="spl-ao-pt">Așteptați aprobarea</div>
+      <div class="spl-poll-info">Cererea a fost înregistrată în Google Sheet.<br>Administratorul SPL va modifica statusul în <strong style="color:var(--grn)">approved</strong> pentru a vă acorda accesul.</div>
+      <button class="spl-ao-btn" id="splPollBtn" onclick="splPollNow()">🔄 Verifică acum</button>
+      <button class="spl-ao-sec" onclick="splResetAuth()">↩ Schimbă emailul</button>
+    </div>
+
+    <!-- Denied -->
+    <div class="spl-av" id="splVDenied">
+      <div class="spl-ao-big">⛔</div>
+      <div class="spl-ao-pt" style="color:var(--red)">Acces refuzat</div>
+      <div class="spl-ao-pm">Administratorul a refuzat accesul pentru emailul dumneavoastră.</div>
+      <div class="spl-ao-adm">vanzari@pieseautotm.ro</div>
+      <button class="spl-ao-sec" onclick="splResetAuth()">↩ Încearcă cu alt email</button>
+    </div>
+
+  </div>
+</div>
 <div id="ibn">
   <div class="ibn-w">
     <div class="ibn-ico">🔧</div>
@@ -4028,8 +4132,124 @@ function resetData(){
 // ═══════════════════════════════════
 // INIT
 // ═══════════════════════════════════
-loadAll();
-checkCam();
+// ══════════════════════════════════════════════════
+// ACCESS CONTROL — SPL Piese Auto
+// Tab "AccessControl" din foaia "SPL Stoc Piese"
+// Flux: cerere email+nume → pending → admin aprobă în GSheet → acces
+// ══════════════════════════════════════════════════
+var SPL_ADMIN_MAIL = 'vanzari@pieseautotm.ro';
+var SPL_SESS_KEY   = 'spl_auth_v1';
+var splAuthUser    = null;
+
+function splShowView(id){
+  document.querySelectorAll('.spl-av').forEach(function(v){ v.classList.remove('on'); });
+  var el=document.getElementById(id); if(el) el.classList.add('on');
+}
+function splSetErr(msg){
+  var el=document.getElementById('splErrEmail');
+  if(!el) return;
+  el.textContent=msg; el.style.display=msg?'block':'none';
+}
+
+async function splRequest(){
+  var email=(document.getElementById('splInpEmail').value||'').trim().toLowerCase();
+  var name=(document.getElementById('splInpName').value||'').trim();
+  splSetErr('');
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){splSetErr('Introduceți un email valid.'); return;}
+  if(!name){splSetErr('Introduceți și numele dumneavoastră.'); return;}
+  splAuthUser={email:email, name:name, isAdmin: email===SPL_ADMIN_MAIL};
+  splShowView('splVSpin');
+  try{
+    var url=GS_URL_PERM+'?action=requestAccess&email='+encodeURIComponent(email)+'&name='+encodeURIComponent(name);
+    var r=await fetch(url,{redirect:'follow'});
+    var res=await r.json();
+    if(!res||res.ok===false) throw new Error(res&&res.error?res.error:'Eroare server');
+    var status=res.status||res.accessStatus||'';
+    if(status==='approved'){
+      splSaveSession(Object.assign({},splAuthUser,{status:'approved'}));
+      splGrantAccess(splAuthUser);
+    } else if(status==='pending'||status==='new'){
+      splShowView('splVPending');
+      toast(status==='new'?'✔ Cerere înregistrată! Așteptați aprobarea.':'⏳ Cerere în așteptare.');
+    } else if(status==='denied'){
+      splShowView('splVDenied');
+    } else {
+      throw new Error('Status necunoscut: '+status);
+    }
+  } catch(e){
+    splShowView('splVEmail');
+    splSetErr('⚠ '+e.message);
+  }
+}
+
+function splGrantAccess(user){
+  splAuthUser=user;
+  var ov=document.getElementById('splAuthOv');
+  if(ov){ ov.style.transition='opacity .35s'; ov.style.opacity='0'; setTimeout(function(){ ov.style.display='none'; },380); }
+  loadAll();
+  checkCam();
+}
+
+async function splPollNow(){
+  if(!splAuthUser) return;
+  var btn=document.getElementById('splPollBtn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Se verifică...'; }
+  try{
+    var url=GS_URL_PERM+'?action=checkStatus&email='+encodeURIComponent(splAuthUser.email);
+    var r=await fetch(url,{redirect:'follow'});
+    var res=await r.json();
+    if(res&&res.status==='approved'){
+      splSaveSession(Object.assign({},splAuthUser,{status:'approved'}));
+      splGrantAccess(splAuthUser);
+    } else if(res&&res.status==='denied'){
+      splShowView('splVDenied');
+    } else {
+      toast('⏳ Încă în așteptare. Administratorul nu a aprobat.');
+    }
+  } catch(e){
+    toast('⚠ Eroare conexiune. Încearcă din nou.');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='🔄 Verifică acum'; }
+  }
+}
+
+function splResetAuth(){
+  var e=document.getElementById('splInpEmail'); if(e) e.value='';
+  var n=document.getElementById('splInpName');  if(n) n.value='';
+  splSetErr('');
+  splShowView('splVEmail');
+}
+
+function splSaveSession(d){
+  try{ localStorage.setItem(SPL_SESS_KEY,JSON.stringify(Object.assign({},d,{_x:Date.now()+365*24*60*60*1000}))); }catch(e){}
+}
+function splLoadSession(){
+  try{ var s=JSON.parse(localStorage.getItem(SPL_SESS_KEY)||'null'); return s; }catch(e){ return null; }
+}
+function splClearSession(){
+  try{ localStorage.removeItem(SPL_SESS_KEY); }catch(e){}
+}
+
+// Auto-poll la 30s cand in pending
+(function splAutoPoll(){
+  setInterval(function(){
+    if(splAuthUser && document.getElementById('splVPending') && document.getElementById('splVPending').classList.contains('on')){
+      splPollNow();
+    }
+  }, 30000);
+})();
+
+// ENTRY POINT
+document.addEventListener('DOMContentLoaded',function(){
+  var s=splLoadSession();
+  if(s && s.status==='approved'){
+    splAuthUser=s;
+    splGrantAccess(s);
+  } else {
+    document.getElementById('splAuthOv').style.display='flex';
+    splShowView('splVEmail');
+  }
+});
 
 // ───────────────────────────────────
 // Verificare automata schimbare zi
