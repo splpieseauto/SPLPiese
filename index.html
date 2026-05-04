@@ -4232,7 +4232,23 @@ function splClearSession(){
 
 // Auto-poll la 30s cand in pending
 (function splAutoPoll(){
-  setInterval(function(){
+  setInterval(async function(){
+    // ── Verificare sesiune activă — scoate userul dacă adminul setează "denied" ──
+    if(splAuthUser && splAuthUser.status==='approved'){
+      try{
+        var url=GS_URL_PERM+'?action=checkStatus&email='+encodeURIComponent(splAuthUser.email);
+        var r=await fetch(url,{redirect:'follow'});
+        var res=await r.json();
+        if(res && res.status==='denied'){
+          splClearSession();
+          var ov=document.getElementById('splAuthOv');
+          if(ov){ ov.style.display='flex'; ov.style.opacity='1'; }
+          splShowView('splVDenied');
+          return;
+        }
+      }catch(e){}
+    }
+    // ── Poll pending — verifică dacă adminul a aprobat ──
     if(splAuthUser && document.getElementById('splVPending') && document.getElementById('splVPending').classList.contains('on')){
       splPollNow();
     }
