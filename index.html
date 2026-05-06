@@ -91,24 +91,30 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
   color:var(--txt);font-family:'Barlow',sans-serif;font-size:13px;padding:9px 11px;
   outline:none;transition:border-color .2s;width:100%}
 .fg input:focus,.fg select:focus{border-color:var(--acc)}
-.bc{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;padding-right:34px!important}
-/* Când există și buton 🆔, rezervăm mai mult spațiu pentru ambele iconițe */
-.iw:has(.si-id) .bc{padding-right:72px!important}
-.iw{position:relative}
-/* Buton scan ⊞ — implicit la marginea dreaptă; când coexistă cu 🆔, se mută în interior */
-.si{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:16px;cursor:pointer;color:var(--t2);transition:color .2s}
-.iw:has(.si-id) .si{right:42px}
-.si:hover{color:var(--acc)}
-/* Buton cod intern 🆔 — la marginea dreaptă, distinct vizual cu fundal mauve */
-.si-id{position:absolute;right:6px;top:50%;transform:translateY(-50%);
-  font-size:13px;cursor:pointer;color:#fff;
+.bc{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700}
+/* Container cu input + butoane: layout flex, NU mai suprapune ⊞ peste input */
+.iw{display:flex;align-items:stretch;gap:6px}
+.iw .bc{flex:1;min-width:0}
+/* Buton scan ⊞ — distinct, alături de input (la stânga butonului 🆔) */
+.si{display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--t2);font-size:18px;
+  background:var(--c2);border:1px solid var(--brd);border-radius:6px;
+  min-width:42px;padding:0 10px;
+  transition:color .2s, border-color .2s, background .2s;
+  user-select:none;flex-shrink:0}
+.si:hover{color:var(--acc);border-color:var(--acc);background:rgba(192,57,43,.06)}
+.si:active{transform:scale(.96)}
+/* Buton cod intern 🆔 — la marginea dreaptă, cu fundal mauve distinct */
+.si-id{display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:#fff;font-size:14px;
   background:linear-gradient(135deg,#6c3483,#8e44ad);
-  border-radius:5px;padding:3px 6px;font-weight:700;
+  border:none;border-radius:6px;
+  min-width:46px;padding:0 11px;font-weight:700;
   box-shadow:0 1px 3px rgba(108,52,131,.4);
-  transition:transform .15s, box-shadow .15s;line-height:1;
-  user-select:none}
-.si-id:hover{transform:translateY(-50%) scale(1.06);box-shadow:0 2px 6px rgba(108,52,131,.6)}
-.si-id:active{transform:translateY(-50%) scale(.96)}
+  transition:transform .15s, box-shadow .15s;
+  user-select:none;flex-shrink:0}
+.si-id:hover{transform:scale(1.05);box-shadow:0 2px 6px rgba(108,52,131,.6)}
+.si-id:active{transform:scale(.96)}
 
 /* PRODUCT FOUND BANNER */
 .pfb{background:rgba(39,174,96,.07);border:1px solid rgba(39,174,96,.25);border-radius:7px;
