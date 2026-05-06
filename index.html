@@ -3607,6 +3607,88 @@ function exportExcel(){
   ws4['!merges']=[{s:{r:0,c:0},e:{r:0,c:10}}];
   XLSX.utils.book_append_sheet(wb,ws4,'↩️ Retururi');
 
+  // ─── Vânzări Zilnice (istoric complet pe toate zilele cu mișcări) ──────────
+  // Board-ul afișează doar ziua curentă (resetat zilnic); aici e istoricul complet.
+  var dailyMap={}; // { 'dd/mm/yyyy': {sales, profit, nrVanz, intr, retStoc, retDist, nrIn, nrRet} }
+  function dayKey(m){
+    if(m.date) return String(m.date).replace(/\./g,'/');
+    if(m.ts){ var d=new Date(m.ts); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+    return '';
+  }
+  function dayKeyToSortable(k){ // 'dd/mm/yyyy' → 'yyyy-mm-dd' pentru sort
+    var parts=String(k).split('/'); if(parts.length!==3) return k;
+    return parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
+  }
+  var mkX=(cfg.markup||25)/100;
+  db.movements.forEach(function(m){
+    var k=dayKey(m); if(!k) return;
+    if(!dailyMap[k]) dailyMap[k]={sales:0,profit:0,nrVanz:0,intr:0,retStoc:0,retDist:0,nrIn:0,nrRet:0};
+    var d=dailyMap[k];
+    if(m.t==='in'){
+      d.intr += (m.qty||0)*(m.price||0);
+      d.nrIn++;
+    } else if(m.t==='out'){
+      var p=db.products.find(function(x){ return x.bc===m.bc; });
+      var v=(m.qty||0)*(m.price||0);
+      var pr=((m.price||0)-(p?p.buy:0))*(m.qty||0);
+      d.sales += v;
+      d.profit += pr;
+      d.nrVanz++;
+    } else if(m.t==='ret'){
+      var vt=(m.qty||0)*(m.val||0);
+      if(m.dest==='stoc'){
+        // Retur de la client: anulează vânzarea cu prețul de vânzare (sellPrice)
+        var sp = m.sellPrice || ((m.val||0) * (1+mkX));
+        var revSale = (m.qty||0)*sp;
+        d.sales = Math.max(0, d.sales - revSale);
+        d.profit = d.profit - (m.qty||0)*sp*mkX;
+        d.retStoc += vt;
+      } else {
+        d.retDist += vt;
+      }
+      d.nrRet++;
+    }
+  });
+  // Construiește lista sortată cronologic (cea mai recentă jos)
+  var sortedDays=Object.keys(dailyMap).sort(function(a,b){
+    return dayKeyToSortable(a).localeCompare(dayKeyToSortable(b));
+  });
+  var vd=[[shop+' — VÂNZĂRI & PROFIT PE ZILE — '+now],[],
+    ['Data','Vânzări (RON)','Profit Net (RON)','Nr. Vânzări','Intrări (RON)','Retur Stoc (RON)','Retur Distrib. (RON)','Nr. Intrări','Nr. Retururi','Total Tranzacții']];
+  var tot={sales:0,profit:0,nrVanz:0,intr:0,retStoc:0,retDist:0,nrIn:0,nrRet:0};
+  sortedDays.forEach(function(k){
+    var d=dailyMap[k];
+    vd.push([k,
+      Math.round(d.sales*100)/100,
+      Math.round(d.profit*100)/100,
+      d.nrVanz,
+      Math.round(d.intr*100)/100,
+      Math.round(d.retStoc*100)/100,
+      Math.round(d.retDist*100)/100,
+      d.nrIn,
+      d.nrRet,
+      d.nrVanz+d.nrIn+d.nrRet]);
+    tot.sales+=d.sales; tot.profit+=d.profit; tot.nrVanz+=d.nrVanz;
+    tot.intr+=d.intr; tot.retStoc+=d.retStoc; tot.retDist+=d.retDist;
+    tot.nrIn+=d.nrIn; tot.nrRet+=d.nrRet;
+  });
+  vd.push([],['TOTAL',
+    Math.round(tot.sales*100)/100,
+    Math.round(tot.profit*100)/100,
+    tot.nrVanz,
+    Math.round(tot.intr*100)/100,
+    Math.round(tot.retStoc*100)/100,
+    Math.round(tot.retDist*100)/100,
+    tot.nrIn, tot.nrRet,
+    tot.nrVanz+tot.nrIn+tot.nrRet]);
+  if(!sortedDays.length){
+    vd.push([]); vd.push(['Nu există încă mișcări înregistrate.']);
+  }
+  var wsV=XLSX.utils.aoa_to_sheet(vd);
+  wsV['!cols']=[{wch:14},{wch:14},{wch:16},{wch:11},{wch:14},{wch:16},{wch:18},{wch:11},{wch:12},{wch:16}];
+  wsV['!merges']=[{s:{r:0,c:0},e:{r:0,c:9}}];
+  XLSX.utils.book_append_sheet(wb,wsV,'📅 Vânzări Zilnice');
+
   // Raport Zilnic
   var t2=tod();
   function isTodayXls(m){ if(m.date&&m.date.replace(/\./g,'/')===t2) return true; if(m.ts){var d=new Date(m.ts);var dd=String(d.getDate()).padStart(2,'0');var mm=String(d.getMonth()+1).padStart(2,'0');var yy=d.getFullYear();if(dd+'/'+mm+'/'+yy===t2) return true;} return false; }
@@ -3655,7 +3737,7 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb,ws6,'📋 Oferte');
 
   XLSX.writeFile(wb,'SPL_Piese_Auto_'+t2.replace(/\//g,'-')+'.xlsx');
-  toast('Excel exportat cu succes! (6 foi)','⬇');
+  toast('Excel exportat cu succes! (7 foi)','⬇');
 }
 function copyCod(){
   var ta=$('gs-cod'); ta.select();
