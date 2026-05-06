@@ -92,9 +92,23 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
   outline:none;transition:border-color .2s;width:100%}
 .fg input:focus,.fg select:focus{border-color:var(--acc)}
 .bc{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;padding-right:34px!important}
+/* Când există și buton 🆔, rezervăm mai mult spațiu pentru ambele iconițe */
+.iw:has(.si-id) .bc{padding-right:72px!important}
 .iw{position:relative}
+/* Buton scan ⊞ — implicit la marginea dreaptă; când coexistă cu 🆔, se mută în interior */
 .si{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:16px;cursor:pointer;color:var(--t2);transition:color .2s}
+.iw:has(.si-id) .si{right:42px}
 .si:hover{color:var(--acc)}
+/* Buton cod intern 🆔 — la marginea dreaptă, distinct vizual cu fundal mauve */
+.si-id{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  font-size:13px;cursor:pointer;color:#fff;
+  background:linear-gradient(135deg,#6c3483,#8e44ad);
+  border-radius:5px;padding:3px 6px;font-weight:700;
+  box-shadow:0 1px 3px rgba(108,52,131,.4);
+  transition:transform .15s, box-shadow .15s;line-height:1;
+  user-select:none}
+.si-id:hover{transform:translateY(-50%) scale(1.06);box-shadow:0 2px 6px rgba(108,52,131,.6)}
+.si-id:active{transform:translateY(-50%) scale(.96)}
 
 /* PRODUCT FOUND BANNER */
 .pfb{background:rgba(39,174,96,.07);border:1px solid rgba(39,174,96,.25);border-radius:7px;
@@ -501,8 +515,9 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <div class="fg"><label>Cod Bară / SKU</label>
           <div class="iw"><input class="bc" type="text" id="in-bc" autocomplete="off"
             placeholder="Scanați sau tastați..." oninput="lookup('in',this.value)">
-            <span class="si" onclick="useCodIntern('in')" title="Generează cod intern unic (pentru piese fără etichetă scanabilă)" style="margin-right:5px;background:linear-gradient(135deg,#6c3483,#8e44ad);color:#fff;font-weight:700">🆔</span>
-            <span class="si" onclick="setMode('in','s')">⊞</span></div></div>
+            <span class="si" onclick="setMode('in','s')" title="Scanează cu camera">⊞</span>
+            <span class="si-id" onclick="useCodIntern('in')" title="Generează cod intern unic (pentru piese fără etichetă scanabilă)">🆔</span>
+          </div></div>
         <div class="fg"><label>Cod Piesă</label>
           <input type="text" id="in-cp" placeholder="Auto-completat / completați manual" autocomplete="off"></div>
         <div class="fg"><label>Denumire Piesă</label>
@@ -813,8 +828,8 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
             <input class="bc" type="text" id="ret-bc" autocomplete="off"
               placeholder="Scanați sau tastați codul de bară..."
               oninput="lookup('ret',this.value)">
-            <span class="si" onclick="useCodIntern('ret')" title="Generează cod intern unic (pentru piese fără etichetă scanabilă)" style="margin-right:5px;background:linear-gradient(135deg,#6c3483,#8e44ad);color:#fff;font-weight:700">🆔</span>
-            <span class="si" onclick="setMode('ret','s')">⊞</span>
+            <span class="si" onclick="setMode('ret','s')" title="Scanează cu camera">⊞</span>
+            <span class="si-id" onclick="useCodIntern('ret')" title="Generează cod intern unic (pentru piese fără etichetă scanabilă)">🆔</span>
           </div>
         </div>
         <div class="fg"><label>Cod Piesă</label>
