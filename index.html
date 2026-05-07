@@ -930,9 +930,70 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         </div>
       </div>
 
+      <!-- Factură Storno (apare doar când destinație = stoc, adică retur de la client) -->
+      <div id="ret-storno-box" style="background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.3);border-radius:8px;padding:11px 13px;margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--txt);margin-bottom:8px">
+          <input type="checkbox" id="ret-storno-on" onchange="toggleStornoForm()" style="accent-color:#c0392b;width:16px;height:16px">
+          🧾 Generează Factură Storno (cu valoare negativă)
+        </label>
+        <div id="ret-storno-info" style="font-size:11px;color:var(--t2);background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.18);border-radius:6px;padding:8px 11px;margin-bottom:9px">
+          ℹ️ La înregistrarea returului se va emite o <b>factură storno</b> către client cu cantitate × preț afișate ca <b style="color:#c0392b">valori negative</b>, util pentru contabilitate.
+        </div>
+        <div id="ret-storno-form" style="display:none">
+          <div class="fr">
+            <div class="fg"><label>Nr. Factură Storno</label>
+              <input type="text" id="ret-fac-nr" placeholder="auto-generat">
+            </div>
+            <div class="fg"><label>Nr. Factură Originală <span style="color:var(--t2);font-size:9px">opțional</span></label>
+              <input type="text" id="ret-fac-orig" placeholder="ex: SPL 123">
+            </div>
+            <div class="fg"><label>Data Factură</label>
+              <input type="text" id="ret-fac-dt" placeholder="DD/MM/YYYY">
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg"><label>Client (Cumpărător)</label>
+              <input type="text" id="ret-fac-cl" placeholder="Nume client">
+            </div>
+            <div class="fg"><label>CUI / CNP Client</label>
+              <input type="text" id="ret-fac-cl-cui" placeholder="opțional">
+            </div>
+          </div>
+          <div class="fr fr1">
+            <div class="fg"><label>Adresă Client</label>
+              <input type="text" id="ret-fac-cl-adr" placeholder="opțional">
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg"><label>TVA (%)</label>
+              <select id="ret-fac-tva-tip">
+                <option value="0">Fără TVA (0%)</option>
+                <option value="5">TVA 5%</option>
+                <option value="9">TVA 9%</option>
+                <option value="19">TVA 19%</option>
+                <option value="21">TVA 21%</option>
+              </select>
+            </div>
+            <div class="fg"><label>Metodă Plată / Restituire</label>
+              <select id="ret-fac-plata">
+                <option>Numerar</option>
+                <option>Card</option>
+                <option>Transfer bancar</option>
+                <option>Compensare</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr fr1">
+            <div class="fg"><label>Observații Factură Storno</label>
+              <input type="text" id="ret-fac-obs" placeholder="ex: Storno conform retur produs defect">
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="acts">
         <button class="btn bgh" onclick="clearRet()">✕ Anulează</button>
-        <button class="btn" style="flex:2;background:linear-gradient(135deg,#6c3483,#8e44ad);color:#fff;font-weight:700;border:none;border-radius:8px;padding:11px;font-size:13px;cursor:pointer" onclick="subRet()">↩️ Înregistrează Retur</button>
+        <button class="btn" id="ret-reg-btn" style="flex:2;background:linear-gradient(135deg,#6c3483,#8e44ad);color:#fff;font-weight:700;border:none;border-radius:8px;padding:11px;font-size:13px;cursor:pointer" onclick="subRet()">↩️ Înregistrează Retur</button>
       </div>
     </div>
   </div>
@@ -1069,6 +1130,10 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       <div class="fr">
         <div class="fg"><label>Nr. Ofertă Următor</label><input type="number" id="s-ofnr" placeholder="1" min="1" onchange="saveCfg()"><div class="hint">Numărul de la care pornesc ofertele noi. Se incrementează automat la fiecare ofertă generată.</div></div>
         <div class="fg"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Nr. Factură Storno Următor</label><input type="number" id="s-stornonr" placeholder="1" min="1" onchange="saveCfg()"><div class="hint">Contor separat pentru facturile storno emise la retur de la client.</div></div>
+        <div class="fg"><label>Nr. Chitanță Următor</label><input type="number" id="s-chitnr" placeholder="1" min="1" onchange="saveCfg()"><div class="hint">Numărul de la care pornesc chitanțele atașate la facturile storno (sau alte chitanțe).</div></div>
       </div>
       <div class="fr">
         <div class="fg"><label>Email</label><input type="email" id="s-eml" placeholder="vanzari@pieseautotm.ro" onchange="saveCfg()"></div>
@@ -1643,7 +1708,7 @@ var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
   phone:'0766551313',email:'vanzari@pieseautotm.ro',
   cui:'44870892',regCom:'J20/1003624352',
   website:'www.pieseautotm.ro',program:'L–V: 08:00–17:00',minStock:5,
-  invoiceNr:124,ofertaNr:1,markup:25};
+  invoiceNr:124,ofertaNr:1,stornoNr:1,chitantaNr:1,markup:25};
 
 function loadAll(){
   cfg.gsUrl=GS_URL_PERM;
@@ -1696,6 +1761,8 @@ function saveCfg(){
   cfg.minStock=parseInt(gv('s-min'))||5;
   cfg.invoiceNr=parseInt(gv('s-invnr'))||cfg.invoiceNr||1;
   cfg.ofertaNr=parseInt(gv('s-ofnr'))||cfg.ofertaNr||1;
+  cfg.stornoNr=parseInt(gv('s-stornonr'))||cfg.stornoNr||1;
+  cfg.chitantaNr=parseInt(gv('s-chitnr'))||cfg.chitantaNr||1;
   cfg.markup=parseInt(gv('s-markup'))||25;
   // Documente — mesaje si footer
   cfg.bonMsg=gv('s-bon-msg');
@@ -1722,6 +1789,8 @@ function applySettings(){
   sv('s-min',cfg.minStock||5);
   sv('s-invnr',cfg.invoiceNr||1);
   sv('s-ofnr',cfg.ofertaNr||1);
+  sv('s-stornonr',cfg.stornoNr||1);
+  sv('s-chitnr',cfg.chitantaNr||1);
   sv('s-markup',cfg.markup||25);
   sv('s-gs',GS_URL_PERM);
   // Documente — mesaje si footer
@@ -2419,6 +2488,31 @@ function toggleRetDest(){
   var infoStoc=$('ret-info-stoc'), infoDist=$('ret-info-dist');
   if(infoStoc) infoStoc.style.display = isStoc ? 'block' : 'none';
   if(infoDist) infoDist.style.display = isStoc ? 'none' : 'block';
+  // Caseta de Factură Storno — vizibilă DOAR la retur de la client (dest=stoc)
+  var stornoBox=$('ret-storno-box');
+  if(stornoBox) stornoBox.style.display = isStoc ? 'block' : 'none';
+  // Dacă schimbăm la distribuitor, debifăm storno
+  if(!isStoc){
+    var sOn=$('ret-storno-on');
+    if(sOn){ sOn.checked=false; toggleStornoForm(); }
+  }
+}
+
+function toggleStornoForm(){
+  var on = $('ret-storno-on') && $('ret-storno-on').checked;
+  var form = $('ret-storno-form');
+  var btn = $('ret-reg-btn');
+  if(form) form.style.display = on ? 'block' : 'none';
+  if(btn) btn.textContent = on ? '↩️ Înregistrează Retur + Factură Storno' : '↩️ Înregistrează Retur';
+  if(on){
+    // Pre-completează: nr. storno, dată, client din ret-par
+    var nr = $('ret-fac-nr');
+    if(nr && !nr.value) nr.value = 'STORNO ' + ((cfg.stornoNr||1));
+    var dt = $('ret-fac-dt');
+    if(dt && !dt.value) dt.value = tod();
+    var cl = $('ret-fac-cl');
+    if(cl && !cl.value) cl.value = gv('ret-par') || '';
+  }
 }
 
 function subRet(){
@@ -2485,6 +2579,17 @@ function subRet(){
   db.movements.unshift(mov);
   saveDB();
   syncGSRet(mov, prod);
+
+  // Generare Factură Storno (numai dacă e bifat și destinația = stoc)
+  var stornoOn = $('ret-storno-on') && $('ret-storno-on').checked;
+  if(stornoOn && dest==='stoc'){
+    printFacturaStorno({
+      bc: bc, nm: nm, cp: cp,
+      qty: qty, val: val,
+      mot: mot, obs: obs, op: op
+    });
+  }
+
   clearRet();
   renderRetList();
 }
@@ -2497,6 +2602,11 @@ function clearRet(){
   var destStoc=document.getElementById('ret-dest-stoc');
   if(destStoc){ destStoc.checked=true; toggleRetDest(); }
   var pf=$('ret-pf'); if(pf) pf.classList.remove('on');
+  // Resetare câmpuri Factură Storno
+  var sOn=$('ret-storno-on'); if(sOn){ sOn.checked=false; toggleStornoForm(); }
+  ['ret-fac-nr','ret-fac-orig','ret-fac-dt','ret-fac-cl','ret-fac-cl-cui','ret-fac-cl-adr','ret-fac-obs'].forEach(function(id){ sv(id,''); });
+  var tva=$('ret-fac-tva-tip'); if(tva) tva.value='0';
+  var pl=$('ret-fac-plata'); if(pl) pl.value='Numerar';
 }
 
 function renderRetList(){
@@ -3338,6 +3448,271 @@ function clearFactura(){
   // Reset back to Bon Fiscal
   var bonRadio = document.getElementById('out-dt-bon');
   if(bonRadio){ bonRadio.checked = true; toggleOutDocType(); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FACTURĂ STORNO + CHITANȚĂ — pentru retur de la client (valoare negativă)
+// ═══════════════════════════════════════════════════════════════════════════
+function printFacturaStorno(retData){
+  // Date din formularul de retur (storno)
+  var nr     = gv('ret-fac-nr')     || ('STORNO ' + (cfg.stornoNr||1));
+  var dt     = gv('ret-fac-dt')     || tod();
+  var orig   = gv('ret-fac-orig')   || '—';
+  var cl     = gv('ret-fac-cl')     || retData.par || '—';
+  var clCui  = gv('ret-fac-cl-cui') || '';
+  var clAdr  = gv('ret-fac-cl-adr') || '';
+  var plata  = gv('ret-fac-plata')  || 'Numerar';
+  var obsFac = gv('ret-fac-obs')    || '';
+  var op     = retData.op || cfg.defaultOp || '—';
+  var tvaPct = parseFloat(gv('ret-fac-tva-tip'))||0;
+
+  var shop  = cfg.shopName||'SPL Piese Auto';
+  var cui   = cfg.cui||'44870892';
+  var reg   = cfg.regCom||'J20/1003624352';
+  var adr   = cfg.address||'Str. Nicolae Firu 46A, Sat Chișoda, Timiș, 307221';
+  var phone = cfg.phone||'0766551313';
+  var email = cfg.email||'vanzari@pieseautotm.ro';
+  var web   = cfg.website||'www.pieseautotm.ro';
+
+  // Linie unică: produsul returnat (cantitate × valoare = NEGATIV)
+  var qty    = retData.qty;
+  var pret   = retData.val;
+  var valLin = -1 * qty * pret; // valoare negativă!
+  var subtotal = valLin;
+  var tva      = Math.round(subtotal * tvaPct) / 100; // și TVA va fi negativ
+  var total    = subtotal + tva;
+
+  // Număr chitanță (atașată facturii storno)
+  var nrChit = 'CHIT ' + (cfg.chitantaNr||1);
+
+  var rows = '<tr><td>1</td><td>'+ (retData.nm||'—') +
+             (retData.cp ? '<br><span style="font-size:10px;color:#888">Cod piesă: '+retData.cp+'</span>' : '') +
+             '<br><span style="font-size:10px;color:#888">Cod bară: '+(retData.bc||'')+'</span>' +
+             (retData.mot ? '<br><span style="font-size:10px;color:#c0392b">Motiv retur: '+retData.mot+'</span>' : '') +
+             '</td>'+
+    '<td style="text-align:center">BUC</td>'+
+    '<td style="text-align:right;color:#c0392b;font-weight:600">-'+qty.toFixed(2)+'</td>'+
+    '<td style="text-align:right">'+pret.toFixed(2)+'</td>'+
+    '<td style="text-align:right;font-weight:700;color:#c0392b">'+valLin.toFixed(2)+'</td></tr>';
+
+  // Sumă totală în litere — pentru chitanță
+  var sumaAbs = Math.abs(total);
+
+  // Incrementăm numerele pentru următoarele documente
+  cfg.stornoNr   = (cfg.stornoNr||1) + 1;
+  cfg.chitantaNr = (cfg.chitantaNr||1) + 1;
+  sv('s-stornonr', cfg.stornoNr);
+  sv('s-chitnr',   cfg.chitantaNr);
+  saveKV('cfg', JSON.stringify(cfg));
+
+  var logoFac='data:image/jpeg;base64,/9j/4QC8RXhpZgAASUkqAAgAAAAGABIBAwABAAAAAQAAABoBBQABAAAAVgAAABsBBQABAAAAXgAAACgBAwABAAAAAgAAABMCAwABAAAAAQAAAGmHBAABAAAAZgAAAAAAAABgAAAAAQAAAGAAAAABAAAABgAAkAcABAAAADAyMTABkQcABAAAAAECAwAAoAcABAAAADAxMDABoAMAAQAAAP//AAACoAQAAQAAAAAIAAADoAQAAQAAAAAIAAAAAAAA';
+
+  openPrint('<!DOCTYPE html><html lang="ro"><head><meta charset="UTF-8">'+
+    '<title>Factură Storno '+nr+' + Chitanță '+nrChit+'</title>'+
+    '<style>'+
+    'body{font-family:Arial,sans-serif;max-width:780px;margin:20px auto;padding:20px;color:#222;font-size:13px}'+
+    '.hdr-tbl{width:100%;border-collapse:collapse;margin-bottom:16px}'+
+    '.hdr-tbl td{vertical-align:top;padding:0}'+
+    '.firm-box{background:#fdf2f0;border:2px solid #c0392b;border-radius:8px;padding:12px 16px}'+
+    '.firm-nm{font-size:20px;font-weight:900;color:#c0392b;font-family:Arial Black,sans-serif}'+
+    '.firm-det{font-size:11px;color:#555;line-height:1.8;margin-top:4px}'+
+    '.fac-box{background:#fff5f5;border:2px solid #c0392b;border-radius:8px;padding:12px 16px;text-align:right}'+
+    '.fac-nm{font-size:24px;font-weight:900;color:#c0392b;letter-spacing:1px}'+
+    '.fac-stamp{display:inline-block;background:#c0392b;color:#fff;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:1px;margin-top:4px}'+
+    '.fac-nr{font-size:14px;font-weight:700;color:#333;margin-top:4px}'+
+    '.fac-dt{font-size:11px;color:#666;margin-top:2px}'+
+    '.client-box{background:#f0f7ff;border:1px solid #2980b9;border-radius:7px;padding:10px 14px;margin-bottom:14px}'+
+    '.client-box h4{font-size:11px;color:#2980b9;text-transform:uppercase;letter-spacing:.5px;margin:0 0 5px;font-weight:700}'+
+    '.client-box p{margin:0;font-size:13px;font-weight:600;color:#1a252f}'+
+    '.client-box span{font-size:11px;color:#555}'+
+    '.ref-box{background:#fff8e7;border:1px dashed #e6a700;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:#7a5a00}'+
+    '.ref-box b{color:#c0392b}'+
+    'table.prod{width:100%;border-collapse:collapse;margin-bottom:14px}'+
+    'table.prod th{background:#c0392b;color:#fff;padding:8px 10px;font-size:11px;text-align:left;font-weight:700}'+
+    'table.prod td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}'+
+    '.total-box{display:flex;justify-content:flex-end;margin-bottom:14px}'+
+    '.total-inner{border:2px solid #c0392b;border-radius:8px;padding:12px 18px;min-width:280px;background:#fff5f5}'+
+    '.total-row{display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px}'+
+    '.total-row span:last-child{color:#c0392b;font-weight:600}'+
+    '.total-final{display:flex;justify-content:space-between;font-size:17px;font-weight:900;color:#c0392b;border-top:2px solid #c0392b;padding-top:8px;margin-top:6px}'+
+    '.info-bar{display:flex;gap:16px;background:#f8f9fa;border:1px solid #eee;border-radius:7px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#555}'+
+    '.info-bar b{display:block;color:#333;font-size:12px}'+
+    '.semnat{display:flex;gap:30px;margin-top:24px}'+
+    '.semnat div{flex:1;border-top:2px solid #c0392b;padding-top:10px;text-align:center;font-size:11px;color:#666}'+
+    '.semnat div b{display:block;font-size:13px;color:#333;margin-bottom:4px}'+
+    '.footer{text-align:center;font-size:10px;color:#aaa;margin-top:16px;border-top:1px solid #eee;padding-top:8px}'+
+    // CHITANȚĂ — design profesional
+    '.chit-page{page-break-before:always;margin-top:30px;padding-top:20px;border-top:3px dashed #c0392b}'+
+    '.chit-cut-label{text-align:center;font-size:10px;color:#999;letter-spacing:3px;margin-bottom:18px;font-weight:700}'+
+    '.chit-hdr{width:100%;border-collapse:collapse;margin-bottom:16px}'+
+    '.chit-hdr td{vertical-align:top;padding:0}'+
+    '.chit-firm{background:#fdf2f0;border:2px solid #c0392b;border-radius:8px;padding:12px 16px}'+
+    '.chit-title-box{background:#fff5f5;border:2px solid #c0392b;border-radius:8px;padding:12px 16px;text-align:right}'+
+    '.chit-title{font-size:24px;font-weight:900;color:#c0392b;letter-spacing:2px}'+
+    '.chit-stamp{display:inline-block;background:#27ae60;color:#fff;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:1px;margin-top:4px}'+
+    '.chit-row{background:#f8f9fa;border:1px solid #ddd;border-radius:7px;padding:14px 18px;margin-bottom:12px;font-size:13px;line-height:2.0}'+
+    '.chit-row b{color:#c0392b}'+
+    '.chit-suma{background:#fff5f5;border:2px solid #c0392b;border-radius:8px;padding:14px 18px;margin-bottom:14px;text-align:center}'+
+    '.chit-suma-lbl{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.5px;font-weight:700}'+
+    '.chit-suma-val{font-size:26px;font-weight:900;color:#c0392b;margin-top:4px;font-family:Arial Black,sans-serif}'+
+    '.chit-suma-lit{font-size:11px;color:#555;font-style:italic;margin-top:6px}'+
+    '@media print{button{display:none}.no-print{display:none}}'+
+    '</style></head><body>'+
+
+    // ═══════════════ PAGINA 1: FACTURĂ STORNO ═══════════════
+    '<table class="hdr-tbl"><tr>'+
+    '<td style="width:55%">'+
+    '<div class="firm-box">'+
+    '<div class="firm-nm">'+shop+'</div>'+
+    '<div class="firm-det">'+
+    'CUI: <b>'+cui+'</b> &nbsp;|&nbsp; Reg. Com.: <b>'+reg+'</b><br>'+
+    '📍 '+adr+'<br>'+
+    '📞 '+phone+' &nbsp;|&nbsp; ✉️ '+email+'<br>'+
+    '🌐 '+web+
+    '</div></div></td>'+
+    '<td style="width:8px"></td>'+
+    '<td>'+
+    '<div class="fac-box">'+
+    '<div class="fac-nm">FACTURĂ STORNO</div>'+
+    '<div class="fac-stamp">⚠ VALOARE NEGATIVĂ</div>'+
+    '<div class="fac-nr">Nr. '+nr+'</div>'+
+    '<div class="fac-dt">Data emiterii: <b>'+dt+'</b></div>'+
+    '</div></td></tr></table>'+
+
+    (orig !== '—' ? '<div class="ref-box">📎 <b>Stornează factura originală nr.</b> '+orig+'</div>' : '') +
+
+    '<div class="client-box">'+
+    '<h4>Cumpărător / Client (beneficiar storno)</h4>'+
+    '<p>'+cl+'</p>'+
+    (clCui?'<span>CUI/CNP: '+clCui+'</span><br>':'')+
+    (clAdr?'<span>Adresă: '+clAdr+'</span>':'')+
+    '</div>'+
+
+    '<table class="prod">'+
+    '<thead><tr><th style="width:30px">#</th><th>Denumire Produs / Serviciu</th>'+
+    '<th style="text-align:center;width:50px">UM</th>'+
+    '<th style="text-align:right;width:70px">Cant.</th>'+
+    '<th style="text-align:right;width:90px">Preț Unit.</th>'+
+    '<th style="text-align:right;width:90px">Valoare</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table>'+
+
+    '<div class="total-box"><div class="total-inner">'+
+    '<div class="total-row"><span>Subtotal storno (fără TVA):</span><span>'+subtotal.toFixed(2)+' RON</span></div>'+
+    '<div class="total-row"><span>TVA '+tvaPct+'% storno:</span><span>'+tva.toFixed(2)+' RON</span></div>'+
+    '<div class="total-final"><span>TOTAL DE RESTITUIT:</span><span>'+total.toFixed(2)+' RON</span></div>'+
+    '</div></div>'+
+
+    '<div class="info-bar">'+
+    '<div><b>Metodă Restituire</b>'+plata+'</div>'+
+    '<div><b>Emis de</b>'+op+'</div>'+
+    (obsFac?'<div><b>Observații</b>'+obsFac+'</div>':'<div><b>Motiv</b>Retur produs de la client</div>')+
+    '</div>'+
+
+    '<div class="semnat">'+
+    '<div><b>Furnizor</b>'+shop+'<br><br>Semnătură și ștampilă<br><br>_______________</div>'+
+    '<div><b>Cumpărător</b>'+cl+'<br><br>Semnătură și ștampilă<br><br>_______________</div>'+
+    '</div>'+
+
+    '<div class="footer">Factură storno emisă electronic — valorile negative reprezintă restituirea contravalorii produsului returnat de client. '+shop+' · CUI: '+cui+'</div>'+
+
+    // ═══════════════ PAGINA 2: CHITANȚĂ ═══════════════
+    '<div class="chit-page">'+
+    '<div class="chit-cut-label">✂ — — — — — — — — — — CHITANȚĂ ATAȘATĂ — — — — — — — — — — ✂</div>'+
+
+    '<table class="chit-hdr"><tr>'+
+    '<td style="width:55%">'+
+    '<div class="chit-firm">'+
+    '<div class="firm-nm">'+shop+'</div>'+
+    '<div class="firm-det">'+
+    'CUI: <b>'+cui+'</b> &nbsp;|&nbsp; Reg. Com.: <b>'+reg+'</b><br>'+
+    '📍 '+adr+'<br>'+
+    '📞 '+phone+' &nbsp;|&nbsp; ✉️ '+email+
+    '</div></div></td>'+
+    '<td style="width:8px"></td>'+
+    '<td>'+
+    '<div class="chit-title-box">'+
+    '<div class="chit-title">CHITANȚĂ</div>'+
+    '<div class="chit-stamp">RESTITUIRE</div>'+
+    '<div class="fac-nr">Nr. '+nrChit+'</div>'+
+    '<div class="fac-dt">Data: <b>'+dt+'</b></div>'+
+    '</div></td></tr></table>'+
+
+    '<div class="ref-box">📎 Chitanță atașată la <b>Factura Storno nr. '+nr+'</b>' +
+    (orig !== '—' ? ' (storno factură originală nr. <b>'+orig+'</b>)' : '') + '</div>'+
+
+    '<div class="chit-row">'+
+    'Subsemnatul, reprezentant al <b>'+shop+'</b>, am restituit clientului <b>'+cl+'</b>'+
+    (clCui ? ' (CUI/CNP: <b>'+clCui+'</b>)' : '') +
+    (clAdr ? ', cu sediul/domiciliul în <b>'+clAdr+'</b>' : '') +
+    ', suma de mai jos, reprezentând contravaloarea produsului returnat conform Facturii Storno menționate.'+
+    '</div>'+
+
+    '<div class="chit-suma">'+
+    '<div class="chit-suma-lbl">Suma restituită</div>'+
+    '<div class="chit-suma-val">'+sumaAbs.toFixed(2)+' RON</div>'+
+    '<div class="chit-suma-lit">(adică '+sumaInLitere(sumaAbs)+')</div>'+
+    '</div>'+
+
+    '<div class="chit-row">'+
+    '<b>Modalitate restituire:</b> '+plata+'<br>'+
+    '<b>Reprezentând:</b> Storno produs returnat — '+(retData.nm||'—')+
+    (retData.mot ? '<br><b>Motiv retur:</b> '+retData.mot : '') +
+    '<br><b>Emis de:</b> '+op+
+    '</div>'+
+
+    '<div class="semnat">'+
+    '<div><b>Casier / Operator</b>'+op+'<br><br>Semnătură<br><br>_______________</div>'+
+    '<div><b>Beneficiar (Client)</b>'+cl+'<br><br>Semnătură<br><br>_______________</div>'+
+    '</div>'+
+
+    '<div class="footer">Chitanță emisă electronic — atestă restituirea sumei către client conform facturii storno atașate. '+shop+' · CUI: '+cui+'</div>'+
+    '</div>'+ // .chit-page
+
+    '<br><div class="no-print" style="text-align:center">'+
+    '<button onclick="window.print()" style="padding:10px 24px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px">🖨️ Printează Factura Storno + Chitanța</button>'+
+    '</div>'+
+    '</body></html>');
+
+  toast('Factură storno '+nr+' + Chitanță '+nrChit+' generate', '🧾');
+}
+
+// Helper: convertește o sumă numerică în text (pentru chitanțe)
+function sumaInLitere(suma){
+  var unitati=['','unu','doi','trei','patru','cinci','șase','șapte','opt','nouă'];
+  var zeci=['','zece','douăzeci','treizeci','patruzeci','cincizeci','șaizeci','șaptezeci','optzeci','nouăzeci'];
+  var unsprzece=['zece','unsprezece','doisprezece','treisprezece','paisprezece','cincisprezece','șaisprezece','șaptesprezece','optsprezece','nouăsprezece'];
+  function sub1000(n){
+    if(n===0) return '';
+    var s='';
+    var sute=Math.floor(n/100); var rest=n%100;
+    if(sute===1) s='o sută ';
+    else if(sute===2) s='două sute ';
+    else if(sute>2) s=unitati[sute]+' sute ';
+    if(rest>=10 && rest<20){ s+=unsprzece[rest-10]; }
+    else if(rest>=20){
+      s+=zeci[Math.floor(rest/10)];
+      if(rest%10>0) s+=' și '+unitati[rest%10];
+    }
+    else if(rest>0){ s+=unitati[rest]; }
+    return s.trim();
+  }
+  var intreg=Math.floor(suma);
+  var bani=Math.round((suma-intreg)*100);
+  var rezultat='';
+  if(intreg===0) rezultat='zero lei';
+  else {
+    var mii=Math.floor(intreg/1000);
+    var rest=intreg%1000;
+    if(mii>0){
+      if(mii===1) rezultat='o mie ';
+      else if(mii===2) rezultat='două mii ';
+      else rezultat=sub1000(mii)+' de mii ';
+    }
+    if(rest>0) rezultat+=sub1000(rest);
+    rezultat+=(intreg===1?' leu':' lei');
+  }
+  if(bani>0) rezultat+=' și '+bani+'/100';
+  return rezultat.trim();
 }
 
 function printFactura(){
