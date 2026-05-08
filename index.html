@@ -603,14 +603,12 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <div style="font-size:9px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">➕ Adaugă Produs în Vânzare</div>
         <div class="fr">
           <div class="fg"><label>Cod Bară / SKU</label>
-            <div class="iw"><input class="bc" type="text" id="out-bc" autocomplete="off" list="out-bc-list"
+            <div class="iw"><input class="bc" type="text" id="out-bc" autocomplete="off"
               placeholder="Scanați sau tastați..." oninput="lookup('out',this.value)">
-              <span class="si" onclick="setMode('out','s')">⊞</span></div>
-            <datalist id="out-bc-list"></datalist></div>
+              <span class="si" onclick="setMode('out','s')">⊞</span></div></div>
           <div class="fg"><label>Cod Piesă</label>
             <input type="text" id="out-cp" placeholder="Scanați, tastați sau auto-completat" autocomplete="off"
-              list="out-cp-list" oninput="lookupCp('out',this.value)">
-            <datalist id="out-cp-list"></datalist></div>
+              oninput="lookupCp('out',this.value)"></div>
           <div class="fg"><label>Denumire Piesă</label>
             <input type="text" id="out-nm" placeholder="Auto-completat la scanare"></div>
         </div>
@@ -2283,20 +2281,6 @@ function lookupCp(type, cp){
     lookup(type, p.bc);
   }
 }
-// Populeaza datalist-urile cu coduri (bara + piesa) pentru autocomplete in Iesiri
-function populateOutCodes(){
-  var bcList=$('out-bc-list'), cpList=$('out-cp-list');
-  if(!bcList && !cpList) return;
-  var esc=function(s){ return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
-  var bcOpts='', cpOpts='';
-  db.products.forEach(function(p){
-    var nm=esc(p.name);
-    if(p.bc) bcOpts += '<option value="'+esc(p.bc)+'">'+nm+(p.codPiesa?' · '+esc(p.codPiesa):'')+'</option>';
-    if(p.codPiesa) cpOpts += '<option value="'+esc(p.codPiesa)+'">'+nm+' · '+esc(p.bc)+'</option>';
-  });
-  if(bcList) bcList.innerHTML=bcOpts;
-  if(cpList) cpList.innerHTML=cpOpts;
-}
 function gpLookup(bc){
   var p=db.products.find(function(x){ return x.bc===bc.trim(); });
   if(p) sv('gp-nm',p.name);
@@ -3130,8 +3114,6 @@ function renderStoc(filter){
       '</tr>';
   }).join('');
   var stotEl=$('stoc-tot'); if(stotEl) stotEl.textContent=fron(total);
-  // Actualizeaza sugestiile pentru autocomplete in Iesiri
-  if(typeof populateOutCodes==='function') populateOutCodes();
 }
 function filtStoc(q){ renderStoc(q); }
 
