@@ -3070,8 +3070,11 @@ function renderDash(){
 // ═══════════════════════════════════
 function renderStoc(filter){
   filter=filter||'';
+  var fl=filter.toLowerCase();
   var prods=filter?db.products.filter(function(p){
-    return p.name.toLowerCase().indexOf(filter.toLowerCase())>=0||p.bc.toLowerCase().indexOf(filter.toLowerCase())>=0;
+    return p.name.toLowerCase().indexOf(fl)>=0
+        || p.bc.toLowerCase().indexOf(fl)>=0
+        || (p.codPiesa||'').toLowerCase().indexOf(fl)>=0;
   }):db.products;
   var total=prods.reduce(function(s,p){ return s+p.stock*p.sell; },0);
   var min=cfg.minStock;
@@ -3080,8 +3083,11 @@ function renderStoc(filter){
     var bc=p.stock<=0?'blo':p.stock<=min?'bwn':'bok';
     var bt=p.stock<=0?'Epuizat':p.stock<=min?'Scăzut':'OK';
     var stClr=p.stock<=0?'var(--red)':p.stock<=min?'var(--acc2)':'var(--grn)';
+    var cpLine = p.codPiesa
+      ? '<br><span class="mono" style="font-size:10px;color:var(--acc2);font-weight:600">Cod produs: '+p.codPiesa+'</span>'
+      : '';
     return '<tr>'+
-      '<td style="font-weight:600">'+p.name+'<br><span class="mono" style="font-size:10px;color:var(--t2)">'+p.bc+'</span></td>'+
+      '<td style="font-weight:600">'+p.name+cpLine+'<br><span class="mono" style="font-size:10px;color:var(--t2)">'+p.bc+'</span></td>'+
       '<td style="text-align:center"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:800;color:'+stClr+'">'+p.stock+'</span><br><span class="bdg '+bc+'" style="font-size:8px">'+bt+'</span></td>'+
       '</tr>';
   }).join('');
@@ -3933,15 +3939,15 @@ function exportExcel(){
   var wb=XLSX.utils.book_new(), shop=cfg.shopName||'SPL Piese Auto', now=tod();
 
   // Stoc
-  var sd=[[shop+' — STOC CURENT — '+now],[],['Cod Bară','Denumire','Categorie','UM','Stoc','P.Ach.','P.Vânz.','Valoare','Status']];
+  var sd=[[shop+' — STOC CURENT — '+now],[],['Cod Bară','Cod Produs','Denumire','Categorie','UM','Stoc','P.Ach.','P.Vânz.','Valoare','Status']];
   var ts=0; db.products.forEach(function(p){
     var v=p.stock*p.sell; ts+=v;
-    sd.push([p.bc,p.name,p.cat||'',p.um||'BUC',p.stock,p.buy,p.sell,v,p.stock<=0?'EPUIZAT':p.stock<=cfg.minStock?'SCĂZUT':'OK']);
+    sd.push([p.bc,p.codPiesa||'',p.name,p.cat||'',p.um||'BUC',p.stock,p.buy,p.sell,v,p.stock<=0?'EPUIZAT':p.stock<=cfg.minStock?'SCĂZUT':'OK']);
   });
-  sd.push([],['','','','','TOTAL','','','',ts]);
+  sd.push([],['','','','','','TOTAL','','','',ts]);
   var ws1=XLSX.utils.aoa_to_sheet(sd);
-  ws1['!cols']=[{wch:16},{wch:34},{wch:13},{wch:6},{wch:10},{wch:12},{wch:12},{wch:15},{wch:10}];
-  ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}}];
+  ws1['!cols']=[{wch:16},{wch:16},{wch:34},{wch:13},{wch:6},{wch:10},{wch:12},{wch:12},{wch:15},{wch:10}];
+  ws1['!merges']=[{s:{r:0,c:0},e:{r:0,c:9}}];
   XLSX.utils.book_append_sheet(wb,ws1,'📦 Stoc Curent');
 
   // Intrări
