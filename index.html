@@ -2267,10 +2267,20 @@ function lookup(type,bc){
   }
 }
 // Cautare in iesire dupa Cod Piesa (input separat). Daca gaseste, completeaza si bc.
+// Daca cp nu corespunde niciunui produs, reseteaza campurile dependente (bc, denumire, pret).
 function lookupCp(type, cp){
-  if(!cp || cp.length < 2) return;
-  var cpTrim = cp.trim();
-  // Mai intai dupa cod piesa exact
+  if(type !== 'out') return;
+  var cpTrim = (cp||'').trim();
+  // Cp gol -> reseteaza tot formularul (bc, denumire, pret, banner)
+  if(cpTrim.length === 0){
+    sv('out-bc','');
+    sv('out-nm','');
+    sv('out-prt','');
+    var pf0=$('out-pf'); if(pf0) pf0.classList.remove('on');
+    return;
+  }
+  if(cpTrim.length < 2) return;
+  // Cauta dupa cod piesa exact
   var p = db.products.find(function(x){
     return (x.codPiesa||'').trim() !== '' && (x.codPiesa||'').trim() === cpTrim;
   });
@@ -2279,6 +2289,13 @@ function lookupCp(type, cp){
   if(p){
     sv(type+'-bc', p.bc);
     lookup(type, p.bc);
+  } else {
+    // Nu corespunde niciunui produs -> reseteaza campurile dependente.
+    // Pastram valoarea tastata in out-cp ca user-ul sa-si poata corecta.
+    sv('out-bc','');
+    sv('out-nm','');
+    sv('out-prt','');
+    var pf=$('out-pf'); if(pf) pf.classList.remove('on');
   }
 }
 function gpLookup(bc){
