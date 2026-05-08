@@ -603,11 +603,14 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
         <div style="font-size:9px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">➕ Adaugă Produs în Vânzare</div>
         <div class="fr">
           <div class="fg"><label>Cod Bară / SKU</label>
-            <div class="iw"><input class="bc" type="text" id="out-bc" autocomplete="off"
+            <div class="iw"><input class="bc" type="text" id="out-bc" autocomplete="off" list="out-bc-list"
               placeholder="Scanați sau tastați..." oninput="lookup('out',this.value)">
-              <span class="si" onclick="setMode('out','s')">⊞</span></div></div>
+              <span class="si" onclick="setMode('out','s')">⊞</span></div>
+            <datalist id="out-bc-list"></datalist></div>
           <div class="fg"><label>Cod Piesă</label>
-            <input type="text" id="out-cp" placeholder="Auto-completat / completați manual" autocomplete="off"></div>
+            <input type="text" id="out-cp" placeholder="Scanați, tastați sau auto-completat" autocomplete="off"
+              list="out-cp-list" oninput="lookupCp('out',this.value)">
+            <datalist id="out-cp-list"></datalist></div>
           <div class="fg"><label>Denumire Piesă</label>
             <input type="text" id="out-nm" placeholder="Auto-completat la scanare"></div>
         </div>
@@ -2215,7 +2218,13 @@ function checkDuplicateCode(bc, nm){
 
 function lookup(type,bc){
   if(!bc||bc.length<3) return;
-  var p=db.products.find(function(x){ return x.bc===bc.trim(); });
+  var bcTrim=bc.trim();
+  var p=db.products.find(function(x){ return x.bc===bcTrim; });
+  // Pentru iesire: daca nu am gasit dupa cod bara, incerc dupa cod piesa
+  if(!p && type==='out'){
+    p=db.products.find(function(x){ return (x.codPiesa||'').trim() && (x.codPiesa||'').trim()===bcTrim; });
+    if(p){ sv('out-bc', p.bc); }
+  }
   var pf=$(type+'-pf');
   if(p){
     $(type+'-nm').value=p.name;
@@ -2258,6 +2267,35 @@ function lookup(type,bc){
       sv('out-prt','');
     }
   }
+}
+// Cautare in iesire dupa Cod Piesa (input separat). Daca gaseste, completeaza si bc.
+function lookupCp(type, cp){
+  if(!cp || cp.length < 2) return;
+  var cpTrim = cp.trim();
+  // Mai intai dupa cod piesa exact
+  var p = db.products.find(function(x){
+    return (x.codPiesa||'').trim() !== '' && (x.codPiesa||'').trim() === cpTrim;
+  });
+  // Fallback: poate userul a tastat un cod bara in campul de cod piesa
+  if(!p) p = db.products.find(function(x){ return x.bc === cpTrim; });
+  if(p){
+    sv(type+'-bc', p.bc);
+    lookup(type, p.bc);
+  }
+}
+// Populeaza datalist-urile cu coduri (bara + piesa) pentru autocomplete in Iesiri
+function populateOutCodes(){
+  var bcList=$('out-bc-list'), cpList=$('out-cp-list');
+  if(!bcList && !cpList) return;
+  var esc=function(s){ return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
+  var bcOpts='', cpOpts='';
+  db.products.forEach(function(p){
+    var nm=esc(p.name);
+    if(p.bc) bcOpts += '<option value="'+esc(p.bc)+'">'+nm+(p.codPiesa?' · '+esc(p.codPiesa):'')+'</option>';
+    if(p.codPiesa) cpOpts += '<option value="'+esc(p.codPiesa)+'">'+nm+' · '+esc(p.bc)+'</option>';
+  });
+  if(bcList) bcList.innerHTML=bcOpts;
+  if(cpList) cpList.innerHTML=cpOpts;
 }
 function gpLookup(bc){
   var p=db.products.find(function(x){ return x.bc===bc.trim(); });
@@ -3092,6 +3130,8 @@ function renderStoc(filter){
       '</tr>';
   }).join('');
   var stotEl=$('stoc-tot'); if(stotEl) stotEl.textContent=fron(total);
+  // Actualizeaza sugestiile pentru autocomplete in Iesiri
+  if(typeof populateOutCodes==='function') populateOutCodes();
 }
 function filtStoc(q){ renderStoc(q); }
 
