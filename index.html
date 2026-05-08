@@ -2833,7 +2833,7 @@ function genPDFOferta(){
   saveKV('cfg',JSON.stringify(cfg));
   sv('s-ofnr',cfg.ofertaNr);
 
-  // Save to oferte list (cu linii complete incl. cod produs)
+  // Save to oferte list (cu linii complete incl. cod piesa)
   var ofObjTotal=linii.reduce(function(s,r){ return s+r.qty*r.prt; },0);
   var ofObj={nr:nrOf,date:dt,client:client||vin,vin:vin,model:model,an:an,total:ofObjTotal,linii:linii,ts:Date.now()};
   oferte.unshift(ofObj);
@@ -3084,7 +3084,7 @@ function renderStoc(filter){
     var bt=p.stock<=0?'Epuizat':p.stock<=min?'Scăzut':'OK';
     var stClr=p.stock<=0?'var(--red)':p.stock<=min?'var(--acc2)':'var(--grn)';
     var cpLine = p.codPiesa
-      ? '<br><span class="mono" style="font-size:10px;color:var(--acc2);font-weight:600">Cod produs: '+p.codPiesa+'</span>'
+      ? '<br><span class="mono" style="font-size:10px;color:var(--acc2);font-weight:600">Cod piesă: '+p.codPiesa+'</span>'
       : '';
     return '<tr>'+
       '<td style="font-weight:600">'+p.name+cpLine+'<br><span class="mono" style="font-size:10px;color:var(--t2)">'+p.bc+'</span></td>'+
@@ -3939,7 +3939,7 @@ function exportExcel(){
   var wb=XLSX.utils.book_new(), shop=cfg.shopName||'SPL Piese Auto', now=tod();
 
   // Stoc
-  var sd=[[shop+' — STOC CURENT — '+now],[],['Cod Bară','Cod Produs','Denumire','Categorie','UM','Stoc','P.Ach.','P.Vânz.','Valoare','Status']];
+  var sd=[[shop+' — STOC CURENT — '+now],[],['Cod Bară','Cod Piesă','Denumire','Categorie','UM','Stoc','P.Ach.','P.Vânz.','Valoare','Status']];
   var ts=0; db.products.forEach(function(p){
     var v=p.stock*p.sell; ts+=v;
     sd.push([p.bc,p.codPiesa||'',p.name,p.cat||'',p.um||'BUC',p.stock,p.buy,p.sell,v,p.stock<=0?'EPUIZAT':p.stock<=cfg.minStock?'SCĂZUT':'OK']);
