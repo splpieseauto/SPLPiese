@@ -2235,13 +2235,13 @@ function lookup(type,bc){
     if(type==='in'){
       sv('in-prt',p.buy);
       var mk16=(cfg.markup||35)/100+1;
-      sv('in-sell',(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*mk16*100)/100);
+      sv('in-sell',(p.sell&&p.sell>0)?p.sell:roundHalf(p.buy*mk16));
       sv('in-cat',p.cat);
     }
     if(type==='out'){
       // Calculează prețul de vânzare: folosește p.sell dacă există și > 0, altfel buy+35%
       var mk17=(cfg.markup||35)/100+1;
-    var sellPrice=(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*mk17*100)/100;
+    var sellPrice=(p.sell&&p.sell>0)?p.sell:roundHalf(p.buy*mk17);
       sv('out-prt',sellPrice);
       // Afișează în banner și prețul de vânzare calculat
       var pfsPriceEl=$('out-pf-price');
@@ -2251,7 +2251,7 @@ function lookup(type,bc){
     }
     if(type==='ret'){
       var mk18=(cfg.markup||35)/100+1;
-      var retSell=(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*mk18*100)/100;
+      var retSell=(p.sell&&p.sell>0)?p.sell:roundHalf(p.buy*mk18);
       sv('ret-val',retSell);
       var retValEl=$('ret-pf-val'); if(retValEl) retValEl.textContent=fron(retSell);
     }
@@ -2306,11 +2306,18 @@ function gpLookup(bc){
 // ═══════════════════════════════════
 // AUTO PRICE CALCULATION
 // ═══════════════════════════════════
+// Rotunjire la 0.50: 3.41->3.50, 3.62->4.00
+function roundHalf(v){
+  var i=Math.floor(v), d=v-i;
+  if(d===0) return v;
+  if(d<=0.5) return i+0.5;
+  return i+1;
+}
 function calcSell(){
   var buy=parseFloat(gv('in-prt'))||0;
   if(buy>0){
     var mk=(cfg.markup||35)/100+1;
-    var sell=Math.round(buy*mk*100)/100;
+    var sell=roundHalf(buy*mk);
     sv('in-sell',sell);
   } else { sv('in-sell',''); }
 }
@@ -2328,7 +2335,7 @@ function subMov(type){
   var doc=gv('in-doc').trim();
   var cat=gv('in-cat').trim();
   var mk19=(cfg.markup||35)/100+1;
-  var sellPrt=parseFloat(gv('in-sell'))||Math.round(prt*mk19*100)/100;
+  var sellPrt=parseFloat(gv('in-sell'))||roundHalf(prt*mk19);
   if(!bc) return toast('Introduceți codul de bară!','⚠️',true);
   if(!nm) return toast('Introduceți denumirea piesei!','⚠️',true);
   if(!qty||qty<1) return toast('Cantitate invalidă!','⚠️',true);
@@ -2581,14 +2588,14 @@ function subRet(){
     // Reintrare in stoc magazin — creste cantitativ, actualizeaza pretul de achizitie
     if(!prod){
       var mk=(cfg.markup||35)/100+1;
-      prod = {bc:bc, name:nm, cat:'', um:'BUC', stock:0, buy:val, sell:Math.round(val*mk*100)/100, codPiesa:cp};
+      prod = {bc:bc, name:nm, cat:'', um:'BUC', stock:0, buy:val, sell:roundHalf(val*mk), codPiesa:cp};
       db.products.push(prod);
     } else {
       prod.buy = val;
       // Recalculeaza pretul de vanzare daca cel existent e 0 sau lipsa
       if(!prod.sell||prod.sell<=0){
         var mk2=(cfg.markup||35)/100+1;
-        prod.sell=Math.round(val*mk2*100)/100;
+        prod.sell=roundHalf(val*mk2);
       }
     }
     prod.stock += qty;
@@ -4458,13 +4465,13 @@ function saveEdit(){
       if(!prodRet){
         // Creează produs nou (cazul în care codul s-a schimbat și nu mai există)
         var mk = (cfg.markup||35)/100+1;
-        prodRet = {bc:newBc, name:newName, cat:'', um:'BUC', stock:0, buy:newVal, sell:Math.round(newVal*mk*100)/100, codPiesa:gv('ef-cp').trim()};
+        prodRet = {bc:newBc, name:newName, cat:'', um:'BUC', stock:0, buy:newVal, sell:roundHalf(newVal*mk), codPiesa:gv('ef-cp').trim()};
         db.products.push(prodRet);
       } else {
         prodRet.buy = newVal;
         if(!prodRet.sell || prodRet.sell<=0){
           var mk2 = (cfg.markup||35)/100+1;
-          prodRet.sell = Math.round(newVal*mk2*100)/100;
+          prodRet.sell = roundHalf(newVal*mk2);
         }
       }
       prodRet.stock += newQty;
