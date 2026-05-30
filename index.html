@@ -553,7 +553,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
       <div class="fr">
         <div class="fg"><label>Preț Achiziție (RON/buc)</label><input type="number" id="in-prt" placeholder="0.00" step="0.01" oninput="calcSell()"></div>
-        <div class="fg"><label>Preț Vânzare (RON/buc) <span style="color:var(--grn);font-size:9px">+25% auto</span></label><input type="number" id="in-sell" placeholder="0.00" step="0.01" style="border-color:rgba(39,174,96,.4);background:rgba(39,174,96,.04)"></div>
+        <div class="fg"><label>Preț Vânzare (RON/buc) <span style="color:var(--grn);font-size:9px">+35% auto</span></label><input type="number" id="in-sell" placeholder="0.00" step="0.01" style="border-color:rgba(39,174,96,.4);background:rgba(39,174,96,.04)"></div>
       </div>
       <div class="fr fr1">
         <div class="fg"><label>Categorie</label>
@@ -1138,7 +1138,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);displ
       </div>
       <div class="fr">
         <div class="fg"><label>Email</label><input type="email" id="s-eml" placeholder="vanzari@pieseautotm.ro" onchange="saveCfg()"></div>
-        <div class="fg"><label>Preț Markup Automat (%)</label><input type="number" id="s-markup" placeholder="25" min="0" max="500" value="25" onchange="saveCfg()"><div class="hint">Adaos implicit aplicat automat la prețul de achiziție (ex: 25 = +25%)</div></div>
+        <div class="fg"><label>Preț Markup Automat (%)</label><input type="number" id="s-markup" placeholder="35" min="0" max="500" value="35" onchange="saveCfg()"><div class="hint">Adaos implicit aplicat automat la prețul de achiziție (ex: 35 = +35%)</div></div>
       </div>
       <div class="fr">
         <div class="fg"><label>Website</label><input type="text" id="s-web" placeholder="www.pieseautotm.ro" onchange="saveCfg()"></div>
@@ -1678,7 +1678,7 @@ function calcZiTotals(dateStr){
     return false;
   }
   var tm=db.movements.filter(isDate);
-  var mk=(cfg.markup||25)/100;
+  var mk=(cfg.markup||35)/100;
   var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
   // Retur de la client în stoc: anulează vânzarea cu PREȚUL DE VÂNZARE original (m.sellPrice).
   // Pentru retururi vechi fără sellPrice, fall-back: val * (1+markup) — aproximare.
@@ -1709,7 +1709,7 @@ var cfg={gsUrl:GS_URL_PERM,shopName:'SPL Piese Auto',defaultOp:'Camelia Dan',
   phone:'0766551313',email:'vanzari@pieseautotm.ro',
   cui:'44870892',regCom:'J20/1003624352',
   website:'www.pieseautotm.ro',program:'L–V: 08:00–17:00',minStock:5,
-  invoiceNr:124,ofertaNr:1,stornoNr:1,chitantaNr:1,markup:25};
+  invoiceNr:124,ofertaNr:1,stornoNr:1,chitantaNr:1,markup:35};
 
 function loadAll(){
   cfg.gsUrl=GS_URL_PERM;
@@ -1764,7 +1764,7 @@ function saveCfg(){
   cfg.ofertaNr=parseInt(gv('s-ofnr'))||cfg.ofertaNr||1;
   cfg.stornoNr=parseInt(gv('s-stornonr'))||cfg.stornoNr||1;
   cfg.chitantaNr=parseInt(gv('s-chitnr'))||cfg.chitantaNr||1;
-  cfg.markup=parseInt(gv('s-markup'))||25;
+  cfg.markup=parseInt(gv('s-markup'))||35;
   // Documente — mesaje si footer
   cfg.bonMsg=gv('s-bon-msg');
   cfg.bonFooter=gv('s-bon-footer');
@@ -1792,7 +1792,7 @@ function applySettings(){
   sv('s-ofnr',cfg.ofertaNr||1);
   sv('s-stornonr',cfg.stornoNr||1);
   sv('s-chitnr',cfg.chitantaNr||1);
-  sv('s-markup',cfg.markup||25);
+  sv('s-markup',cfg.markup||35);
   sv('s-gs',GS_URL_PERM);
   // Documente — mesaje si footer
   sv('s-bon-msg',cfg.bonMsg||'');
@@ -2234,13 +2234,13 @@ function lookup(type,bc){
     pf.classList.add('on');
     if(type==='in'){
       sv('in-prt',p.buy);
-      var mk16=(cfg.markup||25)/100+1;
+      var mk16=(cfg.markup||35)/100+1;
       sv('in-sell',(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*mk16*100)/100);
       sv('in-cat',p.cat);
     }
     if(type==='out'){
-      // Calculează prețul de vânzare: folosește p.sell dacă există și > 0, altfel buy+25%
-      var mk17=(cfg.markup||25)/100+1;
+      // Calculează prețul de vânzare: folosește p.sell dacă există și > 0, altfel buy+35%
+      var mk17=(cfg.markup||35)/100+1;
     var sellPrice=(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*mk17*100)/100;
       sv('out-prt',sellPrice);
       // Afișează în banner și prețul de vânzare calculat
@@ -2250,7 +2250,7 @@ function lookup(type,bc){
       }
     }
     if(type==='ret'){
-      var mk18=(cfg.markup||25)/100+1;
+      var mk18=(cfg.markup||35)/100+1;
       var retSell=(p.sell&&p.sell>0)?p.sell:Math.round(p.buy*mk18*100)/100;
       sv('ret-val',retSell);
       var retValEl=$('ret-pf-val'); if(retValEl) retValEl.textContent=fron(retSell);
@@ -2309,7 +2309,7 @@ function gpLookup(bc){
 function calcSell(){
   var buy=parseFloat(gv('in-prt'))||0;
   if(buy>0){
-    var mk=(cfg.markup||25)/100+1;
+    var mk=(cfg.markup||35)/100+1;
     var sell=Math.round(buy*mk*100)/100;
     sv('in-sell',sell);
   } else { sv('in-sell',''); }
@@ -2327,7 +2327,7 @@ function subMov(type){
   var par=gv('in-sup').trim();
   var doc=gv('in-doc').trim();
   var cat=gv('in-cat').trim();
-  var mk19=(cfg.markup||25)/100+1;
+  var mk19=(cfg.markup||35)/100+1;
   var sellPrt=parseFloat(gv('in-sell'))||Math.round(prt*mk19*100)/100;
   if(!bc) return toast('Introduceți codul de bară!','⚠️',true);
   if(!nm) return toast('Introduceți denumirea piesei!','⚠️',true);
@@ -2580,14 +2580,14 @@ function subRet(){
   if(dest==='stoc'){
     // Reintrare in stoc magazin — creste cantitativ, actualizeaza pretul de achizitie
     if(!prod){
-      var mk=(cfg.markup||25)/100+1;
+      var mk=(cfg.markup||35)/100+1;
       prod = {bc:bc, name:nm, cat:'', um:'BUC', stock:0, buy:val, sell:Math.round(val*mk*100)/100, codPiesa:cp};
       db.products.push(prod);
     } else {
       prod.buy = val;
       // Recalculeaza pretul de vanzare daca cel existent e 0 sau lipsa
       if(!prod.sell||prod.sell<=0){
-        var mk2=(cfg.markup||25)/100+1;
+        var mk2=(cfg.markup||35)/100+1;
         prod.sell=Math.round(val*mk2*100)/100;
       }
     }
@@ -3056,7 +3056,7 @@ function renderDash(){
     return false;
   }
   var tm=db.movements.filter(isToday);
-  var mk = (cfg.markup||25) / 100;
+  var mk = (cfg.markup||35) / 100;
   // Vanzari azi: iesiri minus retururi-in-stoc (la pretul de vanzare original)
   var sales=tm.filter(function(m){ return m.t==='out'; }).reduce(function(s,m){ return s+m.qty*m.price; },0);
   var retStocAzi=tm.filter(function(m){ return m.t==='ret'&&m.dest==='stoc'; }).reduce(function(s,m){
@@ -4037,7 +4037,7 @@ function exportExcel(){
     var parts=String(k).split('/'); if(parts.length!==3) return k;
     return parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
   }
-  var mkX=(cfg.markup||25)/100;
+  var mkX=(cfg.markup||35)/100;
   db.movements.forEach(function(m){
     var k=dayKey(m); if(!k) return;
     if(!dailyMap[k]) dailyMap[k]={sales:0,profit:0,nrVanz:0,intr:0,retStoc:0,retDist:0,nrIn:0,nrRet:0};
@@ -4457,13 +4457,13 @@ function saveEdit(){
     } else { // newDest === 'stoc'
       if(!prodRet){
         // Creează produs nou (cazul în care codul s-a schimbat și nu mai există)
-        var mk = (cfg.markup||25)/100+1;
+        var mk = (cfg.markup||35)/100+1;
         prodRet = {bc:newBc, name:newName, cat:'', um:'BUC', stock:0, buy:newVal, sell:Math.round(newVal*mk*100)/100, codPiesa:gv('ef-cp').trim()};
         db.products.push(prodRet);
       } else {
         prodRet.buy = newVal;
         if(!prodRet.sell || prodRet.sell<=0){
-          var mk2 = (cfg.markup||25)/100+1;
+          var mk2 = (cfg.markup||35)/100+1;
           prodRet.sell = Math.round(newVal*mk2*100)/100;
         }
       }
